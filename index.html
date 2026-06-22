@@ -830,7 +830,12 @@ async function loadMasterData() {
       allDepts    = d.data || [];
       allVTypes   = v.data || [];
       allCats     = c.data || [];
-      allVehicles = (ve.data||[]).map(x=>({...x, department_name:x.departments?.name, vehicle_type_name:x.vehicle_types?.name}));
+      allVehicles = (ve.data||[]).map(x=>({...x,
+        department_name:    x.departments?.name,
+        department_name_en: x.departments?.name_en,
+        vehicle_type_name:    x.vehicle_types?.name,
+        vehicle_type_name_en: x.vehicle_types?.name_en,
+      }));
       // Cache in IDB
       if (allDepts.length)    await idbPutMany('departments', allDepts);
       if (allVTypes.length)   await idbPutMany('vehicle_types', allVTypes);
@@ -1217,21 +1222,29 @@ async function deleteExpense(id, clientId) {
 }
 
 // ─── VEHICLES ─────────────────────────────────────────────
-const FUEL_TH = { gasoline:'เบนซิน',diesel:'ดีเซล',ev:'ไฟฟ้า',hybrid:'ไฮบริด',lpg:'LPG',ngv:'NGV' };
+const FUEL_KEYS = { gasoline:'fuel_gasoline', diesel:'fuel_diesel', ev:'fuel_ev', hybrid:'fuel_hybrid', lpg:'fuel_lpg', ngv:'fuel_ngv' };
+const fuelLabel = code => t(FUEL_KEYS[code] || code) || code;
+const vtypeLabel = vtypeId => {
+  const vt = allVTypes.find(x => x.id === vtypeId);
+  if (!vt) return '-';
+  return currentLang === 'en' ? (vt.name_en || vt.name) : vt.name;
+};
 async function loadVehicles() {
   const { data } = await sbClient.from('vehicles')
-    .select('*,departments(name),vehicle_types(name)').eq('is_active',true).order('name');
-  const rows = (data||[]).map(v=>({...v,department_name:v.departments?.name,vehicle_type_name:v.vehicle_types?.name}));
+    .select('*,departments(name,name_en)').eq('is_active',true).order('name');
+  const rows = (data||[]).map(v=>({...v,
+    department_name: currentLang==='en' ? (v.departments?.name_en||v.departments?.name) : v.departments?.name
+  }));
   document.getElementById('vehiclesTable').innerHTML = rows.length===0
     ? `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚗</div><p>${t('no_vehicles')}</p></div></td></tr>`
     : rows.map(v=>`<tr>
         <td class="fw-bold">${v.license_plate}</td>
         <td>${v.name}</td>
         <td>${v.department_name||'-'}</td>
-        <td>${v.vehicle_type_name||'-'}</td>
+        <td>${vtypeLabel(v.vehicle_type_id)}</td>
         <td>${(v.brand||'')+' '+(v.model||'')}</td>
         <td>${v.year||'-'}</td>
-        <td>${FUEL_TH[v.fuel_type]||v.fuel_type}</td>
+        <td>${fuelLabel(v.fuel_type)}</td>
         <td>
           <button class="btn btn-outline btn-sm btn-icon" onclick='editVehicle(${JSON.stringify(v).replace(/'/g,"&#39;")})'>✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle(${v.id})">🗑️</button>
