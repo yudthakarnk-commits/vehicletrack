@@ -204,6 +204,12 @@ const TRANSLATIONS = {
     fuel_hybrid:      'ไฮบริด',
     fuel_lpg:         'LPG',
     fuel_ngv:         'NGV',
+
+    // Toll
+    toll_items:       'รายการด่านทาง',
+    add_toll_item:    'เพิ่มด่าน',
+    ph_toll_name:     'ชื่อด่าน / ทางด่วน',
+    toll_empty_error: 'กรุณาใส่ยอดเงินอย่างน้อย 1 รายการ',
   },
   en: {
     nav_dashboard:    'Dashboard',
@@ -392,6 +398,12 @@ const TRANSLATIONS = {
     fuel_hybrid:      'Hybrid',
     fuel_lpg:         'LPG',
     fuel_ngv:         'NGV',
+
+    // Toll
+    toll_items:       'Toll Items',
+    add_toll_item:    'Add Toll',
+    ph_toll_name:     'Toll plaza / Expressway name',
+    toll_empty_error: 'Please enter at least one toll amount',
   }
 };
 

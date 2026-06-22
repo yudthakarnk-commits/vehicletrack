@@ -335,7 +335,7 @@ tr:hover td{background:#fafafa}
                 <div class="form-group"><label data-i18n="expense_type">ประเภทค่าใช้จ่าย</label>
                   <select id="ef-category" onchange="categoryChanged()" required>
                     <option value="" data-i18n="select_type">-- เลือกประเภท --</option></select></div>
-                <div class="form-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
+                <div class="form-group" id="ef-amount-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
                   <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
                 <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
                   <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal();calcFuelPricePerLiter()"></div>
@@ -363,8 +363,19 @@ tr:hover td{background:#fafafa}
                 </div>
                 <div class="form-group" id="ef-distance-group" style="display:none"><label data-i18n="distance">ระยะทาง (กม.)</label>
                   <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0" readonly style="background:#f0f4fa;color:var(--text-light)"></div>
-                <div class="form-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
+                <div class="form-group" id="ef-odometer-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
                   <input type="number" id="ef-odometer" min="0" placeholder="0" oninput="calcExpenseDistance()"></div>
+                <!-- Toll sub-items -->
+                <div class="form-group full" id="ef-toll-group" style="display:none">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <label>🚧 <span data-i18n="toll_items">รายการด่านทาง</span></label>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addTollItem()">+ <span data-i18n="add_toll_item">เพิ่มด่าน</span></button>
+                  </div>
+                  <div id="ef-toll-rows"></div>
+                  <div style="text-align:right;margin-top:10px;font-weight:700;font-size:14px;color:var(--primary)">
+                    <span data-i18n="total_label">รวม</span>: RM <span id="ef-toll-total">0.00</span>
+                  </div>
+                </div>
                 <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
                   <input type="text" id="ef-receipt"></div>
                 <!-- Camera / Receipt Scan -->
@@ -1077,13 +1088,48 @@ function isFuelCategory() {
   const cat = allCats.find(c=>c.id==catId);
   return cat?.name_en === 'Fuel' || cat?.name?.includes('น้ำมัน');
 }
+function isTollCategory() {
+  const catId = document.getElementById('ef-category').value;
+  const cat = allCats.find(c=>c.id==catId);
+  return cat?.name_en === 'Toll' || cat?.name?.includes('ทางด่วน') || cat?.name?.includes('ด่าน') || cat?.name?.includes('ผ่านทาง');
+}
 function categoryChanged() {
   const isFuel = isFuelCategory();
+  const isToll = isTollCategory();
   document.getElementById('ef-fuel-group').style.display     = isFuel?'block':'none';
   document.getElementById('ef-price-group').style.display    = isFuel?'block':'none';
   document.getElementById('ef-fueltype-group').style.display = isFuel?'block':'none';
   document.getElementById('ef-distance-group').style.display = isFuel?'block':'none';
+  document.getElementById('ef-amount-group').style.display   = isToll?'none':'';
+  document.getElementById('ef-odometer-group').style.display = isToll?'none':'';
+  document.getElementById('ef-toll-group').style.display     = isToll?'block':'none';
+  document.getElementById('ef-amount').required = !isToll;
   if (isFuel) calcExpenseDistance();
+  if (isToll && document.getElementById('ef-toll-rows').children.length === 0) addTollItem();
+}
+function addTollItem() {
+  const row = document.createElement('div');
+  row.className = 'toll-item';
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:center';
+  row.innerHTML = `
+    <input type="text" placeholder="${t('ph_toll_name')}" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit">
+    <span style="font-size:13px;color:var(--text-light);white-space:nowrap">RM</span>
+    <input type="number" step="0.01" min="0" placeholder="0.00" style="width:100px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px" class="toll-amount" oninput="calcTollTotal()">
+    <button type="button" onclick="removeTollItem(this)" style="padding:5px 9px;border:1px solid var(--danger,#dc2626);border-radius:6px;background:transparent;color:var(--danger,#dc2626);cursor:pointer;font-size:13px;line-height:1">✕</button>
+  `;
+  document.getElementById('ef-toll-rows').appendChild(row);
+  row.querySelector('input[type=text]').focus();
+  calcTollTotal();
+}
+function removeTollItem(btn) {
+  const rows = document.getElementById('ef-toll-rows');
+  if (rows.children.length <= 1) return;
+  btn.closest('.toll-item').remove();
+  calcTollTotal();
+}
+function calcTollTotal() {
+  const total = [...document.querySelectorAll('.toll-amount')].reduce((s,el)=>s+(parseFloat(el.value)||0),0);
+  document.getElementById('ef-toll-total').textContent = total.toFixed(2);
 }
 function calcFuelTotal() {
   const l = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
@@ -1286,8 +1332,51 @@ document.addEventListener('DOMContentLoaded', () => {
 async function submitExpense(e) {
   e.preventDefault();
   const catId = document.getElementById('ef-category').value;
-  const cat = allCats.find(c=>c.id==catId);
-  const isFuel = cat?.name_en === 'Fuel';
+  const isFuel = isFuelCategory();
+  const isToll = isTollCategory();
+
+  // ── Toll: insert one record per toll row ──
+  if (isToll) {
+    const tollItems = [...document.querySelectorAll('.toll-item')].map(row => ({
+      name:   row.querySelector('input[type=text]').value.trim(),
+      amount: parseFloat(row.querySelector('.toll-amount').value)||0,
+    })).filter(item => item.amount > 0);
+    if (tollItems.length === 0) { toast(t('toll_empty_error'), 'error'); return; }
+    const baseFields = {
+      vehicle_id:           Number(document.getElementById('ef-vehicle').value),
+      category_id:          Number(catId),
+      expense_date:         document.getElementById('ef-date').value,
+      receipt_no:           document.getElementById('ef-receipt').value||null,
+      distance_km:          null, odometer: null,
+      fuel_liters:          null, fuel_price_per_liter: null,
+      created_by:           currentUser?.id,
+      is_deleted:           false,
+    };
+    const sharedNote = document.getElementById('ef-desc').value.trim()||null;
+    if (navigator.onLine) {
+      const inserts = tollItems.map(item => ({
+        ...baseFields,
+        client_id:   crypto.randomUUID(),
+        amount:      item.amount,
+        description: item.name || sharedNote || null,
+      }));
+      const { error } = await sbClient.from('expenses').insert(inserts);
+      if (error) { toast(t('save_error')+': '+error.message, 'error'); return; }
+      logAction('add_expense', { vehicle_id: baseFields.vehicle_id, toll_count: tollItems.length });
+    } else {
+      for (const item of tollItems) {
+        const p = { ...baseFields, client_id: crypto.randomUUID(), amount: item.amount, description: item.name||sharedNote||null };
+        await idbPut('expenses', { ...p, id: p.client_id, created_at: new Date().toISOString() });
+        await queueSync('INSERT', 'expenses', p);
+      }
+    }
+    toast(t('save_success'), 'success');
+    updatePendingBadge();
+    resetExpenseForm();
+    return;
+  }
+
+  // ── Normal single record ──
   const clientId = crypto.randomUUID();
   const payload = {
     client_id:           clientId,
@@ -1304,14 +1393,12 @@ async function submitExpense(e) {
     created_by:          currentUser?.id,
     is_deleted:          false,
   };
-
   if (navigator.onLine) {
     const { error } = await sbClient.from('expenses').insert(payload);
     if (error) { toast(t('save_error')+': '+error.message, 'error'); return; }
     logAction('add_expense', { vehicle_id: payload.vehicle_id, amount: payload.amount, date: payload.expense_date });
     toast(t('save_success'), 'success');
   } else {
-    // Save to IDB and queue sync
     await idbPut('expenses', { ...payload, id: clientId, created_at: new Date().toISOString() });
     await queueSync('INSERT', 'expenses', payload);
     toast(t('save_offline'), 'info');
@@ -1323,10 +1410,17 @@ async function submitExpense(e) {
 function resetExpenseForm() {
   document.getElementById('expenseForm').reset();
   document.getElementById('ef-date').value = today();
-  document.getElementById('ef-fuel-group').style.display = 'none';
-  document.getElementById('ef-price-group').style.display = 'none';
-  document.getElementById('ef-fueltype-group').style.display = 'none';
-  document.getElementById('ef-fuel-type').value = '';
+  document.getElementById('ef-fuel-group').style.display    = 'none';
+  document.getElementById('ef-price-group').style.display   = 'none';
+  document.getElementById('ef-fueltype-group').style.display= 'none';
+  document.getElementById('ef-fuel-type').value             = '';
+  document.getElementById('ef-distance-group').style.display= 'none';
+  document.getElementById('ef-toll-group').style.display    = 'none';
+  document.getElementById('ef-toll-rows').innerHTML         = '';
+  document.getElementById('ef-toll-total').textContent      = '0.00';
+  document.getElementById('ef-amount-group').style.display  = '';
+  document.getElementById('ef-odometer-group').style.display= '';
+  document.getElementById('ef-amount').required             = true;
 }
 
 // ─── EXPENSES LIST ────────────────────────────────────────
