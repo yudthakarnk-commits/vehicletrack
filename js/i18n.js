@@ -123,6 +123,11 @@ const TRANSLATIONS = {
     no_usage_logs:     'ยังไม่มีบันทึกการใช้งาน',
     confirm_del_log:   'ยืนยันการลบบันทึกนี้?',
     edit_log:          'แก้ไขบันทึก',
+    ph_origin:         'สถานที่ต้นทาง',
+    ph_destination:    'สถานที่ปลายทาง',
+    ph_purpose:        'เช่น ส่งเอกสาร, ประชุม, ตรวจพื้นที่',
+    ph_optional:       '(ไม่บังคับ)',
+    ph_driver:         'ชื่อ-นามสกุลผู้ขับ',
 
     // Report
     report_title:     'รายงาน',
@@ -313,6 +318,11 @@ const TRANSLATIONS = {
     no_usage_logs:     'No usage logs yet',
     confirm_del_log:   'Confirm delete this log entry?',
     edit_log:          'Edit Log',
+    ph_origin:         'Departure location',
+    ph_destination:    'Arrival location',
+    ph_purpose:        'e.g. Delivery, Meeting, Site inspection',
+    ph_optional:       '(optional)',
+    ph_driver:         'Full name of driver',
 
     report_title:     'Reports',
     group_by:         'Group By',
