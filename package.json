@@ -1,0 +1,18 @@
+{
+  "name": "vehicle-expense-system",
+  "version": "1.0.0",
+  "description": "ระบบบันทึกค่าใช้จ่ายยานพาหนะ - Vehicle Expense Tracking System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "express": "^4.22.2",
+    "sql.js": "^1.14.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

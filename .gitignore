@@ -1,0 +1,6 @@
+node_modules/
+vehicle_data.db
+*.db
+.env
+.DS_Store
+Thumbs.db

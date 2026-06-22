@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e3a5f">
+<title>VehicleTrack — ระบบค่าใช้จ่ายยานพาหนะ</title>
+<link rel="manifest" href="manifest.json">
+<!-- Supabase JS v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Config & i18n (load first) -->
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/offline.js"></script>
+<style>
+:root{--primary:#1e3a5f;--primary-light:#2d5a8e;--accent:#f0a500;--success:#27ae60;--danger:#e74c3c;--warning:#f39c12;--bg:#f0f2f5;--card:#fff;--text:#2c3e50;--text-light:#7f8c8d;--border:#dee2e6;--sidebar-w:230px;--header-h:60px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text)}
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%)}
+.login-card{background:var(--card);border-radius:16px;padding:40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo h1{font-size:28px;color:var(--primary)}
+.login-logo p{color:var(--text-light);font-size:14px;margin-top:4px}
+/* APP */
+#app{display:none;height:100vh;overflow:hidden;flex-direction:column}
+#app.ready{display:flex}
+/* TOPBAR */
+.topbar{height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-shrink:0;z-index:50}
+.menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer}
+.topbar-title{font-size:16px;font-weight:600;flex:1}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.lang-switch{display:flex;gap:2px;background:var(--bg);border-radius:6px;padding:2px}
+.lang-btn{padding:3px 10px;border:none;background:transparent;cursor:pointer;border-radius:4px;font-size:12px;font-weight:600}
+.lang-btn.active-lang{background:var(--primary);color:#fff}
+.user-chip{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px}
+.role-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#eaf2ff;color:var(--primary)}
+#sync-status{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg)}
+.sync-syncing{background:#fff3cd}
+.sync-done{background:#d4edda;color:#155724}
+.sync-offline{background:#f8d7da;color:#721c24}
+.sync-warning{background:#fff3cd;color:#856404}
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--primary);color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s;z-index:100;overflow-y:auto}
+.sidebar-brand{padding:16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
+.sidebar-brand h2{font-size:14px;opacity:.7;font-weight:400}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 18px;cursor:pointer;font-size:13px;border-left:3px solid transparent;transition:all .2s}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.15);border-left-color:var(--accent)}
+.nav-icon{font-size:17px;width:22px;text-align:center}
+.nav-section{padding:8px 18px 4px;font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;margin-top:8px}
+.pending-badge{background:var(--accent);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:auto}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.content{flex:1;overflow-y:auto;padding:20px}
+/* CARDS */
+.card{background:var(--card);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid var(--primary)}
+.kpi-card.accent{border-left-color:var(--accent)}
+.kpi-card.success{border-left-color:var(--success)}
+.kpi-card.danger{border-left-color:var(--danger)}
+.kpi-label{font-size:12px;color:var(--text-light);margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:700}
+.kpi-sub{font-size:11px;color:var(--text-light);margin-top:4px}
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* FILTERS */
+.filter-bar{background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group label{font-size:11px;color:var(--text-light);font-weight:500}
+.filter-group select,.filter-group input{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;min-width:120px}
+/* BUTTONS */
+.btn{padding:7px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-light)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{opacity:.9}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{opacity:.9}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--bg)}
+.btn-sm{padding:4px 10px;font-size:12px}.btn-icon{padding:6px 8px}
+/* TABLES */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);padding:10px 12px;text-align:left;font-weight:600;font-size:12px;color:var(--text-light);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:12px;font-weight:600;color:var(--text-light)}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary-light)}
+.form-group textarea{resize:vertical;min-height:70px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:14px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:16px}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light)}
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#toast.success{background:var(--success)}
+#toast.error{background:var(--danger)}
+#toast.info{background:var(--primary)}
+/* PROGRESS */
+.progress{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress-bar{height:100%;border-radius:4px;transition:width .4s}
+/* EMPTY */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-light)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+/* UTILS */
+.text-right{text-align:right}
+.text-muted{color:var(--text-light)}
+.mt-16{margin-top:16px}
+.fw-bold{font-weight:700}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.sidebar-overlay.open{display:block}
+/* OFFLINE INDICATOR */
+.offline-bar{background:#e74c3c;color:#fff;text-align:center;padding:6px;font-size:12px;display:none}
+.offline-bar.show{display:block}
+/* ACCESS LOG ACTION TAGS */
+.action-tag{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .content{padding:12px}
+  .form-grid{grid-template-columns:1fr}
+  .user-chip span:not(.role-badge){display:none}
+  #sync-status{display:none}
+}
+@media(max-width:480px){.kpi-grid{grid-template-columns:1fr}.topbar-right .btn span{display:none}}
+</style>
+</head>
+<body>
+<!-- Offline bar -->
+<div class="offline-bar" id="offlineBar">📴 <span data-i18n="offline">ออฟไลน์</span> — ข้อมูลจะซิงค์เมื่อกลับมาออนไลน์</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>🚗 VehicleTrack</h1>
+      <p data-i18n="login_title">เข้าสู่ระบบ</p>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label data-i18n="email">อีเมล</label>
+      <input type="email" id="login-email" data-i18n-ph="email" placeholder="อีเมล" autocomplete="email">
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label data-i18n="password">รหัสผ่าน</label>
+      <input type="password" id="login-password" data-i18n-ph="password" placeholder="รหัสผ่าน" autocomplete="current-password">
+    </div>
+    <div id="login-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="login-btn">
+      <span data-i18n="btn_login">เข้าสู่ระบบ</span>
+    </button>
+    <div style="margin-top:16px;text-align:right">
+      <button class="lang-btn" onclick="setLang('th')" id="lang-th" style="border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px">TH</button>
+      <button class="lang-btn" onclick="setLang('en')" id="lang-en" style="border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px;margin-left:4px">EN</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    <div class="topbar-right">
+      <span id="sync-status" class="sync-badge"></span>
+      <span id="pending-count" style="font-size:11px;color:var(--warning);display:none"></span>
+      <div class="lang-switch">
+        <button class="lang-btn active-lang" id="lang-th-app" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" id="lang-en-app" onclick="setLang('en')">EN</button>
+      </div>
+      <div class="user-chip">
+        <span id="user-name-chip">-</span>
+        <span class="role-badge" id="user-role-chip">-</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">
+        <span data-i18n="btn_logout">ออกจากระบบ</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div><div style="font-size:18px;font-weight:700">🚗 VehicleTrack</div><div style="font-size:11px;opacity:.6">v2.0</div></div>
+      </div>
+      <nav id="sidebarNav" style="padding:8px 0"></nav>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="main">
+      <div class="content" id="mainContent">
+
+        <!-- ══ DASHBOARD ══ -->
+        <div class="page active" id="page-dashboard">
+          <div class="filter-bar">
+            <div class="filter-group"><label data-i18n="period">ช่วงเวลา</label>
+              <select id="db-period" onchange="dashboardPeriodChange()">
+                <option value="this_month" data-i18n="this_month">เดือนนี้</option>
+                <option value="last_month" data-i18n="last_month">เดือนที่แล้ว</option>
+                <option value="this_year"  data-i18n="this_year">ปีนี้</option>
+                <option value="last_7"     data-i18n="last_7">7 วันล่าสุด</option>
+                <option value="last_30"    data-i18n="last_30">30 วันล่าสุด</option>
+                <option value="custom"     data-i18n="custom">กำหนดเอง</option>
+              </select>
+            </div>
+            <div class="filter-group" id="db-custom-dates" style="display:none;flex-direction:row;gap:6px">
+              <input type="date" id="db-date-from"><input type="date" id="db-date-to">
+            </div>
+            <div class="filter-group"><label data-i18n="department">หน่วยงาน</label>
+              <select id="db-dept"><option value="" data-i18n="all">ทั้งหมด</option></select>
+            </div>
+            <div class="filter-group"><label data-i18n="vehicle_type">ชนิดรถ</label>
+              <select id="db-vtype"><option value="" data-i18n="all">ทั้งหมด</option></select>
+            </div>
+            <div class="filter-group"><label>&nbsp;</label>
+              <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔍 <span data-i18n="show_data">แสดงข้อมูล</span></button>
+            </div>
+          </div>
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="grid-2 mt-16">
+            <div class="card"><div class="card-header"><span class="card-title" data-i18n="monthly_expense">ค่าใช้จ่ายรายเดือน</span></div>
+              <div style="height:200px"><canvas id="chartMonthly"></canvas></div></div>
+            <div class="card"><div class="card-header"><span class="card-title" data-i18n="by_category">สัดส่วนตามประเภท</span></div>
+              <div style="height:200px"><canvas id="chartCategory"></canvas></div></div>
+          </div>
+          <div class="grid-2 mt-16">
+            <div class="card"><div class="card-header"><span class="card-title" data-i18n="by_dept">ค่าใช้จ่ายตามหน่วยงาน</span></div><div id="deptBars"></div></div>
+            <div class="card"><div class="card-header"><span class="card-title" data-i18n="top_vehicles">รถที่มีค่าใช้จ่ายสูงสุด</span></div><div id="vehicleBars"></div></div>
+          </div>
+          <div class="card mt-16">
+            <div class="card-header"><span class="card-title" data-i18n="recent">รายการล่าสุด</span>
+              <button class="btn btn-outline btn-sm" onclick="showPage('expenses')" data-i18n="view_all">ดูทั้งหมด</button></div>
+            <div class="table-wrap"><table><thead><tr>
+              <th data-i18n="col_date">วันที่</th><th data-i18n="col_vehicle">รถ</th>
+              <th data-i18n="col_dept">หน่วยงาน</th><th data-i18n="col_category">ประเภท</th>
+              <th class="text-right" data-i18n="col_amount">จำนวนเงิน</th>
+            </tr></thead><tbody id="recentTable"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ══ ADD EXPENSE ══ -->
+        <div class="page" id="page-add-expense">
+          <div class="card">
+            <div class="card-header"><span class="card-title" data-i18n="add_expense">บันทึกค่าใช้จ่าย</span></div>
+            <form id="expenseForm" onsubmit="submitExpense(event)">
+              <div class="form-grid">
+                <div class="form-group"><label data-i18n="date">วันที่</label><input type="date" id="ef-date" required></div>
+                <div class="form-group"><label data-i18n="department">หน่วยงาน</label>
+                  <select id="ef-dept" onchange="filterVehiclesByDept()" required>
+                    <option value="" data-i18n="select_dept">-- เลือกหน่วยงาน --</option></select></div>
+                <div class="form-group"><label data-i18n="vehicle">รถ</label>
+                  <select id="ef-vehicle" required><option value="" data-i18n="select_vehicle">-- เลือกรถ --</option></select></div>
+                <div class="form-group"><label data-i18n="expense_type">ประเภทค่าใช้จ่าย</label>
+                  <select id="ef-category" onchange="categoryChanged()" required>
+                    <option value="" data-i18n="select_type">-- เลือกประเภท --</option></select></div>
+                <div class="form-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
+                  <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00"></div>
+                <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
+                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00"></div>
+                <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (บาท)</label>
+                  <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
+                <div class="form-group"><label data-i18n="distance">ระยะทาง (กม.)</label>
+                  <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0"></div>
+                <div class="form-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
+                  <input type="number" id="ef-odometer" min="0" placeholder="0"></div>
+                <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
+                  <input type="text" id="ef-receipt"></div>
+                <div class="form-group full"><label data-i18n="notes">หมายเหตุ</label>
+                  <textarea id="ef-desc"></textarea></div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+                <button type="button" class="btn btn-outline" onclick="resetExpenseForm()" data-i18n="btn_reset">รีเซ็ต</button>
+                <button type="submit" class="btn btn-primary">💾 <span data-i18n="btn_save">บันทึกข้อมูล</span></button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ══ EXPENSES LIST ══ -->
+        <div class="page" id="page-expenses">
+          <div class="filter-bar">
+            <div class="filter-group"><label data-i18n="from_date">จากวันที่</label><input type="date" id="exp-from"></div>
+            <div class="filter-group"><label data-i18n="to_date">ถึงวันที่</label><input type="date" id="exp-to"></div>
+            <div class="filter-group"><label data-i18n="department">หน่วยงาน</label>
+              <select id="exp-dept"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+            <div class="filter-group"><label data-i18n="vehicle_type">ชนิดรถ</label>
+              <select id="exp-vtype"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+            <div class="filter-group"><label data-i18n="expense_type">ประเภท</label>
+              <select id="exp-cat"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+            <div class="filter-group"><label>&nbsp;</label>
+              <button class="btn btn-primary btn-sm" onclick="loadExpenses()">🔍 <span data-i18n="show_data">ค้นหา</span></button></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title" data-i18n="expense_list">รายการค่าใช้จ่าย</span>
+              <span id="expCount" class="text-muted" style="font-size:12px"></span>
+            </div>
+            <div class="table-wrap"><table><thead><tr>
+              <th data-i18n="col_date">วันที่</th><th data-i18n="col_dept">หน่วยงาน</th>
+              <th data-i18n="col_vehicle">รถ</th><th data-i18n="col_vtype">ชนิดรถ</th>
+              <th data-i18n="col_category">ประเภท</th><th data-i18n="col_distance">ระยะทาง</th>
+              <th class="text-right" data-i18n="col_amount">จำนวนเงิน</th>
+              <th data-i18n="col_notes">หมายเหตุ</th><th></th>
+            </tr></thead><tbody id="expensesTable"></tbody></table></div>
+            <div id="expTotal" style="text-align:right;padding:12px 4px;font-size:14px;font-weight:700;color:var(--primary)"></div>
+          </div>
+        </div>
+
+        <!-- ══ VEHICLES ══ -->
+        <div class="page" id="page-vehicles">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+            <button class="btn btn-primary" onclick="openVehicleModal()" id="add-vehicle-btn">
+              ➕ <span data-i18n="add_vehicle">เพิ่มรถ</span>
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title" data-i18n="vehicle_list">รายการรถ</span></div>
+            <div class="table-wrap"><table><thead><tr>
+              <th data-i18n="col_plate">ทะเบียน</th><th data-i18n="col_name">ชื่อรถ</th>
+              <th data-i18n="department">หน่วยงาน</th><th data-i18n="vehicle_type">ชนิดรถ</th>
+              <th data-i18n="col_brand">ยี่ห้อ/รุ่น</th><th data-i18n="col_year">ปี</th>
+              <th data-i18n="col_fuel">เชื้อเพลิง</th><th></th>
+            </tr></thead><tbody id="vehiclesTable"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ══ REPORT ══ -->
+        <div class="page" id="page-report">
+          <div class="filter-bar">
+            <div class="filter-group"><label data-i18n="period">ช่วงเวลา</label>
+              <select id="rp-period" onchange="reportPeriodChange()">
+                <option value="this_month" data-i18n="this_month">เดือนนี้</option>
+                <option value="last_month" data-i18n="last_month">เดือนที่แล้ว</option>
+                <option value="this_year"  data-i18n="this_year">ปีนี้</option>
+                <option value="last_7"     data-i18n="last_7">7 วันล่าสุด</option>
+                <option value="last_30"    data-i18n="last_30">30 วันล่าสุด</option>
+                <option value="custom"     data-i18n="custom">กำหนดเอง</option>
+              </select>
+            </div>
+            <div class="filter-group" id="rp-custom-dates" style="display:none;flex-direction:row;gap:6px">
+              <input type="date" id="rp-date-from"><input type="date" id="rp-date-to">
+            </div>
+            <div class="filter-group"><label data-i18n="department">หน่วยงาน</label>
+              <select id="rp-dept"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+            <div class="filter-group"><label data-i18n="vehicle_type">ชนิดรถ</label>
+              <select id="rp-vtype"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+            <div class="filter-group"><label data-i18n="group_by">แสดงตาม</label>
+              <select id="rp-group">
+                <option value="category" data-i18n="group_category">ประเภทค่าใช้จ่าย</option>
+                <option value="department" data-i18n="group_dept">หน่วยงาน</option>
+                <option value="vehicle_type" data-i18n="group_vtype">ชนิดรถ</option>
+                <option value="vehicle" data-i18n="group_vehicle">รถ</option>
+                <option value="month" data-i18n="group_month">รายเดือน</option>
+              </select>
+            </div>
+            <div class="filter-group"><label>&nbsp;</label>
+              <button class="btn btn-primary btn-sm" onclick="loadReport()">📊 <span data-i18n="btn_report">สร้างรายงาน</span></button></div>
+          </div>
+          <div id="reportContent"></div>
+        </div>
+
+        <!-- ══ USERS (admin only) ══ -->
+        <div class="page" id="page-users">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+            <button class="btn btn-primary" onclick="openUserModal()">➕ <span data-i18n="add_user">เพิ่มผู้ใช้</span></button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title" data-i18n="user_management">จัดการผู้ใช้</span></div>
+            <div class="table-wrap"><table><thead><tr>
+              <th data-i18n="col_email">อีเมล</th><th data-i18n="col_fullname">ชื่อ</th>
+              <th data-i18n="col_role">สิทธิ์</th><th data-i18n="department">หน่วยงาน</th>
+              <th data-i18n="col_vehicles">รถ</th><th></th>
+            </tr></thead><tbody id="usersTable"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ══ ACCESS LOGS (admin/manager) ══ -->
+        <div class="page" id="page-access-logs">
+          <div class="filter-bar">
+            <div class="filter-group"><label data-i18n="from_date">จากวันที่</label><input type="date" id="log-from"></div>
+            <div class="filter-group"><label data-i18n="to_date">ถึงวันที่</label><input type="date" id="log-to"></div>
+            <div class="filter-group"><label>&nbsp;</label>
+              <button class="btn btn-primary btn-sm" onclick="loadAccessLogs()">🔍</button></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title" data-i18n="access_logs">ประวัติการใช้งาน</span></div>
+            <div class="table-wrap"><table><thead><tr>
+              <th data-i18n="col_time">เวลา</th><th data-i18n="col_user">ผู้ใช้</th>
+              <th data-i18n="col_action">การกระทำ</th><th data-i18n="col_details">รายละเอียด</th>
+            </tr></thead><tbody id="logsTable"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ══ SETTINGS ══ -->
+        <div class="page" id="page-settings">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><span class="card-title" data-i18n="dept_mgmt">หน่วยงาน</span>
+                <button class="btn btn-primary btn-sm" onclick="openDeptModal()">➕</button></div>
+              <div class="table-wrap"><table><thead><tr>
+                <th data-i18n="col_name">ชื่อ</th><th data-i18n="col_code">รหัส</th><th></th>
+              </tr></thead><tbody id="deptTable"></tbody></table></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title" data-i18n="vtype_mgmt">ชนิดรถ</span>
+                <button class="btn btn-primary btn-sm" onclick="openVTypeModal()">➕</button></div>
+              <div class="table-wrap"><table><thead><tr>
+                <th data-i18n="col_name">ชื่อ</th><th data-i18n="col_desc">คำอธิบาย</th><th></th>
+              </tr></thead><tbody id="vtypeTable"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="deptModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3 id="deptModalTitle"></h3><button class="close-btn" onclick="closeModal('deptModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="dm-id">
+      <div class="form-group" style="margin-bottom:12px"><label data-i18n="col_name">ชื่อ</label><input type="text" id="dm-name"></div>
+      <div class="form-group"><label data-i18n="col_code">รหัส</label><input type="text" id="dm-code"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('deptModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDept()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="vtypeModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3 id="vtypeModalTitle"></h3><button class="close-btn" onclick="closeModal('vtypeModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="vtm-id">
+      <div class="form-group" style="margin-bottom:12px"><label data-i18n="col_name">ชื่อ</label><input type="text" id="vtm-name"></div>
+      <div class="form-group"><label data-i18n="col_desc">คำอธิบาย</label><input type="text" id="vtm-desc"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('vtypeModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveVType()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="vehicleModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="vehicleModalTitle"></h3><button class="close-btn" onclick="closeModal('vehicleModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="vm-id">
+      <div class="form-grid">
+        <div class="form-group"><label data-i18n="col_plate">ทะเบียน</label><input type="text" id="vm-plate"></div>
+        <div class="form-group"><label data-i18n="col_name">ชื่อรถ</label><input type="text" id="vm-name"></div>
+        <div class="form-group"><label data-i18n="department">หน่วยงาน</label><select id="vm-dept"></select></div>
+        <div class="form-group"><label data-i18n="vehicle_type">ชนิดรถ</label><select id="vm-vtype"></select></div>
+        <div class="form-group"><label>ยี่ห้อ</label><input type="text" id="vm-brand"></div>
+        <div class="form-group"><label>รุ่น</label><input type="text" id="vm-model"></div>
+        <div class="form-group"><label data-i18n="col_year">ปี</label><input type="number" id="vm-year" min="2000" max="2035"></div>
+        <div class="form-group"><label data-i18n="col_fuel">เชื้อเพลิง</label>
+          <select id="vm-fuel">
+            <option value="gasoline" data-i18n="fuel_gasoline">เบนซิน</option>
+            <option value="diesel"   data-i18n="fuel_diesel">ดีเซล</option>
+            <option value="ev"       data-i18n="fuel_ev">ไฟฟ้า</option>
+            <option value="hybrid"   data-i18n="fuel_hybrid">ไฮบริด</option>
+            <option value="lpg"      data-i18n="fuel_lpg">LPG</option>
+            <option value="ngv"      data-i18n="fuel_ngv">NGV</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('vehicleModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveVehicle()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editExpModal">
+  <div class="modal">
+    <div class="modal-header"><h3 data-i18n="col_actions">แก้ไขค่าใช้จ่าย</h3><button class="close-btn" onclick="closeModal('editExpModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ee-id"><input type="hidden" id="ee-client-id">
+      <div class="form-grid">
+        <div class="form-group"><label data-i18n="date">วันที่</label><input type="date" id="ee-date"></div>
+        <div class="form-group"><label data-i18n="vehicle">รถ</label><select id="ee-vehicle"></select></div>
+        <div class="form-group"><label data-i18n="expense_type">ประเภท</label><select id="ee-category"></select></div>
+        <div class="form-group"><label data-i18n="amount">จำนวนเงิน</label><input type="number" id="ee-amount" step="0.01" min="0"></div>
+        <div class="form-group"><label data-i18n="fuel_liters">น้ำมัน (ล.)</label><input type="number" id="ee-fuel" step="0.01" min="0"></div>
+        <div class="form-group"><label data-i18n="distance">ระยะทาง (กม.)</label><input type="number" id="ee-distance" step="0.1" min="0"></div>
+        <div class="form-group"><label data-i18n="odometer">เลขไมล์</label><input type="number" id="ee-odometer" min="0"></div>
+        <div class="form-group"><label data-i18n="receipt_no">ใบเสร็จ</label><input type="text" id="ee-receipt"></div>
+        <div class="form-group full"><label data-i18n="notes">หมายเหตุ</label><textarea id="ee-desc"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editExpModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="updateExpense()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="userModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3 id="userModalTitle"></h3><button class="close-btn" onclick="closeModal('userModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="um-id">
+      <div class="form-grid">
+        <div class="form-group"><label data-i18n="col_email">อีเมล</label><input type="email" id="um-email"></div>
+        <div class="form-group" id="um-password-group"><label data-i18n="password">รหัสผ่าน</label><input type="password" id="um-password" placeholder="รหัสผ่านใหม่"></div>
+        <div class="form-group"><label data-i18n="col_fullname">ชื่อ-นามสกุล</label><input type="text" id="um-name"></div>
+        <div class="form-group"><label data-i18n="col_role">สิทธิ์</label>
+          <select id="um-role">
+            <option value="user" data-i18n="role_user">ผู้ใช้งาน</option>
+            <option value="manager" data-i18n="role_manager">ผู้จัดการ</option>
+            <option value="admin" data-i18n="role_admin">ผู้ดูแลระบบ</option>
+          </select>
+        </div>
+        <div class="form-group"><label data-i18n="department">หน่วยงาน</label><select id="um-dept"><option value="">-</option></select></div>
+        <div class="form-group full"><label data-i18n="col_vehicles">รถที่รับผิดชอบ</label>
+          <div id="um-vehicles-list" style="border:1px solid var(--border);border-radius:7px;padding:10px;max-height:150px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('userModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveUser()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── GLOBALS ──────────────────────────────────────────────
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let currentUser = null, currentProfile = null;
+let allDepts = [], allVTypes = [], allCats = [], allVehicles = [];
+let chartMonthly = null, chartCategory = null;
+
+// ─── UTILS ────────────────────────────────────────────────
+const fmt = n => new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+const today = () => new Date().toISOString().slice(0,10);
+const fmtDate = d => d ? String(d).slice(0,10) : '';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('th-TH') : '';
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(el._t); el._t = setTimeout(()=>el.className='', 3000);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+
+// ─── AUTH ─────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = '...';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    document.getElementById('login-error').textContent = t('login_error');
+    document.getElementById('login-error').style.display = 'block';
+    btn.disabled = false; btn.textContent = t('btn_login');
+    return;
+  }
+  await onSignIn(data.user);
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function onSignIn(user) {
+  currentUser = user;
+  // Fetch profile
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*, departments(name)')
+    .eq('id', user.id)
+    .single();
+  currentProfile = profile;
+  // Log access
+  logAction('login', { email: user.email });
+  // Show app
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('ready');
+  document.getElementById('user-name-chip').textContent = profile?.full_name || user.email;
+  const roleLabels = { admin: t('role_admin'), manager: t('role_manager'), user: t('role_user') };
+  document.getElementById('user-role-chip').textContent = roleLabels[profile?.role] || profile?.role;
+  buildSidebar();
+  await loadMasterData();
+  initNetworkListeners(supabase, () => {
+    loadMasterData(); loadDashboard();
+  });
+  if (navigator.onLine) await pullFromServer(supabase);
+  setLang(profile?.language || currentLang);
+  setDefaultDates();
+  loadDashboard();
+}
+
+async function doLogout() {
+  logAction('logout', { email: currentUser?.email });
+  await supabase.auth.signOut();
+  currentUser = null; currentProfile = null;
+  document.getElementById('app').classList.remove('ready');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// Check existing session on load
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) onSignIn(session.user);
+});
+
+// ─── ACCESS LOG ───────────────────────────────────────────
+async function logAction(action, details = {}) {
+  if (!currentUser) return;
+  try {
+    await supabase.from('access_logs').insert({
+      user_id:    currentUser.id,
+      user_email: currentUser.email,
+      action,
+      details,
+    });
+  } catch(e) {}
+}
+
+// ─── SIDEBAR ──────────────────────────────────────────────
+function buildSidebar() {
+  const role = currentProfile?.role;
+  const items = [
+    { page:'dashboard',    icon:'📊', key:'nav_dashboard',   roles:['admin','manager','user'] },
+    { page:'add-expense',  icon:'➕', key:'nav_add_expense',  roles:['admin','manager','user'] },
+    { page:'expenses',     icon:'📋', key:'nav_expenses',     roles:['admin','manager','user'] },
+    { page:'vehicles',     icon:'🚙', key:'nav_vehicles',     roles:['admin','manager'] },
+    { page:'report',       icon:'📈', key:'nav_report',       roles:['admin','manager','user'] },
+    { page:'users',        icon:'👥', key:'nav_users',        roles:['admin'] },
+    { page:'access-logs',  icon:'🔍', key:'nav_access_logs',  roles:['admin','manager'] },
+    { page:'settings',     icon:'⚙️', key:'nav_settings',      roles:['admin'] },
+  ];
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = items
+    .filter(i => i.roles.includes(role))
+    .map(i => `<div class="nav-item${i.page==='dashboard'?' active':''}" data-page="${i.page}">
+      <span class="nav-icon">${i.icon}</span>
+      <span data-i18n="${i.key}">${t(i.key)}</span>
+    </div>`).join('');
+  nav.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => showPage(el.dataset.page));
+  });
+  // Hide add-vehicle btn for non-admin/manager
+  if (!['admin','manager'].includes(role)) {
+    const btn = document.getElementById('add-vehicle-btn');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard:'Dashboard', 'add-expense':'nav_add_expense', expenses:'nav_expenses',
+  vehicles:'nav_vehicles', report:'nav_report', users:'nav_users',
+  'access-logs':'nav_access_logs', settings:'nav_settings'
+};
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.querySelector(`[data-page="${name}"]`)?.classList.add('active');
+  document.getElementById('topbarTitle').textContent = name==='dashboard' ? 'Dashboard' : t(PAGE_TITLES[name]);
+  closeSidebar();
+  if (name==='dashboard')    loadDashboard();
+  if (name==='expenses')     loadExpenses();
+  if (name==='vehicles')     loadVehicles();
+  if (name==='report')       loadReport();
+  if (name==='users')        loadUsers();
+  if (name==='access-logs')  loadAccessLogs();
+  if (name==='settings')     { loadDeptTable(); loadVTypeTable(); }
+  logAction('view_page', { page: name });
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+// Online/Offline bar
+window.addEventListener('offline', () => document.getElementById('offlineBar').classList.add('show'));
+window.addEventListener('online', () => {
+  document.getElementById('offlineBar').classList.remove('show');
+  syncToServer(supabase).then(r => { if (r?.synced) loadDashboard(); });
+});
+
+// ─── DATES ────────────────────────────────────────────────
+function getPeriodDates(period, prefix='db') {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  if (period==='this_month') return { from:`${y}-${String(m+1).padStart(2,'0')}-01`, to:today() };
+  if (period==='last_month') {
+    const d = new Date(y,m,0);
+    return { from:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`, to:fmtDate(d.toISOString()) };
+  }
+  if (period==='this_year')  return { from:`${y}-01-01`, to:today() };
+  if (period==='last_7')  { const d=new Date(); d.setDate(d.getDate()-6); return { from:fmtDate(d.toISOString()), to:today() }; }
+  if (period==='last_30') { const d=new Date(); d.setDate(d.getDate()-29); return { from:fmtDate(d.toISOString()), to:today() }; }
+  if (period==='custom')  return { from:document.getElementById(prefix+'-date-from')?.value||'', to:document.getElementById(prefix+'-date-to')?.value||today() };
+  return { from:'', to:today() };
+}
+function dashboardPeriodChange() {
+  document.getElementById('db-custom-dates').style.display = document.getElementById('db-period').value==='custom'?'flex':'none';
+}
+function reportPeriodChange() {
+  document.getElementById('rp-custom-dates').style.display = document.getElementById('rp-period').value==='custom'?'flex':'none';
+}
+function setDefaultDates() {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  const first = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  ['exp-from','rp-date-from','log-from'].forEach(id => { const el=document.getElementById(id); if(el) el.value=first; });
+  ['exp-to','rp-date-to','log-to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=today(); });
+}
+
+// ─── MASTER DATA ──────────────────────────────────────────
+async function loadMasterData() {
+  try {
+    if (navigator.onLine) {
+      const [d,v,c,ve] = await Promise.all([
+        supabase.from('departments').select('*').order('name'),
+        supabase.from('vehicle_types').select('*').order('name'),
+        supabase.from('expense_categories').select('*').order('id'),
+        supabase.from('vehicles').select('*, departments(name), vehicle_types(name)').eq('is_active', true).order('name'),
+      ]);
+      allDepts    = d.data || [];
+      allVTypes   = v.data || [];
+      allCats     = c.data || [];
+      allVehicles = (ve.data||[]).map(x=>({...x, department_name:x.departments?.name, vehicle_type_name:x.vehicle_types?.name}));
+      // Cache in IDB
+      if (allDepts.length)    await idbPutMany('departments', allDepts);
+      if (allVTypes.length)   await idbPutMany('vehicle_types', allVTypes);
+      if (allCats.length)     await idbPutMany('expense_categories', allCats);
+      if (allVehicles.length) await idbPutMany('vehicles', allVehicles);
+    } else {
+      allDepts    = await idbGetAll('departments');
+      allVTypes   = await idbGetAll('vehicle_types');
+      allCats     = await idbGetAll('expense_categories');
+      allVehicles = await idbGetAll('vehicles');
+    }
+  } catch(e) {
+    allDepts    = await idbGetAll('departments');
+    allVTypes   = await idbGetAll('vehicle_types');
+    allCats     = await idbGetAll('expense_categories');
+    allVehicles = await idbGetAll('vehicles');
+  }
+  populateSelects();
+  updatePendingBadge();
+}
+
+function populateSelects() {
+  const deptOpts  = allDepts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  const vtypeOpts = allVTypes.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  const catOpts   = allCats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  const allVehOpts = allVehicles.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
+
+  ['db-dept','exp-dept','rp-dept'].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=`<option value="">${t('all')}</option>`+deptOpts;
+  });
+  ['db-vtype','exp-vtype','rp-vtype'].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=`<option value="">${t('all')}</option>`+vtypeOpts;
+  });
+  const expCat=document.getElementById('exp-cat');
+  if(expCat) expCat.innerHTML=`<option value="">${t('all')}</option>`+catOpts;
+  const efDept=document.getElementById('ef-dept');
+  if(efDept) efDept.innerHTML=`<option value="">${t('select_dept')}</option>`+deptOpts;
+  const efCat=document.getElementById('ef-category');
+  if(efCat) efCat.innerHTML=`<option value="">${t('select_type')}</option>`+catOpts;
+  const vmDept=document.getElementById('vm-dept');
+  if(vmDept) vmDept.innerHTML=`<option value="">-</option>`+deptOpts;
+  const vmVtype=document.getElementById('vm-vtype');
+  if(vmVtype) vmVtype.innerHTML=`<option value="">-</option>`+vtypeOpts;
+  const eeCat=document.getElementById('ee-category');
+  if(eeCat) eeCat.innerHTML=`<option value="">-</option>`+catOpts;
+  const eeVeh=document.getElementById('ee-vehicle');
+  if(eeVeh) eeVeh.innerHTML=`<option value="">-</option>`+allVehOpts;
+  const umDept=document.getElementById('um-dept');
+  if(umDept) umDept.innerHTML=`<option value="">-</option>`+deptOpts;
+}
+
+async function updatePendingBadge() {
+  const count = await getPendingCount();
+  const el = document.getElementById('pending-count');
+  if (el) { el.textContent = count > 0 ? `📴 ${count} ${t('pending_sync')}` : ''; el.style.display = count>0?'block':'none'; }
+  // Update sidebar badge
+  const nb = document.querySelector('.pending-badge');
+  if (nb) { nb.textContent = count; nb.style.display = count>0?'inline':'none'; }
+}
+
+function filterVehiclesByDept() {
+  const deptId = document.getElementById('ef-dept').value;
+  const role = currentProfile?.role;
+  let filtered = deptId ? allVehicles.filter(v=>v.department_id==deptId) : allVehicles;
+  document.getElementById('ef-vehicle').innerHTML =
+    `<option value="">${t('select_vehicle')}</option>` +
+    filtered.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
+}
+
+function categoryChanged() {
+  const catId = document.getElementById('ef-category').value;
+  const cat = allCats.find(c=>c.id==catId);
+  const isFuel = cat?.name_en === 'Fuel';
+  document.getElementById('ef-fuel-group').style.display  = isFuel?'block':'none';
+  document.getElementById('ef-price-group').style.display = isFuel?'block':'none';
+}
+function calcFuelTotal() {
+  const l = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
+  const p = parseFloat(document.getElementById('ef-fuel-price')?.value)||0;
+  if (l && p) document.getElementById('ef-amount').value = (l*p).toFixed(2);
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────
+async function loadDashboard() {
+  const period = document.getElementById('db-period').value;
+  const { from, to } = getPeriodDates(period);
+  const dept  = document.getElementById('db-dept').value;
+  const vtype = document.getElementById('db-vtype').value;
+
+  let rows = [];
+  try {
+    let q = supabase.from('expenses')
+      .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id, departments(name), vehicle_types(name)), expense_categories(name, icon, color)`)
+      .eq('is_deleted', false)
+      .order('expense_date', { ascending: false })
+      .limit(2000);
+    if (from)  q = q.gte('expense_date', from);
+    if (to)    q = q.lte('expense_date', to);
+    if (dept)  q = q.eq('vehicles.department_id', dept);
+    if (vtype) q = q.eq('vehicles.vehicle_type_id', vtype);
+    const { data, error } = await q;
+    if (!error) rows = (data||[]).map(flattenExpense);
+    else rows = await getOfflineExpenses(from, to, dept, vtype);
+  } catch(e) { rows = await getOfflineExpenses(from, to, dept, vtype); }
+
+  const total   = rows.reduce((s,r)=>s+Number(r.amount||0),0);
+  const fuelRow = rows.filter(r=>r.category_name==='ค่าน้ำมัน' || r.category_name_en==='Fuel');
+  const fuelTotal = fuelRow.reduce((s,r)=>s+Number(r.amount||0),0);
+  const totalKm   = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
+  const vehicles  = new Set(rows.map(r=>r.vehicle_id)).size;
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">💰 ${t('total_expense')}</div>
+      <div class="kpi-value">฿${fmt(total)}</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
+    <div class="kpi-card accent"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
+      <div class="kpi-value">${vehicles}</div><div class="kpi-sub">${t('cars_unit')}</div></div>
+    <div class="kpi-card success"><div class="kpi-label">📍 ${t('total_km')}</div>
+      <div class="kpi-value">${fmt(totalKm)}</div><div class="kpi-sub">${t('km_unit')}</div></div>
+    <div class="kpi-card danger"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
+      <div class="kpi-value">฿${fmt(fuelTotal)}</div>
+      <div class="kpi-sub">${totalKm>0?'฿'+fmt(fuelTotal/totalKm)+'/กม.':'-'}</div></div>`;
+
+  // Group by month
+  const byMonth = {};
+  rows.forEach(r => { const m=String(r.expense_date).slice(0,7); byMonth[m]=(byMonth[m]||0)+Number(r.amount||0); });
+  const months = Object.keys(byMonth).sort();
+  if (chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+    type:'bar', data:{ labels:months, datasets:[{ label:'฿', data:months.map(m=>byMonth[m]),
+      backgroundColor:'rgba(30,58,95,.7)', borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'฿'+fmt(v)}}} }
+  });
+
+  // Group by category
+  const byCat = {};
+  rows.forEach(r => {
+    const k = (r.category_icon||'') + ' ' + (r.category_name||'-');
+    byCat[k] = byCat[k] || { total:0, color:r.category_color||'#ccc' };
+    byCat[k].total += Number(r.amount||0);
+  });
+  const catKeys = Object.keys(byCat).sort((a,b)=>byCat[b].total-byCat[a].total);
+  if (chartCategory) chartCategory.destroy();
+  chartCategory = new Chart(document.getElementById('chartCategory'), {
+    type:'doughnut', data:{ labels:catKeys, datasets:[{
+      data:catKeys.map(k=>byCat[k].total), backgroundColor:catKeys.map(k=>byCat[k].color) }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10}}}} }
+  });
+
+  // By dept
+  const byDept = {};
+  rows.forEach(r => { const k=r.department_name||'-'; byDept[k]=(byDept[k]||0)+Number(r.amount||0); });
+  const deptKeys = Object.keys(byDept).sort((a,b)=>byDept[b]-byDept[a]);
+  const maxD = Math.max(...Object.values(byDept),1);
+  document.getElementById('deptBars').innerHTML = deptKeys.length===0
+    ? `<div class="empty-state"><p>${t('no_data')}</p></div>`
+    : deptKeys.map(k=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span>${k}</span><span class="fw-bold">฿${fmt(byDept[k])}</span></div>
+        <div class="progress"><div class="progress-bar" style="width:${(byDept[k]/maxD*100).toFixed(1)}%;background:var(--primary)"></div></div>
+      </div>`).join('');
+
+  // By vehicle (top 10)
+  const byVeh = {};
+  rows.forEach(r => {
+    const k = `${r.license_plate} - ${r.vehicle_name}`;
+    byVeh[k]=(byVeh[k]||0)+Number(r.amount||0);
+  });
+  const vehKeys = Object.keys(byVeh).sort((a,b)=>byVeh[b]-byVeh[a]).slice(0,10);
+  const maxV = Math.max(...vehKeys.map(k=>byVeh[k]),1);
+  document.getElementById('vehicleBars').innerHTML = vehKeys.length===0
+    ? `<div class="empty-state"><p>${t('no_data')}</p></div>`
+    : vehKeys.map(k=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span>${k}</span><span class="fw-bold">฿${fmt(byVeh[k])}</span></div>
+        <div class="progress"><div class="progress-bar" style="width:${(byVeh[k]/maxV*100).toFixed(1)}%;background:var(--accent)"></div></div>
+      </div>`).join('');
+
+  // Recent 10
+  const recent = rows.slice(0,10);
+  document.getElementById('recentTable').innerHTML = recent.length===0
+    ? `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📭</div><p>${t('no_data')}</p></div></td></tr>`
+    : recent.map(e=>`<tr>
+        <td>${fmtDate(e.expense_date)}</td>
+        <td>${e.license_plate||''}<br><small class="text-muted">${e.vehicle_name||''}</small></td>
+        <td>${e.department_name||'-'}</td>
+        <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
+        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+      </tr>`).join('');
+}
+
+function flattenExpense(e) {
+  return {
+    ...e,
+    vehicle_name:      e.vehicles?.name,
+    license_plate:     e.vehicles?.license_plate,
+    department_name:   e.vehicles?.departments?.name,
+    vehicle_type_name: e.vehicles?.vehicle_types?.name,
+    category_name:     e.expense_categories?.name,
+    category_icon:     e.expense_categories?.icon,
+    category_color:    e.expense_categories?.color,
+  };
+}
+
+async function getOfflineExpenses(from, to, dept, vtype) {
+  let rows = await idbGetAll('expenses');
+  if (from)  rows = rows.filter(r => r.expense_date >= from);
+  if (to)    rows = rows.filter(r => r.expense_date <= to);
+  if (dept)  rows = rows.filter(r => {
+    const v = allVehicles.find(x=>x.id===r.vehicle_id);
+    return v?.department_id == dept;
+  });
+  const vehicles = await idbGetAll('vehicles');
+  const cats = await idbGetAll('expense_categories');
+  return rows.filter(r=>!r.is_deleted).map(r => {
+    const v = vehicles.find(x=>x.id===r.vehicle_id)||{};
+    const c = cats.find(x=>x.id===r.category_id)||{};
+    return { ...r, vehicle_name:v.name, license_plate:v.license_plate,
+      department_name:v.department_name, vehicle_type_name:v.vehicle_type_name,
+      category_name:c.name, category_icon:c.icon, category_color:c.color };
+  });
+}
+
+// ─── EXPENSE FORM ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ef-date').value = today();
+});
+
+async function submitExpense(e) {
+  e.preventDefault();
+  const catId = document.getElementById('ef-category').value;
+  const cat = allCats.find(c=>c.id==catId);
+  const isFuel = cat?.name_en === 'Fuel';
+  const clientId = crypto.randomUUID();
+  const payload = {
+    client_id:           clientId,
+    vehicle_id:          Number(document.getElementById('ef-vehicle').value),
+    category_id:         Number(catId),
+    expense_date:        document.getElementById('ef-date').value,
+    amount:              Number(document.getElementById('ef-amount').value),
+    distance_km:         document.getElementById('ef-distance').value || null,
+    fuel_liters:         isFuel ? document.getElementById('ef-fuel-liters').value||null : null,
+    fuel_price_per_liter:isFuel ? document.getElementById('ef-fuel-price').value||null : null,
+    odometer:            document.getElementById('ef-odometer').value||null,
+    description:         document.getElementById('ef-desc').value||null,
+    receipt_no:          document.getElementById('ef-receipt').value||null,
+    created_by:          currentUser?.id,
+    is_deleted:          false,
+  };
+
+  if (navigator.onLine) {
+    const { error } = await supabase.from('expenses').insert(payload);
+    if (error) { toast(t('save_error')+': '+error.message, 'error'); return; }
+    logAction('add_expense', { vehicle_id: payload.vehicle_id, amount: payload.amount, date: payload.expense_date });
+    toast(t('save_success'), 'success');
+  } else {
+    // Save to IDB and queue sync
+    await idbPut('expenses', { ...payload, id: clientId, created_at: new Date().toISOString() });
+    await queueSync('INSERT', 'expenses', payload);
+    toast(t('save_offline'), 'info');
+  }
+  updatePendingBadge();
+  resetExpenseForm();
+}
+
+function resetExpenseForm() {
+  document.getElementById('expenseForm').reset();
+  document.getElementById('ef-date').value = today();
+  document.getElementById('ef-fuel-group').style.display = 'none';
+  document.getElementById('ef-price-group').style.display = 'none';
+}
+
+// ─── EXPENSES LIST ────────────────────────────────────────
+async function loadExpenses() {
+  const from  = document.getElementById('exp-from').value;
+  const to    = document.getElementById('exp-to').value;
+  const dept  = document.getElementById('exp-dept').value;
+  const vtype = document.getElementById('exp-vtype').value;
+  const cat   = document.getElementById('exp-cat').value;
+
+  let rows = [];
+  if (navigator.onLine) {
+    let q = supabase.from('expenses')
+      .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id,departments(name),vehicle_types(name)), expense_categories(name,icon,color)`)
+      .eq('is_deleted',false).order('expense_date',{ascending:false}).limit(1000);
+    if (from)  q = q.gte('expense_date',from);
+    if (to)    q = q.lte('expense_date',to);
+    if (cat)   q = q.eq('category_id',cat);
+    const { data } = await q;
+    rows = (data||[]).map(flattenExpense);
+    if (dept)  rows = rows.filter(r=>r.department_name === allDepts.find(d=>d.id==dept)?.name);
+    if (vtype) rows = rows.filter(r=>r.vehicle_type_name === allVTypes.find(v=>v.id==vtype)?.name);
+  } else {
+    rows = await getOfflineExpenses(from, to, dept, vtype);
+    if (cat) rows = rows.filter(r=>r.category_id==cat);
+  }
+
+  const total = rows.reduce((s,r)=>s+Number(r.amount||0),0);
+  document.getElementById('expCount').textContent = `${rows.length} ${t('transactions')}`;
+  document.getElementById('expTotal').textContent = rows.length ? `${t('total_label')} ฿${fmt(total)}` : '';
+  document.getElementById('expensesTable').innerHTML = rows.length===0
+    ? `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>${t('no_data')}</p></div></td></tr>`
+    : rows.map(e=>`<tr>
+        <td>${fmtDate(e.expense_date)}</td>
+        <td>${e.department_name||'-'}</td>
+        <td>${e.license_plate||''}<br><small class="text-muted">${e.vehicle_name||''}</small></td>
+        <td>${e.vehicle_type_name||'-'}</td>
+        <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
+        <td>${e.distance_km?fmt(e.distance_km)+' กม.':'-'}</td>
+        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
+        <td><button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button></td>
+      </tr>`).join('');
+}
+
+function editExpense(e) {
+  document.getElementById('ee-id').value       = e.id;
+  document.getElementById('ee-client-id').value= e.client_id||'';
+  document.getElementById('ee-date').value     = fmtDate(e.expense_date);
+  document.getElementById('ee-vehicle').value  = e.vehicle_id;
+  document.getElementById('ee-category').value = e.category_id;
+  document.getElementById('ee-amount').value   = e.amount;
+  document.getElementById('ee-fuel').value     = e.fuel_liters||'';
+  document.getElementById('ee-distance').value = e.distance_km||'';
+  document.getElementById('ee-odometer').value = e.odometer||'';
+  document.getElementById('ee-receipt').value  = e.receipt_no||'';
+  document.getElementById('ee-desc').value     = e.description||'';
+  openModal('editExpModal');
+}
+
+async function updateExpense() {
+  const id = document.getElementById('ee-id').value;
+  const clientId = document.getElementById('ee-client-id').value;
+  const payload = {
+    vehicle_id:   Number(document.getElementById('ee-vehicle').value),
+    category_id:  Number(document.getElementById('ee-category').value),
+    expense_date: document.getElementById('ee-date').value,
+    amount:       Number(document.getElementById('ee-amount').value),
+    fuel_liters:  document.getElementById('ee-fuel').value||null,
+    distance_km:  document.getElementById('ee-distance').value||null,
+    odometer:     document.getElementById('ee-odometer').value||null,
+    receipt_no:   document.getElementById('ee-receipt').value||null,
+    description:  document.getElementById('ee-desc').value||null,
+  };
+  if (navigator.onLine) {
+    const { error } = await supabase.from('expenses').update(payload).eq('id',id);
+    if (error) { toast(t('save_error'), 'error'); return; }
+    logAction('edit_expense', { id, amount: payload.amount });
+  } else {
+    const existing = (await idbGetAll('expenses')).find(x=>x.id==id||x.client_id===clientId);
+    if (existing) await idbPut('expenses', { ...existing, ...payload });
+    await queueSync('UPDATE', 'expenses', { ...payload, client_id: clientId||id });
+  }
+  closeModal('editExpModal');
+  toast(t('save_success'), 'success');
+  updatePendingBadge();
+  loadExpenses();
+}
+
+async function deleteExpense(id, clientId) {
+  if (!confirm(t('confirm_delete'))) return;
+  if (navigator.onLine) {
+    const { error } = await supabase.from('expenses').update({ is_deleted:true }).eq('id',id);
+    if (error) { toast(t('save_error'),'error'); return; }
+    logAction('delete_expense', { id });
+  } else {
+    const existing = (await idbGetAll('expenses')).find(x=>x.id==id||x.client_id===clientId);
+    if (existing) await idbPut('expenses', { ...existing, is_deleted:true });
+    await queueSync('DELETE','expenses',{ client_id:clientId||id });
+  }
+  toast(t('delete_success'),'success');
+  updatePendingBadge();
+  loadExpenses();
+}
+
+// ─── VEHICLES ─────────────────────────────────────────────
+const FUEL_TH = { gasoline:'เบนซิน',diesel:'ดีเซล',ev:'ไฟฟ้า',hybrid:'ไฮบริด',lpg:'LPG',ngv:'NGV' };
+async function loadVehicles() {
+  const { data } = await supabase.from('vehicles')
+    .select('*,departments(name),vehicle_types(name)').eq('is_active',true).order('name');
+  const rows = (data||[]).map(v=>({...v,department_name:v.departments?.name,vehicle_type_name:v.vehicle_types?.name}));
+  document.getElementById('vehiclesTable').innerHTML = rows.length===0
+    ? `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚗</div><p>${t('no_vehicles')}</p></div></td></tr>`
+    : rows.map(v=>`<tr>
+        <td class="fw-bold">${v.license_plate}</td>
+        <td>${v.name}</td>
+        <td>${v.department_name||'-'}</td>
+        <td>${v.vehicle_type_name||'-'}</td>
+        <td>${(v.brand||'')+' '+(v.model||'')}</td>
+        <td>${v.year||'-'}</td>
+        <td>${FUEL_TH[v.fuel_type]||v.fuel_type}</td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick='editVehicle(${JSON.stringify(v).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle(${v.id})">🗑️</button>
+        </td>
+      </tr>`).join('');
+}
+
+function openVehicleModal(v=null) {
+  document.getElementById('vehicleModalTitle').textContent = v ? t('btn_edit') : t('add_vehicle');
+  ['vm-id','vm-plate','vm-name','vm-brand','vm-model','vm-year'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('vm-dept').value=''; document.getElementById('vm-vtype').value=''; document.getElementById('vm-fuel').value='gasoline';
+  if (v) {
+    document.getElementById('vm-id').value=v.id; document.getElementById('vm-plate').value=v.license_plate;
+    document.getElementById('vm-name').value=v.name; document.getElementById('vm-dept').value=v.department_id;
+    document.getElementById('vm-vtype').value=v.vehicle_type_id; document.getElementById('vm-brand').value=v.brand||'';
+    document.getElementById('vm-model').value=v.model||''; document.getElementById('vm-year').value=v.year||'';
+    document.getElementById('vm-fuel').value=v.fuel_type||'gasoline';
+  }
+  openModal('vehicleModal');
+}
+function editVehicle(v) { openVehicleModal(v); }
+
+async function saveVehicle() {
+  const id = document.getElementById('vm-id').value;
+  const body = {
+    license_plate:document.getElementById('vm-plate').value, name:document.getElementById('vm-name').value,
+    department_id:Number(document.getElementById('vm-dept').value), vehicle_type_id:Number(document.getElementById('vm-vtype').value),
+    brand:document.getElementById('vm-brand').value||null, model:document.getElementById('vm-model').value||null,
+    year:document.getElementById('vm-year').value||null, fuel_type:document.getElementById('vm-fuel').value, is_active:true,
+  };
+  if (!body.license_plate||!body.name||!body.department_id||!body.vehicle_type_id) return toast(t('save_error'),'error');
+  if (id) await supabase.from('vehicles').update(body).eq('id',id);
+  else { const { error } = await supabase.from('vehicles').insert(body); if (error) return toast(error.message,'error'); }
+  closeModal('vehicleModal'); toast(t('save_success'),'success');
+  await loadMasterData(); loadVehicles();
+}
+
+async function deleteVehicle(id) {
+  if (!confirm(t('confirm_del_veh'))) return;
+  await supabase.from('vehicles').update({is_active:false}).eq('id',id);
+  toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
+}
+
+// ─── REPORT ───────────────────────────────────────────────
+async function loadReport() {
+  const period = document.getElementById('rp-period').value;
+  const { from, to } = period==='custom'
+    ? { from:document.getElementById('rp-date-from').value, to:document.getElementById('rp-date-to').value }
+    : getPeriodDates(period,'rp');
+  const dept  = document.getElementById('rp-dept').value;
+  const vtype = document.getElementById('rp-vtype').value;
+  const group = document.getElementById('rp-group').value;
+
+  const rows = await getOfflineExpenses(from, to, dept, vtype);
+  if (rows.length===0) {
+    document.getElementById('reportContent').innerHTML=`<div class="card"><div class="empty-state"><div class="empty-icon">📊</div><p>${t('no_data')}</p></div></div>`;
+    return;
+  }
+  const grouped={};
+  rows.forEach(r=>{
+    let key;
+    if (group==='category')     key=(r.category_icon||'')+' '+(r.category_name||'-');
+    else if (group==='department')  key=r.department_name||'-';
+    else if (group==='vehicle_type') key=r.vehicle_type_name||'-';
+    else if (group==='vehicle') key=(r.license_plate||'')+' - '+(r.vehicle_name||'');
+    else if (group==='month')   key=String(r.expense_date).slice(0,7);
+    grouped[key]=grouped[key]||{total:0,count:0,km:0};
+    grouped[key].total+=Number(r.amount||0);
+    grouped[key].count+=1;
+    grouped[key].km+=Number(r.distance_km||0);
+  });
+  const grandTotal = rows.reduce((s,r)=>s+Number(r.amount||0),0);
+  const sortedKeys = Object.keys(grouped).sort((a,b)=>grouped[b].total-grouped[a].total);
+  document.getElementById('reportContent').innerHTML=`
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📊 ${t('report_title')} ${from||''} - ${to||''}</span>
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ ${t('btn_print')}</button>
+      </div>
+      <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;display:flex;gap:24px;flex-wrap:wrap">
+        <div><small class="text-muted">${t('grand_total')}</small><br><strong style="font-size:20px;color:var(--primary)">฿${fmt(grandTotal)}</strong></div>
+        <div><small class="text-muted">${t('transactions')}</small><br><strong>${rows.length}</strong></div>
+        <div><small class="text-muted">${t('total_km')}</small><br><strong>${fmt(rows.reduce((s,r)=>s+Number(r.distance_km||0),0))} ${t('km_unit')}</strong></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>${t('col_item')}</th><th class="text-right">${t('col_total')}</th>
+          <th class="text-right">${t('col_pct')}</th><th class="text-right">${t('col_count')}</th>
+          <th class="text-right">${t('col_km')}</th>
+        </tr></thead>
+        <tbody>${sortedKeys.map(k=>`<tr>
+          <td class="fw-bold">${k}</td>
+          <td class="text-right">฿${fmt(grouped[k].total)}</td>
+          <td class="text-right">${((grouped[k].total/grandTotal)*100).toFixed(1)}%</td>
+          <td class="text-right">${grouped[k].count}</td>
+          <td class="text-right">${grouped[k].km?fmt(grouped[k].km)+' '+t('km_unit'):'-'}</td>
+        </tr>`).join('')}</tbody>
+        <tfoot><tr style="background:var(--bg);font-weight:700">
+          <td>${t('grand_total')}</td><td class="text-right">฿${fmt(grandTotal)}</td>
+          <td class="text-right">100%</td><td class="text-right">${rows.length}</td>
+          <td class="text-right">${fmt(rows.reduce((s,r)=>s+Number(r.distance_km||0),0))} ${t('km_unit')}</td>
+        </tr></tfoot>
+      </table></div>
+    </div>`;
+  logAction('view_report', { from, to, group });
+}
+
+// ─── USERS ────────────────────────────────────────────────
+async function loadUsers() {
+  const { data } = await supabase.from('user_profiles')
+    .select('*, departments(name), auth_users:id(email)')
+    .order('full_name');
+  // Get all auth users via admin API (not available from client — use profiles only)
+  const { data: uvData } = await supabase.from('user_vehicles').select('user_id, vehicles(name, license_plate)');
+  const uvMap = {};
+  (uvData||[]).forEach(uv => { uvMap[uv.user_id]=uvMap[uv.user_id]||[]; uvMap[uv.user_id].push(`${uv.vehicles?.license_plate} ${uv.vehicles?.name}`); });
+  const ROLE_COLORS = { admin:'#e74c3c', manager:'#f39c12', user:'#27ae60' };
+  const roleLabel = r => ({ admin:t('role_admin'), manager:t('role_manager'), user:t('role_user') }[r]||r);
+  document.getElementById('usersTable').innerHTML = (data||[]).length===0
+    ? `<tr><td colspan="6"><div class="empty-state"><p>${t('no_data')}</p></div></td></tr>`
+    : (data||[]).map(u=>`<tr>
+        <td>${u.id}</td>
+        <td>${u.full_name||'-'}</td>
+        <td><span class="badge" style="background:${ROLE_COLORS[u.role]}22;color:${ROLE_COLORS[u.role]}">${roleLabel(u.role)}</span></td>
+        <td>${u.departments?.name||'-'}</td>
+        <td style="font-size:12px">${(uvMap[u.id]||[]).join(', ')||'-'}</td>
+        <td><button class="btn btn-outline btn-sm btn-icon" onclick='openUserModal(${JSON.stringify(u).replace(/'/g,"&#39;")})'>✏️</button></td>
+      </tr>`).join('');
+}
+
+function openUserModal(u=null) {
+  document.getElementById('userModalTitle').textContent = u ? t('btn_edit') : t('add_user');
+  document.getElementById('um-id').value = u?.id||'';
+  document.getElementById('um-email').value = u?.id||'';
+  document.getElementById('um-password').value = '';
+  document.getElementById('um-name').value = u?.full_name||'';
+  document.getElementById('um-role').value = u?.role||'user';
+  document.getElementById('um-dept').value = u?.department_id||'';
+  const vmList = document.getElementById('um-vehicles-list');
+  vmList.innerHTML = allVehicles.map(v=>`
+    <label style="display:block;margin-bottom:4px;cursor:pointer">
+      <input type="checkbox" value="${v.id}" name="um-veh"> ${v.license_plate} - ${v.name}
+    </label>`).join('');
+  document.getElementById('um-password-group').style.display = u ? 'none' : 'block';
+  openModal('userModal');
+}
+
+async function saveUser() {
+  const id = document.getElementById('um-id').value;
+  const name = document.getElementById('um-name').value;
+  const role = document.getElementById('um-role').value;
+  const deptId = document.getElementById('um-dept').value;
+  if (id) {
+    await supabase.from('user_profiles').update({ full_name:name, role, department_id:deptId||null }).eq('id',id);
+    const checked = [...document.querySelectorAll('[name="um-veh"]:checked')].map(x=>Number(x.value));
+    await supabase.from('user_vehicles').delete().eq('user_id',id);
+    if (checked.length) await supabase.from('user_vehicles').insert(checked.map(vid=>({user_id:id,vehicle_id:vid})));
+  } else {
+    // Invite new user via Supabase Auth (admin only)
+    const email = document.getElementById('um-email').value;
+    const pass  = document.getElementById('um-password').value;
+    const { data, error } = await supabase.auth.admin?.createUser({ email, password:pass, user_metadata:{ full_name:name, role } });
+    if (error) { toast(error.message,'error'); return; }
+    toast('ต้องสร้างผู้ใช้ผ่าน Supabase Dashboard หรือ invite email', 'info');
+  }
+  closeModal('userModal'); toast(t('save_success'),'success'); loadUsers();
+}
+
+// ─── ACCESS LOGS ──────────────────────────────────────────
+async function loadAccessLogs() {
+  const from = document.getElementById('log-from').value;
+  const to   = document.getElementById('log-to').value;
+  let q = supabase.from('access_logs').select('*').order('created_at',{ascending:false}).limit(200);
+  if (from) q = q.gte('created_at', from);
+  if (to)   q = q.lte('created_at', to+'T23:59:59');
+  const { data } = await q;
+  const ACTION_COLORS = { login:'#27ae60', logout:'#6c757d', add_expense:'#3498db', edit_expense:'#f39c12', delete_expense:'#e74c3c', view_report:'#9b59b6', view_page:'#95a5a6' };
+  document.getElementById('logsTable').innerHTML = (data||[]).length===0
+    ? `<tr><td colspan="4"><div class="empty-state"><p>${t('no_data')}</p></div></td></tr>`
+    : (data||[]).map(l=>`<tr>
+        <td style="white-space:nowrap">${fmtDateTime(l.created_at)}</td>
+        <td>${l.user_email||'-'}</td>
+        <td><span class="action-tag" style="background:${ACTION_COLORS[l.action]||'#ccc'}22;color:${ACTION_COLORS[l.action]||'#666'}">${l.action}</span></td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${l.details?JSON.stringify(l.details):'-'}</td>
+      </tr>`).join('');
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────
+async function loadDeptTable() {
+  const { data } = await supabase.from('departments').select('*').order('name');
+  document.getElementById('deptTable').innerHTML = (data||[]).map(d=>`<tr>
+    <td>${d.name}</td><td>${d.code||'-'}</td>
+    <td><button class="btn btn-outline btn-sm btn-icon" onclick="openDeptModal(${d.id},'${d.name}','${d.code||''}')">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDept(${d.id})">🗑️</button></td>
+  </tr>`).join('') || `<tr><td colspan="3"><p class="text-muted">${t('no_data')}</p></td></tr>`;
+}
+
+function openDeptModal(id='', name='', code='') {
+  document.getElementById('deptModalTitle').textContent = id ? t('btn_edit') : t('dept_mgmt');
+  document.getElementById('dm-id').value=id; document.getElementById('dm-name').value=name; document.getElementById('dm-code').value=code;
+  openModal('deptModal');
+}
+async function saveDept() {
+  const id=document.getElementById('dm-id').value, name=document.getElementById('dm-name').value, code=document.getElementById('dm-code').value;
+  if (!name) return toast(t('save_error'),'error');
+  if (id) await supabase.from('departments').update({name,code}).eq('id',id);
+  else { const { error } = await supabase.from('departments').insert({name,code}); if (error) return toast(error.message,'error'); }
+  closeModal('deptModal'); toast(t('save_success'),'success'); await loadMasterData(); loadDeptTable();
+}
+async function deleteDept(id) {
+  if (!confirm(t('confirm_delete'))) return;
+  const { error } = await supabase.from('departments').delete().eq('id',id);
+  if (error) { toast(error.message,'error'); return; }
+  toast(t('delete_success'),'success'); await loadMasterData(); loadDeptTable();
+}
+
+async function loadVTypeTable() {
+  const { data } = await supabase.from('vehicle_types').select('*').order('name');
+  document.getElementById('vtypeTable').innerHTML = (data||[]).map(v=>`<tr>
+    <td>${v.name}</td><td>${v.description||'-'}</td>
+    <td><button class="btn btn-outline btn-sm btn-icon" onclick="openVTypeModal(${v.id},'${v.name}','${v.description||''}')">✏️</button></td>
+  </tr>`).join('') || `<tr><td colspan="3"><p class="text-muted">${t('no_data')}</p></td></tr>`;
+}
+
+function openVTypeModal(id='', name='', desc='') {
+  document.getElementById('vtypeModalTitle').textContent = id ? t('btn_edit') : t('vtype_mgmt');
+  document.getElementById('vtm-id').value=id; document.getElementById('vtm-name').value=name; document.getElementById('vtm-desc').value=desc;
+  openModal('vtypeModal');
+}
+async function saveVType() {
+  const id=document.getElementById('vtm-id').value, name=document.getElementById('vtm-name').value, description=document.getElementById('vtm-desc').value;
+  if (!name) return toast(t('save_error'),'error');
+  if (id) await supabase.from('vehicle_types').update({name,description}).eq('id',id);
+  else { const { error } = await supabase.from('vehicle_types').insert({name,description}); if (error) return toast(error.message,'error'); }
+  closeModal('vtypeModal'); toast(t('save_success'),'success'); await loadMasterData(); loadVTypeTable();
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(currentLang);
+  document.getElementById('ef-date').value = today();
+  // Lang buttons inside app
+  document.getElementById('lang-th-app').addEventListener('click',()=>setLang('th'));
+  document.getElementById('lang-en-app').addEventListener('click',()=>setLang('en'));
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  }
+});
+</script>
+</body>
+</html>

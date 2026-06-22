@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e3a5f">
+<title>ระบบบันทึกค่าใช้จ่ายยานพาหนะ</title>
+<link rel="manifest" href="/manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1e3a5f;
+    --primary-light: #2d5a8e;
+    --accent: #f0a500;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #dee2e6;
+    --sidebar-w: 230px;
+    --header-h: 60px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ─── LAYOUT ─────────────────────────── */
+  #app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--primary); color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: transform 0.3s; z-index: 100;
+  }
+  .sidebar-header { padding: 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-header h2 { font-size: 14px; opacity: 0.7; margin-top: 4px; font-weight: 400; }
+  .sidebar-header h1 { font-size: 17px; }
+  .nav-menu { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 18px; cursor: pointer; font-size: 14px;
+    border-left: 3px solid transparent; transition: all 0.2s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); }
+  .nav-item.active { background: rgba(255,255,255,0.15); border-left-color: var(--accent); }
+  .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: var(--header-h); background: var(--card); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 20px; gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .menu-btn { display: none; background: none; border: none; font-size: 22px; cursor: pointer; }
+  .topbar-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
+
+  /* ─── CARDS ──────────────────────────── */
+  .card { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 600; }
+
+  /* ─── KPI CARDS ──────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--card); border-radius: 12px; padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid var(--primary);
+  }
+  .kpi-card.accent  { border-left-color: var(--accent); }
+  .kpi-card.success { border-left-color: var(--success); }
+  .kpi-card.danger  { border-left-color: var(--danger); }
+  .kpi-label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; }
+  .kpi-value { font-size: 24px; font-weight: 700; }
+  .kpi-sub   { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+  /* ─── GRID LAYOUTS ───────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* ─── FILTER BAR ─────────────────────── */
+  .filter-bar {
+    background: var(--card); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; color: var(--text-light); font-weight: 500; }
+  .filter-group select, .filter-group input {
+    padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; background: #fff; min-width: 120px;
+  }
+  .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ─── BUTTONS ────────────────────────── */
+  .btn {
+    padding: 7px 16px; border-radius: 7px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-primary   { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-accent    { background: var(--accent); color: #fff; }
+  .btn-accent:hover { opacity: 0.9; }
+  .btn-success   { background: var(--success); color: #fff; }
+  .btn-success:hover { opacity: 0.9; }
+  .btn-danger    { background: var(--danger); color: #fff; }
+  .btn-outline   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-sm        { padding: 4px 10px; font-size: 12px; }
+  .btn-icon      { padding: 6px 8px; }
+
+  /* ─── TABLES ─────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--bg); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; color: var(--text-light); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover td { background: #fafafa; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+
+  /* ─── FORMS ──────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--text-light); }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px;
+    font-size: 14px; font-family: inherit; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary-light);
+  }
+  .form-group textarea { resize: vertical; min-height: 70px; }
+
+  /* ─── MODAL ──────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 1000; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 14px; width: 100%; max-width: 600px;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 16px; }
+  .modal-body { padding: 20px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-light); }
+
+  /* ─── CHART CONTAINERS ───────────────── */
+  .chart-container { position: relative; }
+
+  /* ─── TOAST ──────────────────────────── */
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  #toast.success { background: var(--success); }
+  #toast.error   { background: var(--danger); }
+
+  /* ─── PROGRESS BAR ───────────────────── */
+  .progress { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  /* ─── EMPTY STATE ────────────────────── */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── PAGE SECTIONS ──────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ─── MOBILE ─────────────────────────── */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .menu-btn { display: block; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .filter-bar { gap: 8px; }
+    .content { padding: 12px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.open { display: block; }
+  }
+  @media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .topbar-actions .btn span { display: none; }
+  }
+
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .text-right { text-align: right; }
+  .text-muted { color: var(--text-light); }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .fw-bold { font-weight: 700; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1>🚗 VehicleTrack</h1>
+      <h2>ระบบค่าใช้จ่ายยานพาหนะ</h2>
+    </div>
+    <nav class="nav-menu">
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="add-expense">
+        <span class="nav-icon">➕</span> บันทึกค่าใช้จ่าย
+      </div>
+      <div class="nav-item" data-page="expenses">
+        <span class="nav-icon">📋</span> รายการค่าใช้จ่าย
+      </div>
+      <div class="nav-item" data-page="vehicles">
+        <span class="nav-icon">🚙</span> จัดการรถ
+      </div>
+      <div class="nav-item" data-page="report">
+        <span class="nav-icon">📈</span> รายงาน
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span> ตั้งค่า
+      </div>
+    </nav>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      <div class="topbar-actions">
+        <button class="btn btn-accent btn-sm" onclick="showPage('add-expense')">
+          <span>➕</span><span>บันทึก</span>
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="exportData()">
+          <span>📥</span><span>Export</span>
+        </button>
+      </div>
+    </div>
+    <div class="content" id="mainContent">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>ช่วงเวลา</label>
+            <select id="db-period" onchange="dashboardPeriodChange()">
+              <option value="this_month">เดือนนี้</option>
+              <option value="last_month">เดือนที่แล้ว</option>
+              <option value="this_year">ปีนี้</option>
+              <option value="last_7">7 วันล่าสุด</option>
+              <option value="last_30">30 วันล่าสุด</option>
+              <option value="custom">กำหนดเอง</option>
+            </select>
+          </div>
+          <div class="filter-group" id="db-custom-dates" style="display:none; flex-direction:row; gap:6px;">
+            <input type="date" id="db-date-from">
+            <input type="date" id="db-date-to">
+          </div>
+          <div class="filter-group">
+            <label>หน่วยงาน</label>
+            <select id="db-dept"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>ชนิดรถ</label>
+            <select id="db-vtype"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔍 แสดงข้อมูล</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid-2 mt-16">
+          <div class="card">
+            <div class="card-header"><span class="card-title">📅 ค่าใช้จ่ายรายเดือน</span></div>
+            <div class="chart-container" style="height:200px">
+              <canvas id="chartMonthly"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏷️ สัดส่วนตามประเภท</span></div>
+            <div class="chart-container" style="height:200px">
+              <canvas id="chartCategory"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid-2 mt-16">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏢 ค่าใช้จ่ายตามหน่วยงาน</span></div>
+            <div id="deptChart"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🚗 รถที่มีค่าใช้จ่ายสูงสุด</span></div>
+            <div id="vehicleChart"></div>
+          </div>
+        </div>
+
+        <!-- Recent -->
+        <div class="card mt-16">
+          <div class="card-header">
+            <span class="card-title">🕐 รายการล่าสุด</span>
+            <button class="btn btn-outline btn-sm" onclick="showPage('expenses')">ดูทั้งหมด</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>วันที่</th><th>รถ</th><th>หน่วยงาน</th><th>ประเภท</th>
+                <th class="text-right">จำนวนเงิน</th>
+              </tr></thead>
+              <tbody id="recentTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ADD EXPENSE ══ -->
+      <div class="page" id="page-add-expense">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">➕ บันทึกค่าใช้จ่าย</span>
+          </div>
+          <form id="expenseForm" onsubmit="submitExpense(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>วันที่ *</label>
+                <input type="date" id="ef-date" required>
+              </div>
+              <div class="form-group">
+                <label>หน่วยงาน *</label>
+                <select id="ef-dept" onchange="filterVehiclesByDept()" required>
+                  <option value="">-- เลือกหน่วยงาน --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>รถ *</label>
+                <select id="ef-vehicle" required>
+                  <option value="">-- เลือกรถ --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>ประเภทค่าใช้จ่าย *</label>
+                <select id="ef-category" onchange="categoryChanged()" required>
+                  <option value="">-- เลือกประเภท --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>จำนวนเงิน (บาท) *</label>
+                <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00">
+              </div>
+              <div class="form-group" id="ef-fuel-group" style="display:none">
+                <label>ปริมาณน้ำมัน (ลิตร)</label>
+                <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00">
+              </div>
+              <div class="form-group" id="ef-price-group" style="display:none">
+                <label>ราคาต่อลิตร (บาท)</label>
+                <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()">
+              </div>
+              <div class="form-group">
+                <label>ระยะทาง (กม.)</label>
+                <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>เลขไมล์ (กม.)</label>
+                <input type="number" id="ef-odometer" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>เลขที่ใบเสร็จ</label>
+                <input type="text" id="ef-receipt" placeholder="ระบุเลขที่ใบเสร็จ">
+              </div>
+              <div class="form-group full">
+                <label>หมายเหตุ</label>
+                <textarea id="ef-desc" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+              </div>
+            </div>
+            <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" class="btn btn-outline" onclick="resetExpenseForm()">รีเซ็ต</button>
+              <button type="submit" class="btn btn-primary">💾 บันทึกข้อมูล</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══ EXPENSES LIST ══ -->
+      <div class="page" id="page-expenses">
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>จากวันที่</label>
+            <input type="date" id="exp-from">
+          </div>
+          <div class="filter-group">
+            <label>ถึงวันที่</label>
+            <input type="date" id="exp-to">
+          </div>
+          <div class="filter-group">
+            <label>หน่วยงาน</label>
+            <select id="exp-dept"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>ชนิดรถ</label>
+            <select id="exp-vtype"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>ประเภทค่าใช้จ่าย</label>
+            <select id="exp-cat"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary btn-sm" onclick="loadExpenses()">🔍 ค้นหา</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">รายการค่าใช้จ่าย</span>
+            <span id="expCount" class="text-muted" style="font-size:12px;"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>วันที่</th><th>หน่วยงาน</th><th>รถ</th>
+                <th>ประเภทรถ</th><th>ประเภทค่าใช้จ่าย</th>
+                <th>ระยะทาง</th><th class="text-right">จำนวนเงิน</th>
+                <th>หมายเหตุ</th><th></th>
+              </tr></thead>
+              <tbody id="expensesTable"></tbody>
+            </table>
+          </div>
+          <div id="expTotal" style="text-align:right; padding: 12px 4px; font-size:14px; font-weight:600; color:var(--primary);"></div>
+        </div>
+      </div>
+
+      <!-- ══ VEHICLES ══ -->
+      <div class="page" id="page-vehicles">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+          <button class="btn btn-primary" onclick="openVehicleModal()">➕ เพิ่มรถ</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">รายการรถ</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>ทะเบียน</th><th>ชื่อรถ</th><th>หน่วยงาน</th>
+                <th>ชนิดรถ</th><th>ยี่ห้อ/รุ่น</th><th>ปี</th><th>เชื้อเพลิง</th><th></th>
+              </tr></thead>
+              <tbody id="vehiclesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ REPORT ══ -->
+      <div class="page" id="page-report">
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>ช่วงเวลา</label>
+            <select id="rp-period" onchange="reportPeriodChange()">
+              <option value="this_month">เดือนนี้</option>
+              <option value="last_month">เดือนที่แล้ว</option>
+              <option value="this_year">ปีนี้</option>
+              <option value="last_7">7 วันล่าสุด</option>
+              <option value="last_30">30 วันล่าสุด</option>
+              <option value="custom">กำหนดเอง</option>
+            </select>
+          </div>
+          <div class="filter-group" id="rp-custom-dates" style="display:none; flex-direction:row; gap:6px;">
+            <input type="date" id="rp-date-from">
+            <input type="date" id="rp-date-to">
+          </div>
+          <div class="filter-group">
+            <label>หน่วยงาน</label>
+            <select id="rp-dept"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>ชนิดรถ</label>
+            <select id="rp-vtype"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div class="filter-group">
+            <label>แสดงตาม</label>
+            <select id="rp-group">
+              <option value="category">ประเภทค่าใช้จ่าย</option>
+              <option value="department">หน่วยงาน</option>
+              <option value="vehicle_type">ชนิดรถ</option>
+              <option value="vehicle">รถ</option>
+              <option value="month">รายเดือน</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary btn-sm" onclick="loadReport()">📊 สร้างรายงาน</button>
+          </div>
+        </div>
+        <div id="reportContent"></div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="page" id="page-settings">
+        <div class="grid-2">
+          <!-- Departments -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🏢 หน่วยงาน</span>
+              <button class="btn btn-primary btn-sm" onclick="openDeptModal()">➕ เพิ่ม</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ชื่อหน่วยงาน</th><th>รหัส</th><th></th></tr></thead>
+                <tbody id="deptTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Vehicle Types -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🚗 ชนิดรถ</span>
+              <button class="btn btn-primary btn-sm" onclick="openVTypeModal()">➕ เพิ่ม</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ชนิดรถ</th><th>คำอธิบาย</th><th></th></tr></thead>
+                <tbody id="vtypeTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Modal: Department -->
+<div class="modal-overlay" id="deptModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3 id="deptModalTitle">เพิ่มหน่วยงาน</h3>
+      <button class="close-btn" onclick="closeModal('deptModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dm-id">
+      <div class="form-group" style="margin-bottom:12px">
+        <label>ชื่อหน่วยงาน *</label>
+        <input type="text" id="dm-name" placeholder="ชื่อหน่วยงาน">
+      </div>
+      <div class="form-group">
+        <label>รหัส</label>
+        <input type="text" id="dm-code" placeholder="รหัสย่อ">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('deptModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDept()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Vehicle Type -->
+<div class="modal-overlay" id="vtypeModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3 id="vtypeModalTitle">เพิ่มชนิดรถ</h3>
+      <button class="close-btn" onclick="closeModal('vtypeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vtm-id">
+      <div class="form-group" style="margin-bottom:12px">
+        <label>ชื่อชนิดรถ *</label>
+        <input type="text" id="vtm-name" placeholder="ชื่อชนิดรถ">
+      </div>
+      <div class="form-group">
+        <label>คำอธิบาย</label>
+        <input type="text" id="vtm-desc" placeholder="คำอธิบาย">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('vtypeModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveVType()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Vehicle -->
+<div class="modal-overlay" id="vehicleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="vehicleModalTitle">เพิ่มรถ</h3>
+      <button class="close-btn" onclick="closeModal('vehicleModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vm-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>ทะเบียนรถ *</label>
+          <input type="text" id="vm-plate" placeholder="กก 1234 กรุงเทพ">
+        </div>
+        <div class="form-group">
+          <label>ชื่อรถ *</label>
+          <input type="text" id="vm-name" placeholder="ชื่อเรียกรถ">
+        </div>
+        <div class="form-group">
+          <label>หน่วยงาน *</label>
+          <select id="vm-dept"></select>
+        </div>
+        <div class="form-group">
+          <label>ชนิดรถ *</label>
+          <select id="vm-vtype"></select>
+        </div>
+        <div class="form-group">
+          <label>ยี่ห้อ</label>
+          <input type="text" id="vm-brand" placeholder="Toyota, Isuzu...">
+        </div>
+        <div class="form-group">
+          <label>รุ่น</label>
+          <input type="text" id="vm-model" placeholder="Hilux, D-Max...">
+        </div>
+        <div class="form-group">
+          <label>ปี</label>
+          <input type="number" id="vm-year" min="2000" max="2030" placeholder="2024">
+        </div>
+        <div class="form-group">
+          <label>เชื้อเพลิง</label>
+          <select id="vm-fuel">
+            <option value="gasoline">เบนซิน</option>
+            <option value="diesel">ดีเซล</option>
+            <option value="ev">ไฟฟ้า</option>
+            <option value="hybrid">ไฮบริด</option>
+            <option value="lpg">LPG</option>
+            <option value="ngv">NGV</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('vehicleModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveVehicle()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Expense -->
+<div class="modal-overlay" id="editExpModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>แก้ไขค่าใช้จ่าย</h3>
+      <button class="close-btn" onclick="closeModal('editExpModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ee-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>วันที่ *</label>
+          <input type="date" id="ee-date" required>
+        </div>
+        <div class="form-group">
+          <label>รถ *</label>
+          <select id="ee-vehicle"></select>
+        </div>
+        <div class="form-group">
+          <label>ประเภทค่าใช้จ่าย *</label>
+          <select id="ee-category"></select>
+        </div>
+        <div class="form-group">
+          <label>จำนวนเงิน *</label>
+          <input type="number" id="ee-amount" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>ปริมาณน้ำมัน (ลิตร)</label>
+          <input type="number" id="ee-fuel" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>ระยะทาง (กม.)</label>
+          <input type="number" id="ee-distance" step="0.1" min="0">
+        </div>
+        <div class="form-group">
+          <label>เลขไมล์</label>
+          <input type="number" id="ee-odometer" min="0">
+        </div>
+        <div class="form-group">
+          <label>เลขที่ใบเสร็จ</label>
+          <input type="text" id="ee-receipt">
+        </div>
+        <div class="form-group full">
+          <label>หมายเหตุ</label>
+          <textarea id="ee-desc"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editExpModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="updateExpense()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let chartMonthly = null, chartCategory = null;
+let allVehicles = [], allDepts = [], allVTypes = [], allCats = [];
+
+// ─── UTILS ────────────────────────────────────────────────
+const fmt = n => new Intl.NumberFormat('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n||0);
+const fmtDate = d => d ? d.slice(0,10) : '';
+const today = () => new Date().toISOString().slice(0,10);
+
+async function api(path, opts={}) {
+  const r = await fetch(API + path, {
+    headers: {'Content-Type':'application/json'},
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!r.ok) { const e = await r.json().catch(()=>({error:'Error'})); throw new Error(e.error||'Error'); }
+  return r.json();
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  setTimeout(() => el.className = '', 2800);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+
+// ─── NAVIGATION ───────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', 'add-expense': 'บันทึกค่าใช้จ่าย',
+  expenses: 'รายการค่าใช้จ่าย', vehicles: 'จัดการรถ',
+  report: 'รายงาน', settings: 'ตั้งค่า'
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[name];
+  closeSidebar();
+  if (name==='dashboard') loadDashboard();
+  if (name==='expenses')  { setDefaultDates(); loadExpenses(); }
+  if (name==='vehicles')  loadVehicles();
+  if (name==='settings')  { loadDeptTable(); loadVTypeTable(); }
+  if (name==='report')    { setDefaultDates('rp'); loadReport(); }
+}
+
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => showPage(el.dataset.page));
+});
+
+// Sidebar mobile
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+// ─── DATE HELPERS ─────────────────────────────────────────
+function getPeriodDates(period, prefix='db') {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  let from, to;
+  if (period==='this_month') {
+    from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    to = today();
+  } else if (period==='last_month') {
+    const d = new Date(y,m,0);
+    from = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    to = fmtDate(d.toISOString());
+  } else if (period==='this_year') {
+    from = `${y}-01-01`; to = today();
+  } else if (period==='last_7') {
+    const d = new Date(); d.setDate(d.getDate()-6);
+    from = fmtDate(d.toISOString()); to = today();
+  } else if (period==='last_30') {
+    const d = new Date(); d.setDate(d.getDate()-29);
+    from = fmtDate(d.toISOString()); to = today();
+  } else if (period==='custom') {
+    from = document.getElementById(prefix+'-date-from')?.value || '';
+    to   = document.getElementById(prefix+'-date-to')?.value || today();
+  }
+  return { from, to };
+}
+
+function dashboardPeriodChange() {
+  const p = document.getElementById('db-period').value;
+  document.getElementById('db-custom-dates').style.display = p==='custom' ? 'flex' : 'none';
+}
+function reportPeriodChange() {
+  const p = document.getElementById('rp-period').value;
+  document.getElementById('rp-custom-dates').style.display = p==='custom' ? 'flex' : 'none';
+}
+
+function setDefaultDates(prefix='exp') {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  if (prefix==='exp') {
+    document.getElementById('exp-from').value = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    document.getElementById('exp-to').value = today();
+  } else if (prefix==='rp') {
+    document.getElementById('rp-date-from').value = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    document.getElementById('rp-date-to').value = today();
+  }
+}
+
+// ─── LOAD MASTER DATA ─────────────────────────────────────
+async function loadMasterData() {
+  [allDepts, allVTypes, allCats, allVehicles] = await Promise.all([
+    api('/api/departments'),
+    api('/api/vehicle-types'),
+    api('/api/expense-categories'),
+    api('/api/vehicles'),
+  ]);
+  populateSelects();
+}
+
+function populateSelects() {
+  const deptOpts = allDepts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  const vtypeOpts = allVTypes.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  const catOpts = allCats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+
+  ['db-dept','exp-dept','rp-dept'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">ทั้งหมด</option>' + deptOpts;
+  });
+  ['db-vtype','exp-vtype','rp-vtype'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">ทั้งหมด</option>' + vtypeOpts;
+  });
+  document.getElementById('exp-cat').innerHTML = '<option value="">ทั้งหมด</option>' + catOpts;
+  document.getElementById('ef-dept').innerHTML = '<option value="">-- เลือกหน่วยงาน --</option>' + deptOpts;
+  document.getElementById('ef-category').innerHTML = '<option value="">-- เลือกประเภท --</option>' + catOpts;
+  document.getElementById('vm-dept').innerHTML = '<option value="">-- เลือก --</option>' + deptOpts;
+  document.getElementById('vm-vtype').innerHTML = '<option value="">-- เลือก --</option>' + vtypeOpts;
+  document.getElementById('ee-category').innerHTML = '<option value="">-- เลือก --</option>' + catOpts;
+  const eeVeh = allVehicles.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
+  document.getElementById('ee-vehicle').innerHTML = '<option value="">-- เลือก --</option>' + eeVeh;
+}
+
+function filterVehiclesByDept() {
+  const deptId = document.getElementById('ef-dept').value;
+  const filtered = deptId ? allVehicles.filter(v=>v.department_id==deptId) : allVehicles;
+  document.getElementById('ef-vehicle').innerHTML =
+    '<option value="">-- เลือกรถ --</option>' +
+    filtered.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
+}
+
+function categoryChanged() {
+  const catId = document.getElementById('ef-category').value;
+  const cat = allCats.find(c=>c.id==catId);
+  const isFuel = cat?.name_en === 'fuel';
+  document.getElementById('ef-fuel-group').style.display  = isFuel ? 'block' : 'none';
+  document.getElementById('ef-price-group').style.display = isFuel ? 'block' : 'none';
+}
+
+function calcFuelTotal() {
+  const liters = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
+  const price  = parseFloat(document.getElementById('ef-fuel-price')?.value)||0;
+  if (liters && price) document.getElementById('ef-amount').value = (liters*price).toFixed(2);
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────
+async function loadDashboard() {
+  const period = document.getElementById('db-period').value;
+  const { from, to } = getPeriodDates(period);
+  const dept  = document.getElementById('db-dept').value;
+  const vtype = document.getElementById('db-vtype').value;
+
+  let qs = '';
+  if (from)  qs += `&date_from=${from}`;
+  if (to)    qs += `&date_to=${to}`;
+  if (dept)  qs += `&department_id=${dept}`;
+  if (vtype) qs += `&vehicle_type_id=${vtype}`;
+
+  const d = await api('/api/dashboard/summary?' + qs.slice(1));
+
+  // KPIs
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">💰 ค่าใช้จ่ายทั้งหมด</div>
+      <div class="kpi-value">฿${fmt(d.summary.total)}</div>
+      <div class="kpi-sub">${d.summary.transactions} รายการ</div>
+    </div>
+    <div class="kpi-card accent">
+      <div class="kpi-label">🚗 จำนวนรถ</div>
+      <div class="kpi-value">${d.summary.vehicles}</div>
+      <div class="kpi-sub">คัน</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="kpi-label">📍 ระยะทางรวม</div>
+      <div class="kpi-value">${fmt(d.summary.total_km)}</div>
+      <div class="kpi-sub">กิโลเมตร</div>
+    </div>
+    <div class="kpi-card danger">
+      <div class="kpi-label">⛽ ค่าน้ำมัน</div>
+      <div class="kpi-value">฿${fmt(d.byCategory.find(c=>c.name==='ค่าน้ำมัน')?.total||0)}</div>
+      <div class="kpi-sub">ต่อ กม. ฿${d.summary.total_km > 0 ? fmt((d.byCategory.find(c=>c.name==='ค่าน้ำมัน')?.total||0)/d.summary.total_km) : '0.00'}</div>
+    </div>
+  `;
+
+  // Chart: Monthly
+  const labels = d.byMonth.map(m=>m.month);
+  const values = d.byMonth.map(m=>m.total);
+  if (chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'ค่าใช้จ่าย (บาท)', data: values,
+        backgroundColor: 'rgba(30,58,95,0.7)', borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => '฿'+fmt(v) } } }
+    }
+  });
+
+  // Chart: Category Pie
+  if (chartCategory) chartCategory.destroy();
+  chartCategory = new Chart(document.getElementById('chartCategory'), {
+    type: 'doughnut',
+    data: {
+      labels: d.byCategory.map(c=>c.name),
+      datasets: [{ data: d.byCategory.map(c=>c.total),
+        backgroundColor: d.byCategory.map(c=>c.color || '#ccc') }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+    }
+  });
+
+  // Dept bar chart (HTML)
+  const maxDept = Math.max(...d.byDept.map(x=>x.total), 1);
+  document.getElementById('deptChart').innerHTML = d.byDept.length === 0
+    ? '<div class="empty-state"><p>ไม่มีข้อมูล</p></div>'
+    : d.byDept.map(x => `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+          <span>${x.department}</span><span class="fw-bold">฿${fmt(x.total)}</span>
+        </div>
+        <div class="progress"><div class="progress-bar" style="width:${(x.total/maxDept*100).toFixed(1)}%;background:var(--primary)"></div></div>
+      </div>`).join('');
+
+  // Vehicle top 10 (HTML)
+  const maxVeh = Math.max(...d.byVehicle.map(x=>x.total), 1);
+  document.getElementById('vehicleChart').innerHTML = d.byVehicle.length === 0
+    ? '<div class="empty-state"><p>ไม่มีข้อมูล</p></div>'
+    : d.byVehicle.map(x => `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+          <span>${x.license_plate} - ${x.name}</span><span class="fw-bold">฿${fmt(x.total)}</span>
+        </div>
+        <div class="progress"><div class="progress-bar" style="width:${(x.total/maxVeh*100).toFixed(1)}%;background:var(--accent)"></div></div>
+      </div>`).join('');
+
+  // Recent table
+  document.getElementById('recentTable').innerHTML = d.recent.length === 0
+    ? '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📭</div><p>ไม่มีข้อมูล</p></div></td></tr>'
+    : d.recent.map(e => `
+      <tr>
+        <td>${fmtDate(e.expense_date)}</td>
+        <td>${e.license_plate}<br><small class="text-muted">${e.vehicle_name}</small></td>
+        <td>${e.department_name}</td>
+        <td><span class="badge" style="background:${e.category_color}22;color:${e.category_color}">${e.category_icon} ${e.category_name}</span></td>
+        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+      </tr>`).join('');
+}
+
+// ─── EXPENSE FORM ─────────────────────────────────────────
+document.getElementById('ef-date').value = today();
+
+async function submitExpense(e) {
+  e.preventDefault();
+  const catId = document.getElementById('ef-category').value;
+  const cat = allCats.find(c=>c.id==catId);
+  const isFuel = cat?.name_en === 'fuel';
+  try {
+    await api('/api/expenses', {
+      method: 'POST',
+      body: {
+        vehicle_id:           document.getElementById('ef-vehicle').value,
+        category_id:          catId,
+        expense_date:         document.getElementById('ef-date').value,
+        amount:               document.getElementById('ef-amount').value,
+        distance_km:          document.getElementById('ef-distance').value || null,
+        fuel_liters:          isFuel ? document.getElementById('ef-fuel-liters').value || null : null,
+        fuel_price_per_liter: isFuel ? document.getElementById('ef-fuel-price').value || null : null,
+        odometer:             document.getElementById('ef-odometer').value || null,
+        description:          document.getElementById('ef-desc').value || null,
+        receipt_no:           document.getElementById('ef-receipt').value || null,
+      }
+    });
+    toast('บันทึกข้อมูลสำเร็จ ✅', 'success');
+    resetExpenseForm();
+  } catch(err) { toast('เกิดข้อผิดพลาด: '+err.message, 'error'); }
+}
+
+function resetExpenseForm() {
+  document.getElementById('expenseForm').reset();
+  document.getElementById('ef-date').value = today();
+  document.getElementById('ef-fuel-group').style.display = 'none';
+  document.getElementById('ef-price-group').style.display = 'none';
+}
+
+// ─── EXPENSES LIST ────────────────────────────────────────
+async function loadExpenses() {
+  const from  = document.getElementById('exp-from').value;
+  const to    = document.getElementById('exp-to').value;
+  const dept  = document.getElementById('exp-dept').value;
+  const vtype = document.getElementById('exp-vtype').value;
+  const cat   = document.getElementById('exp-cat').value;
+  let qs = '?limit=500';
+  if (from)  qs += `&date_from=${from}`;
+  if (to)    qs += `&date_to=${to}`;
+  if (dept)  qs += `&department_id=${dept}`;
+  if (vtype) qs += `&vehicle_type_id=${vtype}`;
+  if (cat)   qs += `&category_id=${cat}`;
+  const rows = await api('/api/expenses' + qs);
+  const total = rows.reduce((s,r)=>s+r.amount, 0);
+  document.getElementById('expCount').textContent = `${rows.length} รายการ`;
+  document.getElementById('expTotal').textContent = rows.length ? `รวม: ฿${fmt(total)}` : '';
+  document.getElementById('expensesTable').innerHTML = rows.length === 0
+    ? '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>ไม่พบข้อมูล</p></div></td></tr>'
+    : rows.map(e => `
+      <tr>
+        <td>${fmtDate(e.expense_date)}</td>
+        <td>${e.department_name}</td>
+        <td>${e.license_plate}<br><small class="text-muted">${e.vehicle_name}</small></td>
+        <td>${e.vehicle_type_name}</td>
+        <td><span class="badge" style="background:${e.category_color}22;color:${e.category_color}">${e.category_icon} ${e.category_name}</span></td>
+        <td>${e.distance_km ? fmt(e.distance_km)+' กม.' : '-'}</td>
+        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+        <td>${e.description||'-'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick="editExpense(${e.id})" title="แก้ไข">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense(${e.id})" title="ลบ">🗑️</button>
+        </td>
+      </tr>`).join('');
+}
+
+async function editExpense(id) {
+  const rows = await api(`/api/expenses?limit=1000`);
+  const e = rows.find(r=>r.id===id);
+  if (!e) return;
+  document.getElementById('ee-id').value        = e.id;
+  document.getElementById('ee-date').value      = fmtDate(e.expense_date);
+  document.getElementById('ee-vehicle').value   = e.vehicle_id;
+  document.getElementById('ee-category').value  = e.category_id;
+  document.getElementById('ee-amount').value    = e.amount;
+  document.getElementById('ee-fuel').value      = e.fuel_liters || '';
+  document.getElementById('ee-distance').value  = e.distance_km || '';
+  document.getElementById('ee-odometer').value  = e.odometer || '';
+  document.getElementById('ee-receipt').value   = e.receipt_no || '';
+  document.getElementById('ee-desc').value      = e.description || '';
+  openModal('editExpModal');
+}
+
+async function updateExpense() {
+  const id = document.getElementById('ee-id').value;
+  try {
+    await api(`/api/expenses/${id}`, {
+      method: 'PUT',
+      body: {
+        vehicle_id:   document.getElementById('ee-vehicle').value,
+        category_id:  document.getElementById('ee-category').value,
+        expense_date: document.getElementById('ee-date').value,
+        amount:       document.getElementById('ee-amount').value,
+        fuel_liters:  document.getElementById('ee-fuel').value || null,
+        distance_km:  document.getElementById('ee-distance').value || null,
+        odometer:     document.getElementById('ee-odometer').value || null,
+        receipt_no:   document.getElementById('ee-receipt').value || null,
+        description:  document.getElementById('ee-desc').value || null,
+        fuel_price_per_liter: null,
+      }
+    });
+    closeModal('editExpModal'); toast('บันทึกสำเร็จ', 'success'); loadExpenses();
+  } catch(err) { toast('เกิดข้อผิดพลาด: '+err.message, 'error'); }
+}
+
+async function deleteExpense(id) {
+  if (!confirm('ยืนยันการลบรายการนี้?')) return;
+  await api(`/api/expenses/${id}`, { method: 'DELETE' });
+  toast('ลบรายการสำเร็จ', 'success'); loadExpenses();
+}
+
+// ─── VEHICLES ─────────────────────────────────────────────
+async function loadVehicles() {
+  const rows = await api('/api/vehicles');
+  const FUEL_TH = { gasoline:'เบนซิน', diesel:'ดีเซล', ev:'ไฟฟ้า', hybrid:'ไฮบริด', lpg:'LPG', ngv:'NGV' };
+  document.getElementById('vehiclesTable').innerHTML = rows.length === 0
+    ? '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚗</div><p>ยังไม่มีรถ กดเพิ่มรถเพื่อเริ่มต้น</p></div></td></tr>'
+    : rows.map(v => `
+      <tr>
+        <td class="fw-bold">${v.license_plate}</td>
+        <td>${v.name}</td>
+        <td>${v.department_name}</td>
+        <td>${v.vehicle_type_name}</td>
+        <td>${v.brand||''} ${v.model||''}</td>
+        <td>${v.year||'-'}</td>
+        <td>${FUEL_TH[v.fuel_type]||v.fuel_type}</td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick="editVehicle(${JSON.stringify(v).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle(${v.id})" title="ลบ">🗑️</button>
+        </td>
+      </tr>`).join('');
+}
+
+function openVehicleModal(v=null) {
+  document.getElementById('vehicleModalTitle').textContent = v ? 'แก้ไขรถ' : 'เพิ่มรถ';
+  ['vm-id','vm-plate','vm-name','vm-brand','vm-model','vm-year'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('vm-dept').value  = '';
+  document.getElementById('vm-vtype').value = '';
+  document.getElementById('vm-fuel').value  = 'gasoline';
+  if (v) {
+    document.getElementById('vm-id').value    = v.id;
+    document.getElementById('vm-plate').value = v.license_plate;
+    document.getElementById('vm-name').value  = v.name;
+    document.getElementById('vm-dept').value  = v.department_id;
+    document.getElementById('vm-vtype').value = v.vehicle_type_id;
+    document.getElementById('vm-brand').value = v.brand||'';
+    document.getElementById('vm-model').value = v.model||'';
+    document.getElementById('vm-year').value  = v.year||'';
+    document.getElementById('vm-fuel').value  = v.fuel_type||'gasoline';
+  }
+  openModal('vehicleModal');
+}
+function editVehicle(v) { openVehicleModal(v); }
+
+async function saveVehicle() {
+  const id = document.getElementById('vm-id').value;
+  const body = {
+    license_plate: document.getElementById('vm-plate').value,
+    name:          document.getElementById('vm-name').value,
+    department_id: document.getElementById('vm-dept').value,
+    vehicle_type_id: document.getElementById('vm-vtype').value,
+    brand:         document.getElementById('vm-brand').value,
+    model:         document.getElementById('vm-model').value,
+    year:          document.getElementById('vm-year').value,
+    fuel_type:     document.getElementById('vm-fuel').value,
+    is_active: 1,
+  };
+  if (!body.license_plate||!body.name||!body.department_id||!body.vehicle_type_id)
+    return toast('กรุณากรอกข้อมูลให้ครบ', 'error');
+  try {
+    if (id) await api(`/api/vehicles/${id}`, { method:'PUT', body });
+    else    await api('/api/vehicles', { method:'POST', body });
+    closeModal('vehicleModal'); toast('บันทึกสำเร็จ', 'success');
+    await loadMasterData(); loadVehicles();
+  } catch(err) { toast('เกิดข้อผิดพลาด: '+err.message, 'error'); }
+}
+
+async function deleteVehicle(id) {
+  if (!confirm('ยืนยันการลบรถคันนี้?')) return;
+  await api(`/api/vehicles/${id}`, { method:'DELETE' });
+  toast('ลบรถสำเร็จ', 'success'); await loadMasterData(); loadVehicles();
+}
+
+// ─── SETTINGS: DEPARTMENTS ────────────────────────────────
+async function loadDeptTable() {
+  const rows = await api('/api/departments');
+  document.getElementById('deptTable').innerHTML = rows.length === 0
+    ? '<tr><td colspan="3"><div class="empty-state"><p>ยังไม่มีหน่วยงาน</p></div></td></tr>'
+    : rows.map(d => `
+      <tr>
+        <td>${d.name}</td>
+        <td>${d.code||'-'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick="openDeptModal(${d.id},'${d.name}','${d.code||''}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDept(${d.id})">🗑️</button>
+        </td>
+      </tr>`).join('');
+}
+
+function openDeptModal(id='', name='', code='') {
+  document.getElementById('deptModalTitle').textContent = id ? 'แก้ไขหน่วยงาน' : 'เพิ่มหน่วยงาน';
+  document.getElementById('dm-id').value   = id;
+  document.getElementById('dm-name').value = name;
+  document.getElementById('dm-code').value = code;
+  openModal('deptModal');
+}
+
+async function saveDept() {
+  const id = document.getElementById('dm-id').value;
+  const name = document.getElementById('dm-name').value;
+  const code = document.getElementById('dm-code').value;
+  if (!name) return toast('กรุณากรอกชื่อหน่วยงาน', 'error');
+  try {
+    if (id) await api(`/api/departments/${id}`, { method:'PUT', body:{ name, code } });
+    else    await api('/api/departments', { method:'POST', body:{ name, code } });
+    closeModal('deptModal'); toast('บันทึกสำเร็จ', 'success');
+    await loadMasterData(); loadDeptTable();
+  } catch(err) { toast('เกิดข้อผิดพลาด: '+err.message, 'error'); }
+}
+
+async function deleteDept(id) {
+  if (!confirm('ยืนยันการลบหน่วยงาน?')) return;
+  try {
+    await api(`/api/departments/${id}`, { method:'DELETE' });
+    toast('ลบสำเร็จ', 'success'); await loadMasterData(); loadDeptTable();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+// ─── SETTINGS: VEHICLE TYPES ──────────────────────────────
+async function loadVTypeTable() {
+  const rows = await api('/api/vehicle-types');
+  document.getElementById('vtypeTable').innerHTML = rows.length === 0
+    ? '<tr><td colspan="3"><div class="empty-state"><p>ยังไม่มีชนิดรถ</p></div></td></tr>'
+    : rows.map(t => `
+      <tr>
+        <td>${t.name}</td>
+        <td>${t.description||'-'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm btn-icon" onclick="openVTypeModal(${t.id},'${t.name}','${t.description||''}')">✏️</button>
+        </td>
+      </tr>`).join('');
+}
+
+function openVTypeModal(id='', name='', desc='') {
+  document.getElementById('vtypeModalTitle').textContent = id ? 'แก้ไขชนิดรถ' : 'เพิ่มชนิดรถ';
+  document.getElementById('vtm-id').value   = id;
+  document.getElementById('vtm-name').value = name;
+  document.getElementById('vtm-desc').value = desc;
+  openModal('vtypeModal');
+}
+
+async function saveVType() {
+  const id   = document.getElementById('vtm-id').value;
+  const name = document.getElementById('vtm-name').value;
+  const description = document.getElementById('vtm-desc').value;
+  if (!name) return toast('กรุณากรอกชื่อชนิดรถ', 'error');
+  try {
+    if (id) await api(`/api/vehicle-types/${id}`, { method:'PUT', body:{ name, description } });
+    else    await api('/api/vehicle-types', { method:'POST', body:{ name, description } });
+    closeModal('vtypeModal'); toast('บันทึกสำเร็จ', 'success');
+    await loadMasterData(); loadVTypeTable();
+  } catch(err) { toast('เกิดข้อผิดพลาด: '+err.message, 'error'); }
+}
+
+// ─── REPORT ───────────────────────────────────────────────
+async function loadReport() {
+  const period = document.getElementById('rp-period').value;
+  const group  = document.getElementById('rp-group').value;
+  const { from, to } = period === 'custom'
+    ? { from: document.getElementById('rp-date-from').value, to: document.getElementById('rp-date-to').value }
+    : getPeriodDates(period, 'rp');
+  const dept  = document.getElementById('rp-dept').value;
+  const vtype = document.getElementById('rp-vtype').value;
+
+  let qs = '?limit=1000';
+  if (from)  qs += `&date_from=${from}`;
+  if (to)    qs += `&date_to=${to}`;
+  if (dept)  qs += `&department_id=${dept}`;
+  if (vtype) qs += `&vehicle_type_id=${vtype}`;
+
+  const rows = await api('/api/expenses' + qs);
+  if (rows.length === 0) {
+    document.getElementById('reportContent').innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">📊</div><p>ไม่พบข้อมูลในช่วงเวลาที่เลือก</p></div></div>';
+    return;
+  }
+
+  // Group data
+  const grouped = {};
+  rows.forEach(r => {
+    let key;
+    if (group === 'category')     key = `${r.category_icon} ${r.category_name}`;
+    else if (group === 'department') key = r.department_name;
+    else if (group === 'vehicle_type') key = r.vehicle_type_name;
+    else if (group === 'vehicle') key = `${r.license_plate} - ${r.vehicle_name}`;
+    else if (group === 'month')   key = r.expense_date.slice(0,7);
+    grouped[key] = grouped[key] || { total:0, count:0, km:0, items:[] };
+    grouped[key].total += r.amount;
+    grouped[key].count += 1;
+    grouped[key].km    += r.distance_km||0;
+    grouped[key].items.push(r);
+  });
+
+  const grandTotal = rows.reduce((s,r)=>s+r.amount, 0);
+  const sortedKeys = Object.keys(grouped).sort((a,b)=>grouped[b].total-grouped[a].total);
+
+  const tableRows = sortedKeys.map(k => {
+    const g = grouped[k];
+    return `<tr>
+      <td class="fw-bold">${k}</td>
+      <td class="text-right">฿${fmt(g.total)}</td>
+      <td class="text-right">${((g.total/grandTotal)*100).toFixed(1)}%</td>
+      <td class="text-right">${g.count}</td>
+      <td class="text-right">${g.km ? fmt(g.km)+' กม.' : '-'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('reportContent').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📊 รายงาน ${from||''} - ${to||''}</span>
+        <button class="btn btn-outline btn-sm" onclick="printReport()">🖨️ พิมพ์</button>
+      </div>
+      <div style="margin-bottom:16px; padding:12px; background:var(--bg); border-radius:8px; display:flex; gap:24px; flex-wrap:wrap;">
+        <div><small class="text-muted">รวมทั้งหมด</small><br><strong style="font-size:20px; color:var(--primary);">฿${fmt(grandTotal)}</strong></div>
+        <div><small class="text-muted">จำนวนรายการ</small><br><strong>${rows.length} รายการ</strong></div>
+        <div><small class="text-muted">ระยะทางรวม</small><br><strong>${fmt(rows.reduce((s,r)=>s+(r.distance_km||0),0))} กม.</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>รายการ</th>
+            <th class="text-right">จำนวนเงิน</th>
+            <th class="text-right">สัดส่วน</th>
+            <th class="text-right">รายการ</th>
+            <th class="text-right">ระยะทาง</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+          <tfoot>
+            <tr style="background:var(--bg); font-weight:700;">
+              <td>รวมทั้งหมด</td>
+              <td class="text-right">฿${fmt(grandTotal)}</td>
+              <td class="text-right">100%</td>
+              <td class="text-right">${rows.length}</td>
+              <td class="text-right">${fmt(rows.reduce((s,r)=>s+(r.distance_km||0),0))} กม.</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>`;
+}
+
+function printReport() { window.print(); }
+
+// ─── EXPORT ───────────────────────────────────────────────
+function exportData() {
+  window.open('/api/export', '_blank');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+(async function init() {
+  await loadMasterData();
+  setDefaultDates();
+  setDefaultDates('rp');
+  loadDashboard();
+})();
+</script>
+</body>
+</html>
