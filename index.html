@@ -1627,8 +1627,7 @@ async function handleReceiptScan(event) {
     const amountMap = new Map();
 
     // Priority pattern: TOTAL / JUMLAH / AMOUNT
-    const totalRe = /(?:TOTAL|JUMLAH|AMOUNT\s*DUE?|GRAND\s*TOTAL|BAYAR|PAID|TUNAI|CASH)[^\d
-]{0,12}(RM\s*)?(\d[\d,]*\.?\d{0,2})/gi;
+    const totalRe = /(?:TOTAL|JUMLAH|AMOUNT\s*DUE?|GRAND\s*TOTAL|BAYAR|PAID|TUNAI|CASH)[^\d]{0,12}(RM\s*)?(\d[\d,]*\.?\d{0,2})/gi;
     let m;
     while ((m = totalRe.exec(text)) !== null) {
       const v = parseFloat(m[2].replace(/,/g,''));
