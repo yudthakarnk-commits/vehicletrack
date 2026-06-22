@@ -1193,8 +1193,31 @@ async function loadDashboard() {
   const fuelCatIds = allCats.filter(c=>c.name?.includes('น้ำมัน')||c.name_en?.includes('Fuel')).map(c=>c.id);
   const fuelRow = rows.filter(r => fuelCatIds.includes(r.category_id));
   const fuelTotal = fuelRow.reduce((s,r)=>s+Number(r.amount||0),0);
-  const totalKm   = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
   const vehicles  = new Set(rows.map(r=>r.vehicle_id)).size;
+
+  // ── Total KM from vehicle_usage_logs (more accurate than expenses.distance_km) ──
+  let totalKm = 0;
+  try {
+    if (navigator.onLine) {
+      let uq = sbClient.from('vehicle_usage_logs')
+        .select('odometer_start, odometer_end, vehicle_id, vehicles!inner(department_id, vehicle_type_id)')
+        .not('odometer_start', 'is', null)
+        .not('odometer_end', 'is', null);
+      if (from)  uq = uq.gte('date', from);
+      if (to)    uq = uq.lte('date', to);
+      if (dept)  uq = uq.eq('vehicles.department_id', dept);
+      if (vtype) uq = uq.eq('vehicles.vehicle_type_id', vtype);
+      const { data: ulData } = await uq;
+      totalKm = (ulData||[]).reduce((s, r) => {
+        const km = Number(r.odometer_end) - Number(r.odometer_start);
+        return km > 0 ? s + km : s;
+      }, 0);
+      // Fallback: if no usage logs, sum from expenses.distance_km
+      if (totalKm === 0) totalKm = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
+    }
+  } catch(e) {
+    totalKm = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
+  }
 
   document.getElementById('kpiGrid').innerHTML = `
     <div class="kpi-card"><div class="kpi-label">💰 ${t('total_expense')}</div>
@@ -1202,7 +1225,7 @@ async function loadDashboard() {
     <div class="kpi-card accent"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
       <div class="kpi-value">${vehicles}</div><div class="kpi-sub">${t('cars_unit')}</div></div>
     <div class="kpi-card success"><div class="kpi-label">📍 ${t('total_km')}</div>
-      <div class="kpi-value">${fmt(totalKm)}</div><div class="kpi-sub">${t('km_unit')}</div></div>
+      <div class="kpi-value">${fmtKm(totalKm)}</div><div class="kpi-sub">${t('km_unit')}</div></div>
     <div class="kpi-card danger"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
       <div class="kpi-value">RM ${fmt(fuelTotal)}</div>
       <div class="kpi-sub">${totalKm>0?'RM '+fmt(fuelTotal/totalKm)+'/km':'-'}</div></div>`;
