@@ -825,17 +825,12 @@ async function loadMasterData() {
         sbClient.from('departments').select('*').order('name'),
         sbClient.from('vehicle_types').select('*').order('name'),
         sbClient.from('expense_categories').select('*').order('id'),
-        sbClient.from('vehicles').select('*, departments(name, name_en), vehicle_types(name, name_en)').eq('is_active', true).order('name'),
+        sbClient.from('vehicles').select('*').eq('is_active', true).order('name'),
       ]);
       allDepts    = d.data || [];
       allVTypes   = v.data || [];
       allCats     = c.data || [];
-      allVehicles = (ve.data||[]).map(x=>({...x,
-        department_name:    x.departments?.name,
-        department_name_en: x.departments?.name_en,
-        vehicle_type_name:    x.vehicle_types?.name,
-        vehicle_type_name_en: x.vehicle_types?.name_en,
-      }));
+      allVehicles = ve.data || [];
       // Cache in IDB
       if (allDepts.length)    await idbPutMany('departments', allDepts);
       if (allVTypes.length)   await idbPutMany('vehicle_types', allVTypes);
@@ -932,7 +927,7 @@ async function loadDashboard() {
   let rows = [];
   try {
     let q = sbClient.from('expenses')
-      .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id, departments(name, name_en), vehicle_types(name, name_en)), expense_categories(name, name_en, icon, color)`)
+      .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id), expense_categories(name, icon, color)`)
       .eq('is_deleted', false)
       .order('expense_date', { ascending: false })
       .limit(2000);
@@ -946,7 +941,8 @@ async function loadDashboard() {
   } catch(e) { rows = await getOfflineExpenses(from, to, dept, vtype); }
 
   const total   = rows.reduce((s,r)=>s+Number(r.amount||0),0);
-  const fuelRow = rows.filter(r=>r.category_name==='ค่าน้ำมัน' || r.category_name_en==='Fuel');
+  const fuelCatIds = allCats.filter(c=>c.name?.includes('น้ำมัน')||c.name_en?.includes('Fuel')).map(c=>c.id);
+  const fuelRow = rows.filter(r => fuelCatIds.includes(r.category_id));
   const fuelTotal = fuelRow.reduce((s,r)=>s+Number(r.amount||0),0);
   const totalKm   = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
   const vehicles  = new Set(rows.map(r=>r.vehicle_id)).size;
@@ -1035,15 +1031,22 @@ async function loadDashboard() {
 }
 
 function flattenExpense(e) {
+  const veh  = e.vehicles || {};
+  const cat  = e.expense_categories || {};
+  const dept  = allDepts.find(d => d.id === veh.department_id);
+  const vtype = allVTypes.find(x => x.id === veh.vehicle_type_id);
+  const catFull = allCats.find(x => x.id === e.category_id) || cat;
   return {
     ...e,
-    vehicle_name:      e.vehicles?.name,
-    license_plate:     e.vehicles?.license_plate,
-    department_name:   e.vehicles?.departments?.name,
-    vehicle_type_name: e.vehicles?.vehicle_types?.name,
-    category_name:     e.expense_categories?.name,
-    category_icon:     e.expense_categories?.icon,
-    category_color:    e.expense_categories?.color,
+    vehicle_name:       veh.name,
+    license_plate:      veh.license_plate,
+    vehicle_dept_id:    veh.department_id,
+    vehicle_vtype_id:   veh.vehicle_type_id,
+    department_name:    useName(dept),
+    vehicle_type_name:  useName(vtype),
+    category_name:      useName(catFull) || cat.name,
+    category_icon:      catFull.icon  || cat.icon,
+    category_color:     catFull.color || cat.color,
   };
 }
 
@@ -1060,9 +1063,15 @@ async function getOfflineExpenses(from, to, dept, vtype) {
   return rows.filter(r=>!r.is_deleted).map(r => {
     const v = vehicles.find(x=>x.id===r.vehicle_id)||{};
     const c = cats.find(x=>x.id===r.category_id)||{};
+    const dept  = allDepts.find(d => d.id === v.department_id);
+    const vtype = allVTypes.find(x => x.id === v.vehicle_type_id);
     return { ...r, vehicle_name:v.name, license_plate:v.license_plate,
-      department_name:v.department_name, vehicle_type_name:v.vehicle_type_name,
-      category_name:c.name, category_icon:c.icon, category_color:c.color };
+      vehicle_dept_id: v.department_id, vehicle_vtype_id: v.vehicle_type_id,
+      department_name:   useName(dept),
+      vehicle_type_name: useName(vtype),
+      category_name: useName(allCats.find(x=>x.id===r.category_id))||c.name,
+      category_icon: allCats.find(x=>x.id===r.category_id)?.icon||c.icon,
+      category_color:allCats.find(x=>x.id===r.category_id)?.color||c.color };
   });
 }
 
@@ -1128,15 +1137,15 @@ async function loadExpenses() {
   let rows = [];
   if (navigator.onLine) {
     let q = sbClient.from('expenses')
-      .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id,departments(name,name_en),vehicle_types(name,name_en)), expense_categories(name,name_en,icon,color)`)
+      .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id), expense_categories(name,icon,color)`)
       .eq('is_deleted',false).order('expense_date',{ascending:false}).limit(1000);
     if (from)  q = q.gte('expense_date',from);
     if (to)    q = q.lte('expense_date',to);
     if (cat)   q = q.eq('category_id',cat);
     const { data } = await q;
     rows = (data||[]).map(flattenExpense);
-    if (dept)  rows = rows.filter(r=>r.department_name === allDepts.find(d=>d.id==dept)?.name);
-    if (vtype) rows = rows.filter(r=>r.vehicle_type_name === allVTypes.find(v=>v.id==vtype)?.name);
+    if (dept)  rows = rows.filter(r => r.vehicle_dept_id == dept);
+    if (vtype) rows = rows.filter(r => r.vehicle_vtype_id == vtype);
   } else {
     rows = await getOfflineExpenses(from, to, dept, vtype);
     if (cat) rows = rows.filter(r=>r.category_id==cat);
@@ -1224,23 +1233,20 @@ async function deleteExpense(id, clientId) {
 // ─── VEHICLES ─────────────────────────────────────────────
 const FUEL_KEYS = { gasoline:'fuel_gasoline', diesel:'fuel_diesel', ev:'fuel_ev', hybrid:'fuel_hybrid', lpg:'fuel_lpg', ngv:'fuel_ngv' };
 const fuelLabel = code => t(FUEL_KEYS[code] || code) || code;
-const vtypeLabel = vtypeId => {
-  const vt = allVTypes.find(x => x.id === vtypeId);
-  if (!vt) return '-';
-  return currentLang === 'en' ? (vt.name_en || vt.name) : vt.name;
-};
+const useName = o => o ? (currentLang==='en' ? (o.name_en||o.name) : o.name) : '-';
+const vtypeLabel = vtypeId => useName(allVTypes.find(x => x.id === vtypeId));
+const deptLabel  = deptId  => useName(allDepts.find(x => x.id === deptId));
 async function loadVehicles() {
-  const { data } = await sbClient.from('vehicles')
-    .select('*,departments(name,name_en)').eq('is_active',true).order('name');
-  const rows = (data||[]).map(v=>({...v,
-    department_name: currentLang==='en' ? (v.departments?.name_en||v.departments?.name) : v.departments?.name
-  }));
+  const { data, error } = await sbClient.from('vehicles')
+    .select('*').eq('is_active',true).order('name');
+  if (error) { console.error('loadVehicles:', error.message); }
+  const rows = data||[];
   document.getElementById('vehiclesTable').innerHTML = rows.length===0
     ? `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚗</div><p>${t('no_vehicles')}</p></div></td></tr>`
     : rows.map(v=>`<tr>
         <td class="fw-bold">${v.license_plate}</td>
         <td>${v.name}</td>
-        <td>${v.department_name||'-'}</td>
+        <td>${deptLabel(v.department_id)}</td>
         <td>${vtypeLabel(v.vehicle_type_id)}</td>
         <td>${(v.brand||'')+' '+(v.model||'')}</td>
         <td>${v.year||'-'}</td>
