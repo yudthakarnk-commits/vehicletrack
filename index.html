@@ -2070,12 +2070,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Fuel grade patterns (MY: Petronas, Shell, BHP, Caltex, PETRONASmart etc.)
 const MY_FUEL_GRADES = [
-  { grade:'RON 95',       patterns:[/ron\s*95/i, /petrol\s*95/i, /r95/i, /95\s*ron/i, /unleaded\s*95/i] },
-  { grade:'RON 97',       patterns:[/ron\s*97/i, /petrol\s*97/i, /r97/i, /97\s*ron/i, /v-power/i] },
-  { grade:'RON 100',      patterns:[/ron\s*100/i, /100\s*ron/i, /v-power\s*100/i, /nitro\+/i] },
-  { grade:'Diesel B10',   patterns:[/b10/i, /diesel\s*b10/i, /biodiesel\s*10/i] },
-  { grade:'Diesel B20',   patterns:[/b20/i, /diesel\s*b20/i, /biodiesel\s*20/i] },
-  { grade:'Euro 5 Diesel',patterns:[/euro\s*5/i, /euro5/i, /diesel\s*euro/i] },
+  { grade:'RON 95',        patterns:[/ron\s*95/i, /petrol\s*95/i, /r95/i, /95\s*ron/i, /unleaded\s*95/i,
+                                      /fuelsave\s*95/i, /fuel\s*save\s*95/i, /primax\s*95/i, /euro\s*95/i,
+                                      /(?:pump|unleaded|petrol)\s*\(?\s*95\s*\)?/i] },
+  { grade:'RON 97',        patterns:[/ron\s*97/i, /petrol\s*97/i, /r97/i, /97\s*ron/i, /v-power/i,
+                                      /fuelsave\s*97/i, /primax\s*97/i,
+                                      /(?:pump|unleaded|petrol)\s*\(?\s*97\s*\)?/i] },
+  { grade:'RON 100',       patterns:[/ron\s*100/i, /100\s*ron/i, /v-power\s*100/i, /nitro\+/i, /fuelsave\s*100/i] },
+  { grade:'Diesel B10',    patterns:[/b10/i, /diesel\s*b10/i, /biodiesel\s*10/i] },
+  { grade:'Diesel B20',    patterns:[/b20/i, /diesel\s*b20/i, /biodiesel\s*20/i] },
+  { grade:'Euro 5 Diesel', patterns:[/euro\s*5/i, /euro5/i, /diesel\s*euro/i, /dynamic\s*diesel/i] },
   { grade:'Diesel B10',   patterns:[/diesel/i, /gas\s*oil/i] }, // generic diesel fallback
   { grade:'E5 Petrol',    patterns:[/e5/i, /ethanol\s*5/i] },
   { grade:'E10 Petrol',   patterns:[/e10/i, /ethanol\s*10/i] },
@@ -2089,19 +2093,62 @@ function detectFuelGrade(text) {
 }
 
 function detectLiters(text) {
-  // Patterns: "35.50 L", "LITER : 35.50", "VOLUME 35.50", "QTY 35.50 L"
   const litPatterns = [
+    /(\d{1,4}\.\d{1,3})\s*ltr/i,
     /(?:volume|qty|liter[s]?|litre[s]?|isipadu|kuantiti)[^\d]{0,10}(\d{1,4}\.\d{1,3})/gi,
     /(\d{1,4}\.\d{1,3})\s*(?:l|liter|litre|L)/gi,
     /jumlah\s+(?:liter|isipadu)[^\d]{0,10}(\d{1,4}\.\d{1,3})/gi,
   ];
   for (const re of litPatterns) {
-    re.lastIndex = 0;
     const m = re.exec(text);
     if (m) {
       const v = parseFloat(m[1]);
-      if (v > 0 && v < 500) return v; // sanity: 0–500 liters
+      if (v > 0.5 && v < 500) return v;
     }
+  }
+  return null;
+}
+
+function detectPricePerLiter(text) {
+  const patterns = [
+    /@\s*RM\s*(\d+\.\d+)\s*\/\s*(?:ltr|l|litre|liter)\b/i,
+    /RM\s*(\d+\.\d+)\s*\/\s*(?:ltr|l|litre|liter)\b/i,
+    /(?:price|harga|unit\s*price)[^\d]{0,10}(\d+\.\d+)/i,
+  ];
+  for (const re of patterns) {
+    const m = re.exec(text);
+    if (m) {
+      const v = parseFloat(m[1]);
+      if (v > 0.5 && v < 50) return v;
+    }
+  }
+  return null;
+}
+function detectOdometer(text) {
+  const patterns = [
+    /odometer[^\d]{0,10}(\d{4,7})/i,
+    /\bodo\b[^\d]{0,10}(\d{4,7})/i,
+    /km\s*(?:reading|meter|bacaan)[^\d]{0,10}(\d{4,7})/i,
+    /mileage[^\d]{0,10}(\d{4,7})/i,
+  ];
+  for (const re of patterns) {
+    const m = re.exec(text);
+    if (m) {
+      const v = parseInt(m[1]);
+      if (v > 100 && v < 9999999) return v;
+    }
+  }
+  return null;
+}
+function detectReceiptNo(text) {
+  const patterns = [
+    /receipt\s*no[.:\s]{0,5}(\w{4,12})/i,
+    /resit\s*no[.:\s]{0,5}(\w{4,12})/i,
+    /inv(?:oice)?\s*(?:no|#)[.:\s]{0,5}(\w{4,12})/i,
+  ];
+  for (const re of patterns) {
+    const m = re.exec(text);
+    if (m) return m[1].trim();
   }
   return null;
 }
@@ -2127,11 +2174,12 @@ async function handleReceiptScan(event) {
     const text   = result.data.text;
     console.log('[OCR]', text);
 
-    // ── Detect fuel grade ──────────────────────────────────
-    const fuelGrade = detectFuelGrade(text);
-
-    // ── Detect liters ──────────────────────────────────────
-    const liters = detectLiters(text);
+    // ── Detect all fields ──────────────────────────────────
+    const fuelGrade   = detectFuelGrade(text);
+    const liters      = detectLiters(text);
+    const pricePerLit = detectPricePerLiter(text);
+    const odometer    = detectOdometer(text);
+    const receiptNo   = detectReceiptNo(text);
 
     // ── Detect amount candidates ───────────────────────────
     const amountMap = new Map();
@@ -2170,31 +2218,47 @@ async function handleReceiptScan(event) {
     // ── Build result UI ────────────────────────────────────
     let html = '';
 
-    if (fuelGrade || liters || sortedAmounts.length > 0) {
+    if (fuelGrade || liters || pricePerLit || odometer || receiptNo || sortedAmounts.length > 0) {
       statusEl.textContent = '✅ ' + t('scan_result');
 
       // Auto-fill fuel grade
       if (fuelGrade) {
         const sel = document.getElementById('ef-fuel-type');
-        if (sel) {
-          for (const opt of sel.options) {
-            if (opt.value === fuelGrade) { sel.value = fuelGrade; break; }
-          }
-        }
+        if (sel) for (const opt of sel.options) { if (opt.value === fuelGrade) { sel.value = fuelGrade; break; } }
       }
 
       // Auto-fill liters
       if (liters) {
         const litEl = document.getElementById('ef-fuel-liters');
-        if (litEl) litEl.value = liters.toFixed(2);
-        // Recalc total if price already set
+        if (litEl) litEl.value = liters.toFixed(3);
         calcFuelTotal();
+      }
+
+      // Auto-fill price per liter
+      if (pricePerLit) {
+        const prEl = document.getElementById('ef-fuel-price');
+        if (prEl) { prEl.value = pricePerLit.toFixed(3); calcFuelTotal(); calcFuelPricePerLiter(); }
+      }
+
+      // Auto-fill odometer → triggers distance calc
+      if (odometer) {
+        const odoEl = document.getElementById('ef-odometer');
+        if (odoEl) { odoEl.value = odometer; calcExpenseDistance(); }
+      }
+
+      // Auto-fill receipt no
+      if (receiptNo) {
+        const rcEl = document.getElementById('ef-receipt');
+        if (rcEl && !rcEl.value) rcEl.value = receiptNo;
       }
 
       // Summary chip
       html += `<div style="background:#f0f7ff;border:1px solid #b0d0f0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:13px">`;
-      if (fuelGrade) html += `⛽ <strong>${fuelGrade}</strong>&nbsp;&nbsp;`;
-      if (liters)    html += `🔢 <strong>${liters.toFixed(2)} L</strong>&nbsp;&nbsp;`;
+      if (fuelGrade)   html += `⛽ <strong>${fuelGrade}</strong>&nbsp;&nbsp;`;
+      if (liters)      html += `💧 <strong>${liters.toFixed(3)} L</strong>&nbsp;&nbsp;`;
+      if (pricePerLit) html += `💰 <strong>RM ${pricePerLit.toFixed(3)}/L</strong>&nbsp;&nbsp;`;
+      if (odometer)    html += `📍 <strong>ODO ${odometer.toLocaleString()}</strong>&nbsp;&nbsp;`;
+      if (receiptNo)   html += `🧾 <strong>${receiptNo}</strong>&nbsp;&nbsp;`;
       html += `</div>`;
 
       // Amount buttons
