@@ -7,7 +7,7 @@
 <title>VehicleTrack — ระบบค่าใช้จ่ายยานพาหนะ</title>
 <link rel="manifest" href="manifest.json">
 <!-- Supabase JS v2 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/sbClient.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Config & i18n (load first) -->
@@ -565,7 +565,7 @@ tr:hover td{background:#fafafa}
 
 <script>
 // ─── GLOBALS ──────────────────────────────────────────────
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null, currentProfile = null;
 let allDepts = [], allVTypes = [], allCats = [], allVehicles = [];
 let chartMonthly = null, chartCategory = null;
@@ -590,7 +590,7 @@ async function doLogin() {
   const password = document.getElementById('login-password').value;
   const btn = document.getElementById('login-btn');
   btn.disabled = true; btn.textContent = '...';
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
   if (error) {
     document.getElementById('login-error').textContent = t('login_error');
     document.getElementById('login-error').style.display = 'block';
@@ -623,10 +623,10 @@ async function onSignIn(user) {
   document.getElementById('user-role-chip').textContent = roleLabels[profile?.role] || profile?.role;
   buildSidebar();
   await loadMasterData();
-  initNetworkListeners(supabase, () => {
+  initNetworkListeners(sbClient, () => {
     loadMasterData(); loadDashboard();
   });
-  if (navigator.onLine) await pullFromServer(supabase);
+  if (navigator.onLine) await pullFromServer(sbClient);
   setLang(profile?.language || currentLang);
   setDefaultDates();
   loadDashboard();
@@ -634,14 +634,14 @@ async function onSignIn(user) {
 
 async function doLogout() {
   logAction('logout', { email: currentUser?.email });
-  await supabase.auth.signOut();
+  await sbClient.auth.signOut();
   currentUser = null; currentProfile = null;
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-screen').style.display = 'flex';
 }
 
 // Check existing session on load
-supabase.auth.getSession().then(({ data: { session } }) => {
+sbClient.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) onSignIn(session.user);
 });
 
@@ -649,7 +649,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
 async function logAction(action, details = {}) {
   if (!currentUser) return;
   try {
-    await supabase.from('access_logs').insert({
+    await sbClient.from('access_logs').insert({
       user_id:    currentUser.id,
       user_email: currentUser.email,
       action,
@@ -725,7 +725,7 @@ document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar
 window.addEventListener('offline', () => document.getElementById('offlineBar').classList.add('show'));
 window.addEventListener('online', () => {
   document.getElementById('offlineBar').classList.remove('show');
-  syncToServer(supabase).then(r => { if (r?.synced) loadDashboard(); });
+  syncToServer(sbClient).then(r => { if (r?.synced) loadDashboard(); });
 });
 
 // ─── DATES ────────────────────────────────────────────────
@@ -760,10 +760,10 @@ async function loadMasterData() {
   try {
     if (navigator.onLine) {
       const [d,v,c,ve] = await Promise.all([
-        supabase.from('departments').select('*').order('name'),
-        supabase.from('vehicle_types').select('*').order('name'),
-        supabase.from('expense_categories').select('*').order('id'),
-        supabase.from('vehicles').select('*, departments(name), vehicle_types(name)').eq('is_active', true).order('name'),
+        sbClient.from('departments').select('*').order('name'),
+        sbClient.from('vehicle_types').select('*').order('name'),
+        sbClient.from('expense_categories').select('*').order('id'),
+        sbClient.from('vehicles').select('*, departments(name), vehicle_types(name)').eq('is_active', true).order('name'),
       ]);
       allDepts    = d.data || [];
       allVTypes   = v.data || [];
@@ -862,7 +862,7 @@ async function loadDashboard() {
 
   let rows = [];
   try {
-    let q = supabase.from('expenses')
+    let q = sbClient.from('expenses')
       .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id, departments(name), vehicle_types(name)), expense_categories(name, icon, color)`)
       .eq('is_deleted', false)
       .order('expense_date', { ascending: false })
@@ -1025,7 +1025,7 @@ async function submitExpense(e) {
   };
 
   if (navigator.onLine) {
-    const { error } = await supabase.from('expenses').insert(payload);
+    const { error } = await sbClient.from('expenses').insert(payload);
     if (error) { toast(t('save_error')+': '+error.message, 'error'); return; }
     logAction('add_expense', { vehicle_id: payload.vehicle_id, amount: payload.amount, date: payload.expense_date });
     toast(t('save_success'), 'success');
@@ -1056,7 +1056,7 @@ async function loadExpenses() {
 
   let rows = [];
   if (navigator.onLine) {
-    let q = supabase.from('expenses')
+    let q = sbClient.from('expenses')
       .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id,departments(name),vehicle_types(name)), expense_categories(name,icon,color)`)
       .eq('is_deleted',false).order('expense_date',{ascending:false}).limit(1000);
     if (from)  q = q.gte('expense_date',from);
@@ -1120,7 +1120,7 @@ async function updateExpense() {
     description:  document.getElementById('ee-desc').value||null,
   };
   if (navigator.onLine) {
-    const { error } = await supabase.from('expenses').update(payload).eq('id',id);
+    const { error } = await sbClient.from('expenses').update(payload).eq('id',id);
     if (error) { toast(t('save_error'), 'error'); return; }
     logAction('edit_expense', { id, amount: payload.amount });
   } else {
@@ -1137,7 +1137,7 @@ async function updateExpense() {
 async function deleteExpense(id, clientId) {
   if (!confirm(t('confirm_delete'))) return;
   if (navigator.onLine) {
-    const { error } = await supabase.from('expenses').update({ is_deleted:true }).eq('id',id);
+    const { error } = await sbClient.from('expenses').update({ is_deleted:true }).eq('id',id);
     if (error) { toast(t('save_error'),'error'); return; }
     logAction('delete_expense', { id });
   } else {
@@ -1153,7 +1153,7 @@ async function deleteExpense(id, clientId) {
 // ─── VEHICLES ─────────────────────────────────────────────
 const FUEL_TH = { gasoline:'เบนซิน',diesel:'ดีเซล',ev:'ไฟฟ้า',hybrid:'ไฮบริด',lpg:'LPG',ngv:'NGV' };
 async function loadVehicles() {
-  const { data } = await supabase.from('vehicles')
+  const { data } = await sbClient.from('vehicles')
     .select('*,departments(name),vehicle_types(name)').eq('is_active',true).order('name');
   const rows = (data||[]).map(v=>({...v,department_name:v.departments?.name,vehicle_type_name:v.vehicle_types?.name}));
   document.getElementById('vehiclesTable').innerHTML = rows.length===0
@@ -1197,15 +1197,15 @@ async function saveVehicle() {
     year:document.getElementById('vm-year').value||null, fuel_type:document.getElementById('vm-fuel').value, is_active:true,
   };
   if (!body.license_plate||!body.name||!body.department_id||!body.vehicle_type_id) return toast(t('save_error'),'error');
-  if (id) await supabase.from('vehicles').update(body).eq('id',id);
-  else { const { error } = await supabase.from('vehicles').insert(body); if (error) return toast(error.message,'error'); }
+  if (id) await sbClient.from('vehicles').update(body).eq('id',id);
+  else { const { error } = await sbClient.from('vehicles').insert(body); if (error) return toast(error.message,'error'); }
   closeModal('vehicleModal'); toast(t('save_success'),'success');
   await loadMasterData(); loadVehicles();
 }
 
 async function deleteVehicle(id) {
   if (!confirm(t('confirm_del_veh'))) return;
-  await supabase.from('vehicles').update({is_active:false}).eq('id',id);
+  await sbClient.from('vehicles').update({is_active:false}).eq('id',id);
   toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
 }
 
@@ -1275,11 +1275,11 @@ async function loadReport() {
 
 // ─── USERS ────────────────────────────────────────────────
 async function loadUsers() {
-  const { data } = await supabase.from('user_profiles')
+  const { data } = await sbClient.from('user_profiles')
     .select('*, departments(name), auth_users:id(email)')
     .order('full_name');
   // Get all auth users via admin API (not available from client — use profiles only)
-  const { data: uvData } = await supabase.from('user_vehicles').select('user_id, vehicles(name, license_plate)');
+  const { data: uvData } = await sbClient.from('user_vehicles').select('user_id, vehicles(name, license_plate)');
   const uvMap = {};
   (uvData||[]).forEach(uv => { uvMap[uv.user_id]=uvMap[uv.user_id]||[]; uvMap[uv.user_id].push(`${uv.vehicles?.license_plate} ${uv.vehicles?.name}`); });
   const ROLE_COLORS = { admin:'#e74c3c', manager:'#f39c12', user:'#27ae60' };
@@ -1319,15 +1319,15 @@ async function saveUser() {
   const role = document.getElementById('um-role').value;
   const deptId = document.getElementById('um-dept').value;
   if (id) {
-    await supabase.from('user_profiles').update({ full_name:name, role, department_id:deptId||null }).eq('id',id);
+    await sbClient.from('user_profiles').update({ full_name:name, role, department_id:deptId||null }).eq('id',id);
     const checked = [...document.querySelectorAll('[name="um-veh"]:checked')].map(x=>Number(x.value));
-    await supabase.from('user_vehicles').delete().eq('user_id',id);
-    if (checked.length) await supabase.from('user_vehicles').insert(checked.map(vid=>({user_id:id,vehicle_id:vid})));
+    await sbClient.from('user_vehicles').delete().eq('user_id',id);
+    if (checked.length) await sbClient.from('user_vehicles').insert(checked.map(vid=>({user_id:id,vehicle_id:vid})));
   } else {
     // Invite new user via Supabase Auth (admin only)
     const email = document.getElementById('um-email').value;
     const pass  = document.getElementById('um-password').value;
-    const { data, error } = await supabase.auth.admin?.createUser({ email, password:pass, user_metadata:{ full_name:name, role } });
+    const { data, error } = await sbClient.auth.admin?.createUser({ email, password:pass, user_metadata:{ full_name:name, role } });
     if (error) { toast(error.message,'error'); return; }
     toast('ต้องสร้างผู้ใช้ผ่าน Supabase Dashboard หรือ invite email', 'info');
   }
@@ -1338,7 +1338,7 @@ async function saveUser() {
 async function loadAccessLogs() {
   const from = document.getElementById('log-from').value;
   const to   = document.getElementById('log-to').value;
-  let q = supabase.from('access_logs').select('*').order('created_at',{ascending:false}).limit(200);
+  let q = sbClient.from('access_logs').select('*').order('created_at',{ascending:false}).limit(200);
   if (from) q = q.gte('created_at', from);
   if (to)   q = q.lte('created_at', to+'T23:59:59');
   const { data } = await q;
@@ -1355,7 +1355,7 @@ async function loadAccessLogs() {
 
 // ─── SETTINGS ─────────────────────────────────────────────
 async function loadDeptTable() {
-  const { data } = await supabase.from('departments').select('*').order('name');
+  const { data } = await sbClient.from('departments').select('*').order('name');
   document.getElementById('deptTable').innerHTML = (data||[]).map(d=>`<tr>
     <td>${d.name}</td><td>${d.code||'-'}</td>
     <td><button class="btn btn-outline btn-sm btn-icon" onclick="openDeptModal(${d.id},'${d.name}','${d.code||''}')">✏️</button>
@@ -1371,19 +1371,19 @@ function openDeptModal(id='', name='', code='') {
 async function saveDept() {
   const id=document.getElementById('dm-id').value, name=document.getElementById('dm-name').value, code=document.getElementById('dm-code').value;
   if (!name) return toast(t('save_error'),'error');
-  if (id) await supabase.from('departments').update({name,code}).eq('id',id);
-  else { const { error } = await supabase.from('departments').insert({name,code}); if (error) return toast(error.message,'error'); }
+  if (id) await sbClient.from('departments').update({name,code}).eq('id',id);
+  else { const { error } = await sbClient.from('departments').insert({name,code}); if (error) return toast(error.message,'error'); }
   closeModal('deptModal'); toast(t('save_success'),'success'); await loadMasterData(); loadDeptTable();
 }
 async function deleteDept(id) {
   if (!confirm(t('confirm_delete'))) return;
-  const { error } = await supabase.from('departments').delete().eq('id',id);
+  const { error } = await sbClient.from('departments').delete().eq('id',id);
   if (error) { toast(error.message,'error'); return; }
   toast(t('delete_success'),'success'); await loadMasterData(); loadDeptTable();
 }
 
 async function loadVTypeTable() {
-  const { data } = await supabase.from('vehicle_types').select('*').order('name');
+  const { data } = await sbClient.from('vehicle_types').select('*').order('name');
   document.getElementById('vtypeTable').innerHTML = (data||[]).map(v=>`<tr>
     <td>${v.name}</td><td>${v.description||'-'}</td>
     <td><button class="btn btn-outline btn-sm btn-icon" onclick="openVTypeModal(${v.id},'${v.name}','${v.description||''}')">✏️</button></td>
@@ -1398,8 +1398,8 @@ function openVTypeModal(id='', name='', desc='') {
 async function saveVType() {
   const id=document.getElementById('vtm-id').value, name=document.getElementById('vtm-name').value, description=document.getElementById('vtm-desc').value;
   if (!name) return toast(t('save_error'),'error');
-  if (id) await supabase.from('vehicle_types').update({name,description}).eq('id',id);
-  else { const { error } = await supabase.from('vehicle_types').insert({name,description}); if (error) return toast(error.message,'error'); }
+  if (id) await sbClient.from('vehicle_types').update({name,description}).eq('id',id);
+  else { const { error } = await sbClient.from('vehicle_types').insert({name,description}); if (error) return toast(error.message,'error'); }
   closeModal('vtypeModal'); toast(t('save_success'),'success'); await loadMasterData(); loadVTypeTable();
 }
 
