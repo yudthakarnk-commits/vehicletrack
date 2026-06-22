@@ -7,7 +7,7 @@
 <title>VehicleTrack — ระบบค่าใช้จ่ายยานพาหนะ</title>
 <link rel="manifest" href="manifest.json">
 <!-- Supabase JS v2 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/sbClient.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Config & i18n (load first) -->
@@ -607,7 +607,7 @@ document.getElementById('login-password').addEventListener('keydown', e => {
 async function onSignIn(user) {
   currentUser = user;
   // Fetch profile
-  const { data: profile } = await supabase
+  const { data: profile } = await sbClient
     .from('user_profiles')
     .select('*, departments(name)')
     .eq('id', user.id)
