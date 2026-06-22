@@ -10,6 +10,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Tesseract OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <!-- Config & i18n (load first) -->
 <script src="js/config.js"></script>
 <script src="js/i18n.js"></script>
@@ -293,6 +295,21 @@ tr:hover td{background:#fafafa}
                   <input type="number" id="ef-odometer" min="0" placeholder="0"></div>
                 <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
                   <input type="text" id="ef-receipt"></div>
+                <!-- Camera / Receipt Scan -->
+                <div class="form-group full" id="scan-section">
+                  <label data-i18n="scan_receipt">สแกนใบเสร็จ</label>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('receipt-input').click()">
+                      📷 <span data-i18n="scan_receipt">สแกนใบเสร็จ</span>
+                    </button>
+                    <input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptScan(event)">
+                    <span id="scan-status" style="font-size:13px;color:var(--text-light)"></span>
+                  </div>
+                  <div id="scan-preview-wrap" style="display:none;margin-top:10px">
+                    <img id="receipt-preview" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border)">
+                    <div id="scan-amounts" style="margin-top:10px"></div>
+                  </div>
+                </div>
                 <div class="form-group full"><label data-i18n="notes">หมายเหตุ</label>
                   <textarea id="ef-desc"></textarea></div>
               </div>
@@ -571,10 +588,10 @@ let allDepts = [], allVTypes = [], allCats = [], allVehicles = [];
 let chartMonthly = null, chartCategory = null;
 
 // ─── UTILS ────────────────────────────────────────────────
-const fmt = n => new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+const fmt = n => new Intl.NumberFormat('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
 const today = () => new Date().toISOString().slice(0,10);
 const fmtDate = d => d ? String(d).slice(0,10) : '';
-const fmtDateTime = d => d ? new Date(d).toLocaleString('th-TH') : '';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('en-MY') : '';
 
 function toast(msg, type='') {
   const el = document.getElementById('toast');
@@ -690,16 +707,37 @@ function buildSidebar() {
 
 // ─── NAVIGATION ───────────────────────────────────────────
 const PAGE_TITLES = {
-  dashboard:'Dashboard', 'add-expense':'nav_add_expense', expenses:'nav_expenses',
+  dashboard:'nav_dashboard', 'add-expense':'nav_add_expense', expenses:'nav_expenses',
   vehicles:'nav_vehicles', report:'nav_report', users:'nav_users',
   'access-logs':'nav_access_logs', settings:'nav_settings'
 };
+function getCurrentPageName() {
+  const active = document.querySelector('.page.active');
+  return active ? active.id.replace('page-','') : null;
+}
+
+function refreshCurrentPage() {
+  const name = getCurrentPageName();
+  if (!name || !currentUser) return;
+  document.getElementById('topbarTitle').textContent = t(PAGE_TITLES[name]) || name;
+  if (name==='dashboard')   loadDashboard();
+  else if (name==='expenses')    loadExpenses();
+  else if (name==='vehicles')    loadVehicles();
+  else if (name==='report')      loadReport();
+  else if (name==='users')       loadUsers();
+  else if (name==='access-logs') loadAccessLogs();
+  else if (name==='settings')    { loadDeptTable(); loadVTypeTable(); }
+  else if (name==='add-expense') populateSelects();
+}
+
+window.addEventListener('langChanged', () => { refreshCurrentPage(); });
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
   document.querySelector(`[data-page="${name}"]`)?.classList.add('active');
-  document.getElementById('topbarTitle').textContent = name==='dashboard' ? 'Dashboard' : t(PAGE_TITLES[name]);
+  document.getElementById('topbarTitle').textContent = t(PAGE_TITLES[name]) || name;
   closeSidebar();
   if (name==='dashboard')    loadDashboard();
   if (name==='expenses')     loadExpenses();
@@ -884,14 +922,14 @@ async function loadDashboard() {
 
   document.getElementById('kpiGrid').innerHTML = `
     <div class="kpi-card"><div class="kpi-label">💰 ${t('total_expense')}</div>
-      <div class="kpi-value">฿${fmt(total)}</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
+      <div class="kpi-value">RM ${fmt(total)}</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
     <div class="kpi-card accent"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
       <div class="kpi-value">${vehicles}</div><div class="kpi-sub">${t('cars_unit')}</div></div>
     <div class="kpi-card success"><div class="kpi-label">📍 ${t('total_km')}</div>
       <div class="kpi-value">${fmt(totalKm)}</div><div class="kpi-sub">${t('km_unit')}</div></div>
     <div class="kpi-card danger"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
-      <div class="kpi-value">฿${fmt(fuelTotal)}</div>
-      <div class="kpi-sub">${totalKm>0?'฿'+fmt(fuelTotal/totalKm)+'/กม.':'-'}</div></div>`;
+      <div class="kpi-value">RM ${fmt(fuelTotal)}</div>
+      <div class="kpi-sub">${totalKm>0?'RM '+fmt(fuelTotal/totalKm)+'/km':'-'}</div></div>`;
 
   // Group by month
   const byMonth = {};
@@ -899,10 +937,10 @@ async function loadDashboard() {
   const months = Object.keys(byMonth).sort();
   if (chartMonthly) chartMonthly.destroy();
   chartMonthly = new Chart(document.getElementById('chartMonthly'), {
-    type:'bar', data:{ labels:months, datasets:[{ label:'฿', data:months.map(m=>byMonth[m]),
+    type:'bar', data:{ labels:months, datasets:[{ label:'RM', data:months.map(m=>byMonth[m]),
       backgroundColor:'rgba(30,58,95,.7)', borderRadius:6 }] },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'฿'+fmt(v)}}} }
+      plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'RM '+fmt(v)}}} }
   });
 
   // Group by category
@@ -931,7 +969,7 @@ async function loadDashboard() {
     : deptKeys.map(k=>`
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
-          <span>${k}</span><span class="fw-bold">฿${fmt(byDept[k])}</span></div>
+          <span>${k}</span><span class="fw-bold">RM ${fmt(byDept[k])}</span></div>
         <div class="progress"><div class="progress-bar" style="width:${(byDept[k]/maxD*100).toFixed(1)}%;background:var(--primary)"></div></div>
       </div>`).join('');
 
@@ -948,7 +986,7 @@ async function loadDashboard() {
     : vehKeys.map(k=>`
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
-          <span>${k}</span><span class="fw-bold">฿${fmt(byVeh[k])}</span></div>
+          <span>${k}</span><span class="fw-bold">RM ${fmt(byVeh[k])}</span></div>
         <div class="progress"><div class="progress-bar" style="width:${(byVeh[k]/maxV*100).toFixed(1)}%;background:var(--accent)"></div></div>
       </div>`).join('');
 
@@ -961,7 +999,7 @@ async function loadDashboard() {
         <td>${e.license_plate||''}<br><small class="text-muted">${e.vehicle_name||''}</small></td>
         <td>${e.department_name||'-'}</td>
         <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
-        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+        <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
       </tr>`).join('');
 }
 
@@ -1073,7 +1111,7 @@ async function loadExpenses() {
 
   const total = rows.reduce((s,r)=>s+Number(r.amount||0),0);
   document.getElementById('expCount').textContent = `${rows.length} ${t('transactions')}`;
-  document.getElementById('expTotal').textContent = rows.length ? `${t('total_label')} ฿${fmt(total)}` : '';
+  document.getElementById('expTotal').textContent = rows.length ? `${t('total_label')} RM ${fmt(total)}` : '';
   document.getElementById('expensesTable').innerHTML = rows.length===0
     ? `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>${t('no_data')}</p></div></td></tr>`
     : rows.map(e=>`<tr>
@@ -1083,7 +1121,7 @@ async function loadExpenses() {
         <td>${e.vehicle_type_name||'-'}</td>
         <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
         <td>${e.distance_km?fmt(e.distance_km)+' กม.':'-'}</td>
-        <td class="text-right fw-bold">฿${fmt(e.amount)}</td>
+        <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
         <td><button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button></td>
@@ -1246,7 +1284,7 @@ async function loadReport() {
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ ${t('btn_print')}</button>
       </div>
       <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;display:flex;gap:24px;flex-wrap:wrap">
-        <div><small class="text-muted">${t('grand_total')}</small><br><strong style="font-size:20px;color:var(--primary)">฿${fmt(grandTotal)}</strong></div>
+        <div><small class="text-muted">${t('grand_total')}</small><br><strong style="font-size:20px;color:var(--primary)">RM ${fmt(grandTotal)}</strong></div>
         <div><small class="text-muted">${t('transactions')}</small><br><strong>${rows.length}</strong></div>
         <div><small class="text-muted">${t('total_km')}</small><br><strong>${fmt(rows.reduce((s,r)=>s+Number(r.distance_km||0),0))} ${t('km_unit')}</strong></div>
       </div>
@@ -1258,13 +1296,13 @@ async function loadReport() {
         </tr></thead>
         <tbody>${sortedKeys.map(k=>`<tr>
           <td class="fw-bold">${k}</td>
-          <td class="text-right">฿${fmt(grouped[k].total)}</td>
+          <td class="text-right">RM ${fmt(grouped[k].total)}</td>
           <td class="text-right">${((grouped[k].total/grandTotal)*100).toFixed(1)}%</td>
           <td class="text-right">${grouped[k].count}</td>
           <td class="text-right">${grouped[k].km?fmt(grouped[k].km)+' '+t('km_unit'):'-'}</td>
         </tr>`).join('')}</tbody>
         <tfoot><tr style="background:var(--bg);font-weight:700">
-          <td>${t('grand_total')}</td><td class="text-right">฿${fmt(grandTotal)}</td>
+          <td>${t('grand_total')}</td><td class="text-right">RM ${fmt(grandTotal)}</td>
           <td class="text-right">100%</td><td class="text-right">${rows.length}</td>
           <td class="text-right">${fmt(rows.reduce((s,r)=>s+Number(r.distance_km||0),0))} ${t('km_unit')}</td>
         </tr></tfoot>
@@ -1415,6 +1453,82 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.serviceWorker.register('/sw.js').catch(()=>{});
   }
 });
+
+// ══════════════════════════════════════════════════
+//  RECEIPT SCANNING (Tesseract OCR)
+// ══════════════════════════════════════════════════
+async function handleReceiptScan(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('scan-status');
+  const previewWrap = document.getElementById('scan-preview-wrap');
+  const previewImg = document.getElementById('receipt-preview');
+  const amountsEl = document.getElementById('scan-amounts');
+
+  // Show preview
+  const url = URL.createObjectURL(file);
+  previewImg.src = url;
+  previewWrap.style.display = 'block';
+  statusEl.textContent = t('scanning');
+  amountsEl.innerHTML = '';
+
+  try {
+    // Check Tesseract available
+    if (typeof Tesseract === 'undefined') {
+      statusEl.textContent = t('scan_error');
+      return;
+    }
+    const result = await Tesseract.recognize(file, 'eng+tha', {});
+    const text = result.data.text;
+
+    // Extract all numbers that look like money amounts
+    // Patterns: 123.45, 1,234.56, RM123, TOTAL 123
+    const patterns = [
+      /(?:TOTAL|JUMLAH|AMOUNT|GRAND|BAYAR|TUNAI|CASH|CHANGE|PAID)[^\d]*(\d[\d,]*\.?\d{0,2})/gi,
+      /(\d{1,6}(?:[,\.]\d{2,3})*(?:\.\d{2})?)/g
+    ];
+
+    const found = new Set();
+    // Priority: TOTAL-like patterns
+    let priorityMatch = text.match(/(?:TOTAL|JUMLAH|AMOUNT DUE|GRAND TOTAL)[^\d
+]{0,10}(\d[\d,]*\.?\d{0,2})/i);
+    if (priorityMatch) found.add(priorityMatch[1].replace(/,/g,''));
+
+    // General numeric extraction
+    const numRe = /(\d{1,6}(?:,\d{3})*(?:\.\d{2})?)/g;
+    let m;
+    while ((m = numRe.exec(text)) !== null) {
+      const val = parseFloat(m[1].replace(/,/g,''));
+      if (val >= 1 && val <= 999999) found.add(String(val.toFixed(2)));
+    }
+
+    const sorted = [...found]
+      .map(v => parseFloat(v))
+      .filter(v => v > 0)
+      .sort((a,b) => b-a)
+      .slice(0, 6);
+
+    if (sorted.length === 0) {
+      statusEl.textContent = t('scan_error');
+      return;
+    }
+
+    statusEl.textContent = t('scan_result') + ':';
+    amountsEl.innerHTML = sorted.map(v =>
+      `<button type="button" class="btn btn-outline btn-sm" style="margin:4px"
+        onclick="document.getElementById('ef-amount').value=${v};document.getElementById('scan-status').textContent='✅ RM ${v}';document.getElementById('scan-amounts').innerHTML=''">
+        RM ${fmt(v)} &nbsp;✔
+       </button>`
+    ).join('');
+
+  } catch(err) {
+    console.error('OCR error:', err);
+    statusEl.textContent = t('scan_error');
+  }
+  // Reset input so same file can be re-scanned
+  event.target.value = '';
+}
+
 </script>
 </body>
 </html>

@@ -56,9 +56,9 @@ const TRANSLATIONS = {
     date:             'วันที่',
     vehicle:          'รถ',
     expense_type:     'ประเภทค่าใช้จ่าย',
-    amount:           'จำนวนเงิน (บาท)',
+    amount:           'จำนวนเงิน (RM)',
     fuel_liters:      'ปริมาณน้ำมัน (ลิตร)',
-    price_per_liter:  'ราคาต่อลิตร (บาท)',
+    price_per_liter:  'ราคาต่อลิตร (RM)',
     distance:         'ระยะทาง (กม.)',
     odometer:         'เลขไมล์ (กม.)',
     receipt_no:       'เลขที่ใบเสร็จ',
@@ -146,6 +146,14 @@ const TRANSLATIONS = {
     col_desc:         'คำอธิบาย',
     col_code:         'รหัส',
 
+    // Camera / Receipt
+    scan_receipt:     'สแกนใบเสร็จ',
+    scanning:         'กำลังสแกน...',
+    scan_result:      'ผลการสแกน',
+    scan_confirm:     'ใช้ยอดนี้',
+    scan_error:       'สแกนไม่สำเร็จ กรอกมือ',
+    currency:         'RM',
+
     // Status
     online:           'ออนไลน์',
     offline:          'ออฟไลน์',
@@ -211,9 +219,9 @@ const TRANSLATIONS = {
     date:             'Date',
     vehicle:          'Vehicle',
     expense_type:     'Expense Type',
-    amount:           'Amount (THB)',
+    amount:           'Amount (MYR)',
     fuel_liters:      'Fuel Volume (liters)',
-    price_per_liter:  'Price per Liter (THB)',
+    price_per_liter:  'Price per Liter (MYR)',
     distance:         'Distance (km)',
     odometer:         'Odometer (km)',
     receipt_no:       'Receipt No.',
@@ -295,6 +303,13 @@ const TRANSLATIONS = {
     col_desc:         'Description',
     col_code:         'Code',
 
+    scan_receipt:     'Scan Receipt',
+    scanning:         'Scanning...',
+    scan_result:      'Scan Result',
+    scan_confirm:     'Use this amount',
+    scan_error:       'Scan failed, enter manually',
+    currency:         'RM',
+
     online:           'Online',
     offline:          'Offline',
     syncing:          'Syncing...',
@@ -336,4 +351,5 @@ function setLang(lang) {
   ['lang-en','lang-en-app'].forEach(id => {
     const el = document.getElementById(id); if (el) el.classList.toggle('active-lang', lang === 'en');
   });
+  window.dispatchEvent(new CustomEvent('langChanged', { detail: { lang } }));
 }
