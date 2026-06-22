@@ -355,13 +355,14 @@ function setLang(lang) {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
-  // Update all lang toggle buttons (login + app topbar)
-  ['lang-th','lang-th-app'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.classList.toggle('active-lang', lang === 'th');
+  // Update lang toggle buttons (login + app topbar)
+  ['lang-th', 'lang-th-app'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active-lang', lang === 'th');
   });
-  ['lang-en','lang-en-app'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.classList.toggle('active-lang', lang === 'en');
+  ['lang-en', 'lang-en-app'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active-lang', lang === 'en');
   });
   window.dispatchEvent(new CustomEvent('langChanged', { detail: { lang } }));
 }
-              
