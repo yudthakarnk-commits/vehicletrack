@@ -1,18 +1,21 @@
 // ============================================================
-//  Service Worker — VehicleTrack PWA
+//  Service Worker — VehicleTrack PWA  v2.1.0
 //  Caches app shell + static assets for offline use
 // ============================================================
 
-const CACHE_NAME = 'vehicletrack-v2.0.0';
+const CACHE_NAME = 'vehicletrack-v2.1.0';
+const BASE = '/vehicletrack';
 
 // App shell files to cache on install
 const PRECACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/js/config.js',
-  '/js/i18n.js',
-  '/js/offline.js',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
+  BASE + '/js/config.js',
+  BASE + '/js/i18n.js',
+  BASE + '/js/offline.js',
+  BASE + '/icons/icon-192.png',
+  BASE + '/icons/icon-512.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
 ];
@@ -35,7 +38,10 @@ self.addEventListener('activate', event => {
       Promise.all(
         keys
           .filter(k => k !== CACHE_NAME)
-          .map(k => caches.delete(k))
+          .map(k => {
+            console.log('[SW] Deleting old cache:', k);
+            return caches.delete(k);
+          })
       )
     ).then(() => self.clients.claim())
   );
@@ -59,14 +65,14 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(c => c.put(request, clone));
           return res;
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match(BASE + '/index.html'))
     );
     return;
   }
 
   // For JS/CDN resources: cache-first, network fallback
   if (
-    url.pathname.startsWith('/js/') ||
+    url.pathname.startsWith(BASE + '/js/') ||
     url.hostname.includes('cdn.jsdelivr.net') ||
     url.hostname.includes('cdnjs.cloudflare.com')
   ) {
@@ -98,11 +104,9 @@ self.addEventListener('fetch', event => {
 });
 
 // ─── BACKGROUND SYNC ──────────────────────────────────────
-// Triggered when connection is restored (requires Background Sync API)
 self.addEventListener('sync', event => {
   if (event.tag === 'sync-expenses') {
     event.waitUntil(
-      // Notify all clients to trigger sync
       self.clients.matchAll().then(clients =>
         clients.forEach(client => client.postMessage({ type: 'TRIGGER_SYNC' }))
       )
@@ -117,8 +121,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'VehicleTrack', {
       body: data.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-72.png',
+      icon: BASE + '/icons/icon-192.png',
+      badge: BASE + '/icons/icon-72.png',
     })
   );
 });
