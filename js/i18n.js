@@ -94,6 +94,8 @@ const TRANSLATIONS = {
     col_plate:        'ทะเบียน',
     col_name:         'ชื่อรถ',
     col_brand:        'ยี่ห้อ/รุ่น',
+    col_brand_only:   'ยี่ห้อ',
+    col_model:        'รุ่น',
     col_year:         'ปี',
     col_fuel:         'เชื้อเพลิง',
     no_vehicles:      'ยังไม่มีรถ',
@@ -145,6 +147,10 @@ const TRANSLATIONS = {
     btn_confirm:      'ยืนยัน',
     col_desc:         'คำอธิบาย',
     col_code:         'รหัส',
+
+    // Fuel form
+    fuel_grade:       'ชนิดน้ำมัน',
+    select_grade:     '-- เลือกชนิด --',
 
     // Camera / Receipt
     scan_receipt:     'สแกนใบเสร็จ',
@@ -255,6 +261,8 @@ const TRANSLATIONS = {
     col_plate:        'License Plate',
     col_name:         'Name',
     col_brand:        'Brand/Model',
+    col_brand_only:   'Brand',
+    col_model:        'Model',
     col_year:         'Year',
     col_fuel:         'Fuel',
     no_vehicles:      'No vehicles yet',
@@ -302,6 +310,9 @@ const TRANSLATIONS = {
     btn_confirm:      'Confirm',
     col_desc:         'Description',
     col_code:         'Code',
+
+    fuel_grade:       'Fuel Grade',
+    select_grade:     '-- Select Grade --',
 
     scan_receipt:     'Scan Receipt',
     scanning:         'Scanning...',
@@ -353,3 +364,4 @@ function setLang(lang) {
   });
   window.dispatchEvent(new CustomEvent('langChanged', { detail: { lang } }));
 }
+              

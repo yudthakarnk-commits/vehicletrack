@@ -264,3 +264,15 @@ CREATE INDEX IF NOT EXISTS idx_vehicles_dept       ON vehicles (department_id);
 -- Enable realtime for sync
 ALTER PUBLICATION supabase_realtime ADD TABLE expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE vehicles;
+
+-- ═══════════════════════════════════════════════════════════════
+--  MIGRATION: Add name_en to vehicle_types (run if upgrading)
+-- ═══════════════════════════════════════════════════════════════
+ALTER TABLE vehicle_types ADD COLUMN IF NOT EXISTS name_en TEXT;
+
+UPDATE vehicle_types SET name_en = 'Personal Car'  WHERE name = 'รถยนต์ส่วนบุคคล';
+UPDATE vehicle_types SET name_en = 'Pickup Truck'  WHERE name = 'รถกระบะ';
+UPDATE vehicle_types SET name_en = 'Van / MPV'     WHERE name = 'รถตู้';
+UPDATE vehicle_types SET name_en = 'Truck'         WHERE name = 'รถบรรทุก';
+UPDATE vehicle_types SET name_en = 'Motorcycle'    WHERE name = 'รถจักรยานยนต์';
+UPDATE vehicle_types SET name_en = 'Trailer'       WHERE name = 'รถพ่วง';

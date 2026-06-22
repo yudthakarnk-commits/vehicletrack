@@ -525,8 +525,8 @@ tr:hover td{background:#fafafa}
         <div class="form-group"><label data-i18n="col_name">ชื่อรถ</label><input type="text" id="vm-name"></div>
         <div class="form-group"><label data-i18n="department">หน่วยงาน</label><select id="vm-dept"></select></div>
         <div class="form-group"><label data-i18n="vehicle_type">ชนิดรถ</label><select id="vm-vtype"></select></div>
-        <div class="form-group"><label>ยี่ห้อ</label><input type="text" id="vm-brand"></div>
-        <div class="form-group"><label>รุ่น</label><input type="text" id="vm-model"></div>
+        <div class="form-group"><label data-i18n="col_brand_only">ยี่ห้อ</label><input type="text" id="vm-brand"></div>
+        <div class="form-group"><label data-i18n="col_model">รุ่น</label><input type="text" id="vm-model"></div>
         <div class="form-group"><label data-i18n="col_year">ปี</label><input type="number" id="vm-year" min="2000" max="2035"></div>
         <div class="form-group"><label data-i18n="col_fuel">เชื้อเพลิง</label>
           <select id="vm-fuel">
@@ -825,7 +825,7 @@ async function loadMasterData() {
         sbClient.from('departments').select('*').order('name'),
         sbClient.from('vehicle_types').select('*').order('name'),
         sbClient.from('expense_categories').select('*').order('id'),
-        sbClient.from('vehicles').select('*, departments(name), vehicle_types(name)').eq('is_active', true).order('name'),
+        sbClient.from('vehicles').select('*, departments(name, name_en), vehicle_types(name, name_en)').eq('is_active', true).order('name'),
       ]);
       allDepts    = d.data || [];
       allVTypes   = v.data || [];
@@ -853,9 +853,10 @@ async function loadMasterData() {
 }
 
 function populateSelects() {
-  const deptOpts  = allDepts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
-  const vtypeOpts = allVTypes.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-  const catOpts   = allCats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  const useName = o => currentLang==='en' ? (o.name_en||o.name) : o.name;
+  const deptOpts  = allDepts.map(d=>`<option value="${d.id}">${useName(d)}</option>`).join('');
+  const vtypeOpts = allVTypes.map(t=>`<option value="${t.id}">${useName(t)}</option>`).join('');
+  const catOpts   = allCats.map(c=>`<option value="${c.id}">${c.icon} ${useName(c)}</option>`).join('');
   const allVehOpts = allVehicles.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
 
   ['db-dept','exp-dept','rp-dept'].forEach(id => {
@@ -926,7 +927,7 @@ async function loadDashboard() {
   let rows = [];
   try {
     let q = sbClient.from('expenses')
-      .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id, departments(name), vehicle_types(name)), expense_categories(name, icon, color)`)
+      .select(`*, vehicles!inner(name, license_plate, department_id, vehicle_type_id, departments(name, name_en), vehicle_types(name, name_en)), expense_categories(name, name_en, icon, color)`)
       .eq('is_deleted', false)
       .order('expense_date', { ascending: false })
       .limit(2000);
@@ -1122,7 +1123,7 @@ async function loadExpenses() {
   let rows = [];
   if (navigator.onLine) {
     let q = sbClient.from('expenses')
-      .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id,departments(name),vehicle_types(name)), expense_categories(name,icon,color)`)
+      .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id,departments(name,name_en),vehicle_types(name,name_en)), expense_categories(name,name_en,icon,color)`)
       .eq('is_deleted',false).order('expense_date',{ascending:false}).limit(1000);
     if (from)  q = q.gte('expense_date',from);
     if (to)    q = q.lte('expense_date',to);
