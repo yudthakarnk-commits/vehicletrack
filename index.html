@@ -116,6 +116,11 @@ tr:hover td{background:#fafafa}
 /* Settings sticky-scroll tables */
 #page-settings .table-wrap{overflow-y:auto;max-height:420px;border-radius:8px}
 #page-settings th{position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8}
+/* Page Tabs (Vehicles) */
+.page-tabs{display:flex;gap:0;margin-bottom:16px;background:rgba(255,255,255,.92);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.tab-btn{flex:1;padding:9px 16px;border:none;background:transparent;cursor:pointer;border-radius:9px;font-size:13px;font-weight:500;color:var(--text-light);transition:all .2s}
+.tab-btn:hover{background:rgba(37,99,235,.08);color:var(--primary)}
+.tab-btn.active{background:var(--primary);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.35)}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 /* FORMS */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
@@ -420,19 +425,67 @@ tr:hover td{background:#fafafa}
 
         <!-- ══ VEHICLES ══ -->
         <div class="page" id="page-vehicles">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-            <button class="btn btn-accent" onclick="openVehicleModal()" id="add-vehicle-btn" style="font-weight:700">
-              + <span data-i18n="add_vehicle">เพิ่มรถ</span>
-            </button>
+          <!-- Tabs -->
+          <div class="page-tabs">
+            <button class="tab-btn active" id="tab-vehicle-list" onclick="switchVehicleTab('list')">🚗 <span data-i18n="tab_vehicle_list">รายการรถ</span></button>
+            <button class="tab-btn" id="tab-usage-log" onclick="switchVehicleTab('log')">📋 <span data-i18n="tab_usage_log">บันทึกการใช้งาน</span></button>
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title" data-i18n="vehicle_list">รายการรถ</span></div>
-            <div class="table-wrap"><table><thead><tr>
-              <th data-i18n="col_plate">ทะเบียน</th><th data-i18n="col_name">ชื่อรถ</th>
-              <th data-i18n="department">หน่วยงาน</th><th data-i18n="vehicle_type">ชนิดรถ</th>
-              <th data-i18n="col_brand">ยี่ห้อ/รุ่น</th><th data-i18n="col_year">ปี</th>
-              <th data-i18n="col_fuel">เชื้อเพลิง</th><th></th>
-            </tr></thead><tbody id="vehiclesTable"></tbody></table></div>
+
+          <!-- Tab 1: Vehicle List -->
+          <div id="vtab-list">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+              <button class="btn btn-accent" onclick="openVehicleModal()" id="add-vehicle-btn" style="font-weight:700">
+                + <span data-i18n="add_vehicle">เพิ่มรถ</span>
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title" data-i18n="vehicle_list">รายการรถ</span></div>
+              <div class="table-wrap"><table><thead><tr>
+                <th data-i18n="col_plate">ทะเบียน</th><th data-i18n="col_name">ชื่อรถ</th>
+                <th data-i18n="department">หน่วยงาน</th><th data-i18n="vehicle_type">ชนิดรถ</th>
+                <th data-i18n="col_brand">ยี่ห้อ/รุ่น</th><th data-i18n="col_year">ปี</th>
+                <th data-i18n="col_fuel">เชื้อเพลิง</th><th></th>
+              </tr></thead><tbody id="vehiclesTable"></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Usage Logs -->
+          <div id="vtab-log" style="display:none">
+            <div class="filter-bar">
+              <div class="filter-group">
+                <label data-i18n="vehicle">รถ</label>
+                <select id="ul-filter-vehicle" onchange="loadUsageLogs()"><option value="">-- รถทั้งหมด --</option></select>
+              </div>
+              <div class="filter-group">
+                <label data-i18n="from_date">จากวันที่</label>
+                <input type="date" id="ul-filter-from" onchange="loadUsageLogs()">
+              </div>
+              <div class="filter-group">
+                <label data-i18n="to_date">ถึงวันที่</label>
+                <input type="date" id="ul-filter-to" onchange="loadUsageLogs()">
+              </div>
+              <button class="btn btn-accent" onclick="openUsageModal()" style="font-weight:700;margin-left:auto">
+                + <span data-i18n="add_usage_log">บันทึกการใช้งาน</span>
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title" data-i18n="usage_log_title">บันทึกการใช้งานรถ</span>
+                <span id="ulCount" class="text-muted" style="font-size:12px"></span>
+              </div>
+              <div class="table-wrap" style="overflow-x:auto"><table><thead><tr>
+                <th data-i18n="col_date">วันที่</th>
+                <th data-i18n="col_vehicle">รถ</th>
+                <th data-i18n="col_driver">ผู้ขับ</th>
+                <th data-i18n="col_origin">ต้นทาง</th>
+                <th data-i18n="col_destination">ปลายทาง</th>
+                <th data-i18n="col_purpose">วัตถุประสงค์</th>
+                <th data-i18n="col_odo_start">ไมล์ต้น</th>
+                <th data-i18n="col_odo_end">ไมล์ปลาย</th>
+                <th data-i18n="col_distance_km">ระยะทาง (กม.)</th>
+                <th></th>
+              </tr></thead><tbody id="usageLogsTable"></tbody></table></div>
+            </div>
           </div>
         </div>
 
@@ -590,6 +643,65 @@ tr:hover td{background:#fafafa}
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('vehicleModal')" data-i18n="btn_cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveVehicle()" data-i18n="btn_save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- USAGE LOG MODAL -->
+<div class="modal-overlay" id="usageModal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <h3 id="usageModalTitle" data-i18n="add_usage_log">บันทึกการใช้งานรถ</h3>
+      <button class="close-btn" onclick="closeModal('usageModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ulm-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label data-i18n="date">วันที่ <span style="color:red">*</span></label>
+          <input type="date" id="ulm-date">
+        </div>
+        <div class="form-group">
+          <label data-i18n="vehicle">รถ <span style="color:red">*</span></label>
+          <select id="ulm-vehicle"><option value="">-- เลือกรถ --</option></select>
+        </div>
+        <div class="form-group full">
+          <label data-i18n="driver_name_lbl">ชื่อผู้ขับ <span style="color:red">*</span></label>
+          <input type="text" id="ulm-driver" placeholder="ชื่อ-นามสกุลผู้ขับ">
+        </div>
+        <div class="form-group">
+          <label data-i18n="origin_lbl">ต้นทาง</label>
+          <input type="text" id="ulm-origin" placeholder="สถานที่ต้นทาง">
+        </div>
+        <div class="form-group">
+          <label data-i18n="destination_lbl">ปลายทาง</label>
+          <input type="text" id="ulm-destination" placeholder="สถานที่ปลายทาง">
+        </div>
+        <div class="form-group full">
+          <label data-i18n="purpose_lbl">วัตถุประสงค์ / เหตุผล</label>
+          <input type="text" id="ulm-purpose" placeholder="เช่น ส่งเอกสาร, ประชุม, ตรวจพื้นที่">
+        </div>
+        <div class="form-group">
+          <label data-i18n="odo_start_lbl">เลขไมล์ต้น (กม.)</label>
+          <input type="number" id="ulm-odo-start" placeholder="0" step="0.1" oninput="calcULDistance()">
+        </div>
+        <div class="form-group">
+          <label data-i18n="odo_end_lbl">เลขไมล์ปลาย (กม.)</label>
+          <input type="number" id="ulm-odo-end" placeholder="0" step="0.1" oninput="calcULDistance()">
+        </div>
+        <div class="form-group full">
+          <label data-i18n="calc_distance_lbl">ระยะทาง (คำนวณอัตโนมัติ)</label>
+          <input type="text" id="ulm-distance" readonly style="background:#f1f5f9;color:var(--primary);font-weight:700;cursor:default">
+        </div>
+        <div class="form-group full">
+          <label data-i18n="notes">หมายเหตุ</label>
+          <textarea id="ulm-notes" rows="2" placeholder="(ไม่บังคับ)" style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('usageModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveUsageLog()" data-i18n="btn_save">บันทึก</button>
     </div>
   </div>
 </div>
@@ -802,7 +914,7 @@ function refreshCurrentPage() {
   populateSelects(); // rebuild all filter selects with current language
   if (name==='dashboard')   loadDashboard();
   else if (name==='expenses')    loadExpenses();
-  else if (name==='vehicles')    loadVehicles();
+  else if (name==='vehicles')    { switchVehicleTab('list'); loadVehicles(); }
   else if (name==='report')      loadReport();
   else if (name==='users')       loadUsers();
   else if (name==='access-logs') loadAccessLogs();
@@ -820,7 +932,7 @@ function showPage(name) {
   closeSidebar();
   if (name==='dashboard')    loadDashboard();
   if (name==='expenses')     loadExpenses();
-  if (name==='vehicles')     loadVehicles();
+  if (name==='vehicles')     { switchVehicleTab('list'); loadVehicles(); }
   if (name==='report')       loadReport();
   if (name==='users')        loadUsers();
   if (name==='access-logs')  loadAccessLogs();
@@ -1347,6 +1459,168 @@ async function deleteVehicle(id) {
   if (!confirm(t('confirm_del_veh'))) return;
   await sbClient.from('vehicles').update({is_active:false}).eq('id',id);
   toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
+}
+
+// ─── VEHICLE USAGE LOGS ───────────────────────────────────
+let assignedVehicleIds = []; // vehicles this user can log usage for
+
+function switchVehicleTab(tab) {
+  const isList = tab === 'list';
+  document.getElementById('vtab-list').style.display = isList ? '' : 'none';
+  document.getElementById('vtab-log').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-vehicle-list').classList.toggle('active', isList);
+  document.getElementById('tab-usage-log').classList.toggle('active', !isList);
+  if (!isList) { loadAssignedVehicles().then(() => { populateULVehicleSelects(); loadUsageLogs(); }); }
+}
+
+async function loadAssignedVehicles() {
+  if (!currentUser) return;
+  const role = currentProfile?.role;
+  if (role === 'admin' || role === 'manager') {
+    assignedVehicleIds = allVehicles.map(v => v.id);
+  } else {
+    const { data } = await sbClient.from('user_vehicles').select('vehicle_id').eq('user_id', currentUser.id);
+    assignedVehicleIds = (data||[]).map(x => Number(x.vehicle_id));
+  }
+}
+
+function getAccessibleVehicles() {
+  const role = currentProfile?.role;
+  if (role === 'admin' || role === 'manager') return allVehicles;
+  return allVehicles.filter(v => assignedVehicleIds.includes(v.id));
+}
+
+function populateULVehicleSelects() {
+  const vehicles = getAccessibleVehicles();
+  const opts = vehicles.map(v => `<option value="${v.id}">${v.license_plate} – ${v.name}</option>`).join('');
+  document.getElementById('ul-filter-vehicle').innerHTML = `<option value="">-- รถทั้งหมด --</option>` + opts;
+  document.getElementById('ulm-vehicle').innerHTML = `<option value="">-- เลือกรถ --</option>` + opts;
+}
+
+async function loadUsageLogs() {
+  const vehicleId = document.getElementById('ul-filter-vehicle').value;
+  const from = document.getElementById('ul-filter-from').value;
+  const to   = document.getElementById('ul-filter-to').value;
+
+  let q = sbClient.from('vehicle_usage_logs')
+    .select('*, vehicles(license_plate, name)')
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  // Role-based filter: users see only their assigned vehicles
+  const role = currentProfile?.role;
+  if (role !== 'admin' && role !== 'manager') {
+    if (assignedVehicleIds.length === 0) {
+      document.getElementById('usageLogsTable').innerHTML =
+        `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('no_usage_logs')}</p></div></td></tr>`;
+      document.getElementById('ulCount').textContent = '';
+      return;
+    }
+    q = q.in('vehicle_id', assignedVehicleIds);
+  }
+
+  if (vehicleId) q = q.eq('vehicle_id', Number(vehicleId));
+  if (from) q = q.gte('date', from);
+  if (to)   q = q.lte('date', to);
+
+  const { data, error } = await q;
+  if (error) { console.error('loadUsageLogs:', error.message); }
+  const rows = data||[];
+  document.getElementById('ulCount').textContent = rows.length ? `(${rows.length} รายการ)` : '';
+
+  document.getElementById('usageLogsTable').innerHTML = rows.length === 0
+    ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('no_usage_logs')}</p></div></td></tr>`
+    : rows.map(r => {
+        const dist = (r.odometer_start != null && r.odometer_end != null && r.odometer_end > r.odometer_start)
+          ? (r.odometer_end - r.odometer_start).toFixed(1)
+          : '-';
+        const veh = r.vehicles ? `${r.vehicles.license_plate}<br><small class="text-muted">${r.vehicles.name}</small>` : '-';
+        return `<tr>
+          <td>${fmtDate(r.date)}</td>
+          <td class="fw-bold">${veh}</td>
+          <td>${r.driver_name}</td>
+          <td>${r.origin||'-'}</td>
+          <td>${r.destination||'-'}</td>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.purpose||'-'}</td>
+          <td>${r.odometer_start!=null?r.odometer_start:'-'}</td>
+          <td>${r.odometer_end!=null?r.odometer_end:'-'}</td>
+          <td class="fw-bold" style="color:var(--primary)">${dist !== '-' ? dist + ' กม.' : '-'}</td>
+          <td>
+            <button class="btn btn-outline btn-sm btn-icon" onclick='openUsageModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUsageLog(${r.id})">🗑️</button>
+          </td>
+        </tr>`;
+      }).join('');
+}
+
+function calcULDistance() {
+  const s = parseFloat(document.getElementById('ulm-odo-start').value);
+  const e = parseFloat(document.getElementById('ulm-odo-end').value);
+  if (!isNaN(s) && !isNaN(e) && e > s) {
+    document.getElementById('ulm-distance').value = (e - s).toFixed(1) + ' กม.';
+  } else {
+    document.getElementById('ulm-distance').value = '';
+  }
+}
+
+async function openUsageModal(log=null) {
+  await loadAssignedVehicles();
+  populateULVehicleSelects();
+  const isEdit = !!log;
+  document.getElementById('usageModalTitle').textContent = isEdit ? t('edit_log') : t('add_usage_log');
+  document.getElementById('ulm-id').value          = log?.id || '';
+  document.getElementById('ulm-date').value        = log?.date || today();
+  document.getElementById('ulm-vehicle').value     = log?.vehicle_id || '';
+  document.getElementById('ulm-driver').value      = log?.driver_name || currentProfile?.full_name || '';
+  document.getElementById('ulm-origin').value      = log?.origin || '';
+  document.getElementById('ulm-destination').value = log?.destination || '';
+  document.getElementById('ulm-purpose').value     = log?.purpose || '';
+  document.getElementById('ulm-odo-start').value   = log?.odometer_start ?? '';
+  document.getElementById('ulm-odo-end').value     = log?.odometer_end ?? '';
+  document.getElementById('ulm-notes').value       = log?.notes || '';
+  calcULDistance();
+  openModal('usageModal');
+}
+
+async function saveUsageLog() {
+  const id        = document.getElementById('ulm-id').value;
+  const date      = document.getElementById('ulm-date').value;
+  const vehicleId = document.getElementById('ulm-vehicle').value;
+  const driver    = document.getElementById('ulm-driver').value.trim();
+  if (!date || !vehicleId || !driver) return toast(t('save_error'), 'error');
+
+  const oStart = document.getElementById('ulm-odo-start').value;
+  const oEnd   = document.getElementById('ulm-odo-end').value;
+  const body = {
+    date,
+    vehicle_id:     Number(vehicleId),
+    user_id:        currentUser.id,
+    driver_name:    driver,
+    origin:         document.getElementById('ulm-origin').value || null,
+    destination:    document.getElementById('ulm-destination').value || null,
+    purpose:        document.getElementById('ulm-purpose').value || null,
+    odometer_start: oStart !== '' ? parseFloat(oStart) : null,
+    odometer_end:   oEnd   !== '' ? parseFloat(oEnd)   : null,
+    notes:          document.getElementById('ulm-notes').value || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbClient.from('vehicle_usage_logs').update(body).eq('id', id));
+  } else {
+    ({ error } = await sbClient.from('vehicle_usage_logs').insert(body));
+  }
+  if (error) return toast(error.message, 'error');
+  closeModal('usageModal');
+  toast(t('save_success'), 'success');
+  loadUsageLogs();
+}
+
+async function deleteUsageLog(id) {
+  if (!confirm(t('confirm_del_log'))) return;
+  await sbClient.from('vehicle_usage_logs').delete().eq('id', id);
+  toast(t('delete_success'), 'success');
+  loadUsageLogs();
 }
 
 // ─── REPORT ───────────────────────────────────────────────
