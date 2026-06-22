@@ -2,10 +2,11 @@
   "name": "VehicleTrack — ระบบค่าใช้จ่ายยานพาหนะ",
   "short_name": "VehicleTrack",
   "description": "ระบบติดตามค่าใช้จ่ายยานพาหนะ รองรับออนไลน์/ออฟไลน์",
-  "start_url": "/",
+  "start_url": "/vehicletrack/",
+  "scope": "/vehicletrack/",
   "display": "standalone",
-  "background_color": "#1e3a5f",
-  "theme_color": "#1e3a5f",
+  "background_color": "#2563EB",
+  "theme_color": "#2563EB",
   "orientation": "any",
   "lang": "th",
   "icons": [
@@ -22,13 +23,13 @@
     {
       "name": "บันทึกค่าใช้จ่าย",
       "short_name": "เพิ่มค่าใช้จ่าย",
-      "url": "/?page=add-expense",
+      "url": "/vehicletrack/?page=add-expense",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "รายงาน",
       "short_name": "รายงาน",
-      "url": "/?page=report",
+      "url": "/vehicletrack/?page=report",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
