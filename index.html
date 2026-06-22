@@ -336,14 +336,14 @@ tr:hover td{background:#fafafa}
                   <select id="ef-category" onchange="categoryChanged()" required>
                     <option value="" data-i18n="select_type">-- เลือกประเภท --</option></select></div>
                 <div class="form-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
-                  <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00"></div>
+                  <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
                 <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
-                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00"></div>
+                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal();calcFuelPricePerLiter()"></div>
                 <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (RM)</label>
                   <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
                 <div class="form-group" id="ef-fueltype-group" style="display:none">
                   <label data-i18n="fuel_grade">ชนิดน้ำมัน</label>
-                  <select id="ef-fuel-type">
+                  <select id="ef-fuel-type" style="width:100%">
                     <option value="" data-i18n="select_grade">-- เลือกชนิด --</option>
                     <optgroup label="Petrol">
                       <option value="RON 95">⛽ RON 95</option>
@@ -361,10 +361,10 @@ tr:hover td{background:#fafafa}
                     </optgroup>
                   </select>
                 </div>
-                <div class="form-group"><label data-i18n="distance">ระยะทาง (กม.)</label>
-                  <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0"></div>
+                <div class="form-group" id="ef-distance-group" style="display:none"><label data-i18n="distance">ระยะทาง (กม.)</label>
+                  <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0" readonly style="background:#f0f4fa;color:var(--text-light)"></div>
                 <div class="form-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
-                  <input type="number" id="ef-odometer" min="0" placeholder="0"></div>
+                  <input type="number" id="ef-odometer" min="0" placeholder="0" oninput="calcExpenseDistance()"></div>
                 <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
                   <input type="text" id="ef-receipt"></div>
                 <!-- Camera / Receipt Scan -->
@@ -1072,18 +1072,52 @@ function filterVehiclesByDept() {
     filtered.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
 }
 
-function categoryChanged() {
+function isFuelCategory() {
   const catId = document.getElementById('ef-category').value;
   const cat = allCats.find(c=>c.id==catId);
-  const isFuel = cat?.name_en === 'Fuel' || cat?.name?.includes('น้ำมัน');
+  return cat?.name_en === 'Fuel' || cat?.name?.includes('น้ำมัน');
+}
+function categoryChanged() {
+  const isFuel = isFuelCategory();
   document.getElementById('ef-fuel-group').style.display     = isFuel?'block':'none';
   document.getElementById('ef-price-group').style.display    = isFuel?'block':'none';
   document.getElementById('ef-fueltype-group').style.display = isFuel?'block':'none';
+  document.getElementById('ef-distance-group').style.display = isFuel?'block':'none';
+  if (isFuel) calcExpenseDistance();
 }
 function calcFuelTotal() {
   const l = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
   const p = parseFloat(document.getElementById('ef-fuel-price')?.value)||0;
   if (l && p) document.getElementById('ef-amount').value = (l*p).toFixed(2);
+}
+function calcFuelPricePerLiter() {
+  const l = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
+  const a = parseFloat(document.getElementById('ef-amount')?.value)||0;
+  if (l && a) document.getElementById('ef-fuel-price').value = (a/l).toFixed(4);
+}
+async function calcExpenseDistance() {
+  if (!isFuelCategory()) return;
+  const vehicleId = document.getElementById('ef-vehicle').value;
+  const currentOdo = parseFloat(document.getElementById('ef-odometer').value);
+  if (!vehicleId || isNaN(currentOdo) || currentOdo <= 0) {
+    document.getElementById('ef-distance').value = '';
+    return;
+  }
+  const fuelCatIds = allCats.filter(c=>c.name?.includes('น้ำมัน')||c.name_en?.includes('Fuel')).map(c=>c.id);
+  const { data } = await sbClient.from('expenses')
+    .select('odometer')
+    .eq('vehicle_id', Number(vehicleId))
+    .in('category_id', fuelCatIds)
+    .not('odometer', 'is', null)
+    .order('expense_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (data?.odometer != null && currentOdo > Number(data.odometer)) {
+    document.getElementById('ef-distance').value = (currentOdo - Number(data.odometer)).toFixed(1);
+  } else {
+    document.getElementById('ef-distance').value = '';
+  }
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────
@@ -1331,7 +1365,7 @@ async function loadExpenses() {
         <td>${e.license_plate||''}<br><small class="text-muted">${e.vehicle_name||''}</small></td>
         <td>${e.vehicle_type_name||'-'}</td>
         <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
-        <td>${e.distance_km?fmt(e.distance_km)+' กม.':'-'}</td>
+        <td>${e.distance_km?fmt(e.distance_km)+' '+t('km_abbr'):'-'}</td>
         <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
         <td><button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
@@ -1528,7 +1562,7 @@ async function loadUsageLogs() {
   const { data, error } = await q;
   if (error) { console.error('loadUsageLogs:', error.message); }
   const rows = data||[];
-  document.getElementById('ulCount').textContent = rows.length ? `(${rows.length} รายการ)` : '';
+  document.getElementById('ulCount').textContent = rows.length ? `(${rows.length} ${t('transactions')})` : '';
 
   // คำนวณระยะทางรวม
   const totalKm = rows.reduce((sum, r) => {
@@ -1539,7 +1573,7 @@ async function loadUsageLogs() {
   const hasFilter = vehicleId || from || to;
   document.getElementById('ulTotal').textContent =
     (rows.length > 0 && (hasFilter || rows.length > 0))
-      ? `${t('total_label')} ${fmtKm(totalKm)} กม.`
+      ? `${t('total_label')} ${fmtKm(totalKm)} ${t('km_abbr')}`
       : '';
 
   document.getElementById('usageLogsTable').innerHTML = rows.length === 0
@@ -1547,7 +1581,7 @@ async function loadUsageLogs() {
     : rows.map(r => {
         const km = (r.odometer_start != null && r.odometer_end != null && r.odometer_end > r.odometer_start)
           ? r.odometer_end - r.odometer_start : null;
-        const distCell = km != null ? `<span class="fw-bold" style="color:var(--primary)">${fmtKm(km)} กม.</span>` : '-';
+        const distCell = km != null ? `<span class="fw-bold" style="color:var(--primary)">${fmtKm(km)} ${t('km_abbr')}</span>` : '-';
         const veh = r.vehicles ? `${r.vehicles.license_plate}<br><small class="text-muted">${r.vehicles.name}</small>` : '-';
         return `<tr>
           <td>${fmtDate(r.date)}</td>
@@ -1571,7 +1605,7 @@ function calcULDistance() {
   const s = parseFloat(document.getElementById('ulm-odo-start').value);
   const e = parseFloat(document.getElementById('ulm-odo-end').value);
   if (!isNaN(s) && !isNaN(e) && e > s) {
-    document.getElementById('ulm-distance').value = fmtKm(e - s) + ' กม.';
+    document.getElementById('ulm-distance').value = fmtKm(e - s) + ' ' + t('km_abbr');
   } else {
     document.getElementById('ulm-distance').value = '';
   }
