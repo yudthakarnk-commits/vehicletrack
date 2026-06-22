@@ -287,8 +287,28 @@ tr:hover td{background:#fafafa}
                   <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00"></div>
                 <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
                   <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00"></div>
-                <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (บาท)</label>
+                <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (RM)</label>
                   <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
+                <div class="form-group" id="ef-fueltype-group" style="display:none">
+                  <label data-i18n="fuel_grade">ชนิดน้ำมัน</label>
+                  <select id="ef-fuel-type">
+                    <option value="" data-i18n="select_grade">-- เลือกชนิด --</option>
+                    <optgroup label="Petrol">
+                      <option value="RON 95">⛽ RON 95</option>
+                      <option value="RON 97">⛽ RON 97</option>
+                      <option value="RON 100">⛽ RON 100</option>
+                    </optgroup>
+                    <optgroup label="Diesel">
+                      <option value="Diesel B10">🛢 Diesel B10</option>
+                      <option value="Diesel B20">🛢 Diesel B20</option>
+                      <option value="Euro 5 Diesel">🛢 Euro 5 Diesel</option>
+                    </optgroup>
+                    <optgroup label="Others">
+                      <option value="E5 Petrol">⛽ E5 Petrol</option>
+                      <option value="E10 Petrol">⛽ E10 Petrol</option>
+                    </optgroup>
+                  </select>
+                </div>
                 <div class="form-group"><label data-i18n="distance">ระยะทาง (กม.)</label>
                   <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0"></div>
                 <div class="form-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
@@ -557,8 +577,12 @@ tr:hover td{background:#fafafa}
     <div class="modal-body">
       <input type="hidden" id="um-id">
       <div class="form-grid">
+        <div id="um-new-user-info" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:7px;padding:10px;margin-bottom:8px;font-size:13px;grid-column:1/-1">
+          📧 ระบบจะส่ง email ยืนยันให้ผู้ใช้ใหม่ (ถ้า Supabase เปิด email confirmation) หรือเข้าใช้งานได้ทันที
+        </div>
         <div class="form-group"><label data-i18n="col_email">อีเมล</label><input type="email" id="um-email"></div>
-        <div class="form-group" id="um-password-group"><label data-i18n="password">รหัสผ่าน</label><input type="password" id="um-password" placeholder="รหัสผ่านใหม่"></div>
+        <div class="form-group" id="um-password-group"><label data-i18n="password">รหัสผ่าน</label>
+          <input type="password" id="um-password" placeholder="อย่างน้อย 6 ตัวอักษร" minlength="6"></div>
         <div class="form-group"><label data-i18n="col_fullname">ชื่อ-นามสกุล</label><input type="text" id="um-name"></div>
         <div class="form-group"><label data-i18n="col_role">สิทธิ์</label>
           <select id="um-role">
@@ -881,9 +905,10 @@ function filterVehiclesByDept() {
 function categoryChanged() {
   const catId = document.getElementById('ef-category').value;
   const cat = allCats.find(c=>c.id==catId);
-  const isFuel = cat?.name_en === 'Fuel';
-  document.getElementById('ef-fuel-group').style.display  = isFuel?'block':'none';
-  document.getElementById('ef-price-group').style.display = isFuel?'block':'none';
+  const isFuel = cat?.name_en === 'Fuel' || cat?.name?.includes('น้ำมัน');
+  document.getElementById('ef-fuel-group').style.display     = isFuel?'block':'none';
+  document.getElementById('ef-price-group').style.display    = isFuel?'block':'none';
+  document.getElementById('ef-fueltype-group').style.display = isFuel?'block':'none';
 }
 function calcFuelTotal() {
   const l = parseFloat(document.getElementById('ef-fuel-liters')?.value)||0;
@@ -1082,6 +1107,8 @@ function resetExpenseForm() {
   document.getElementById('ef-date').value = today();
   document.getElementById('ef-fuel-group').style.display = 'none';
   document.getElementById('ef-price-group').style.display = 'none';
+  document.getElementById('ef-fueltype-group').style.display = 'none';
+  document.getElementById('ef-fuel-type').value = '';
 }
 
 // ─── EXPENSES LIST ────────────────────────────────────────
@@ -1325,7 +1352,7 @@ async function loadUsers() {
   document.getElementById('usersTable').innerHTML = (data||[]).length===0
     ? `<tr><td colspan="6"><div class="empty-state"><p>${t('no_data')}</p></div></td></tr>`
     : (data||[]).map(u=>`<tr>
-        <td>${u.id}</td>
+        <td style='font-size:12px'>${u.email||u.id.slice(0,8)+'...'}</td>
         <td>${u.full_name||'-'}</td>
         <td><span class="badge" style="background:${ROLE_COLORS[u.role]}22;color:${ROLE_COLORS[u.role]}">${roleLabel(u.role)}</span></td>
         <td>${u.departments?.name||'-'}</td>
@@ -1335,41 +1362,112 @@ async function loadUsers() {
 }
 
 function openUserModal(u=null) {
-  document.getElementById('userModalTitle').textContent = u ? t('btn_edit') : t('add_user');
-  document.getElementById('um-id').value = u?.id||'';
-  document.getElementById('um-email').value = u?.id||'';
+  const isEdit = !!u;
+  document.getElementById('userModalTitle').textContent = isEdit ? t('btn_edit') : t('add_user');
+  document.getElementById('um-id').value       = u?.id||'';
+  document.getElementById('um-email').value    = u?.email||'';
+  document.getElementById('um-email').readOnly = isEdit;
+  document.getElementById('um-email').style.background = isEdit ? 'var(--bg)' : '';
   document.getElementById('um-password').value = '';
-  document.getElementById('um-name').value = u?.full_name||'';
-  document.getElementById('um-role').value = u?.role||'user';
-  document.getElementById('um-dept').value = u?.department_id||'';
+  document.getElementById('um-name').value     = u?.full_name||'';
+  document.getElementById('um-role').value     = u?.role||'user';
+  document.getElementById('um-dept').value     = u?.department_id||'';
+  document.getElementById('um-new-user-info').style.display = isEdit ? 'none' : 'block';
   const vmList = document.getElementById('um-vehicles-list');
   vmList.innerHTML = allVehicles.map(v=>`
     <label style="display:block;margin-bottom:4px;cursor:pointer">
       <input type="checkbox" value="${v.id}" name="um-veh"> ${v.license_plate} - ${v.name}
     </label>`).join('');
-  document.getElementById('um-password-group').style.display = u ? 'none' : 'block';
+  document.getElementById('um-password-group').style.display = isEdit ? 'none' : 'block';
   openModal('userModal');
 }
 
 async function saveUser() {
-  const id = document.getElementById('um-id').value;
-  const name = document.getElementById('um-name').value;
-  const role = document.getElementById('um-role').value;
-  const deptId = document.getElementById('um-dept').value;
+  const id      = document.getElementById('um-id').value;
+  const email   = document.getElementById('um-email').value.trim();
+  const pass    = document.getElementById('um-password').value;
+  const name    = document.getElementById('um-name').value.trim();
+  const role    = document.getElementById('um-role').value;
+  const deptId  = document.getElementById('um-dept').value;
+  const checked = [...document.querySelectorAll('[name="um-veh"]:checked')].map(x=>Number(x.value));
+
   if (id) {
-    await sbClient.from('user_profiles').update({ full_name:name, role, department_id:deptId||null }).eq('id',id);
-    const checked = [...document.querySelectorAll('[name="um-veh"]:checked')].map(x=>Number(x.value));
+    // ── Edit existing user ──────────────────────────────────
+    const { error } = await sbClient.from('user_profiles')
+      .update({ full_name:name, role, department_id:deptId||null }).eq('id',id);
+    if (error) { toast(error.message,'error'); return; }
     await sbClient.from('user_vehicles').delete().eq('user_id',id);
     if (checked.length) await sbClient.from('user_vehicles').insert(checked.map(vid=>({user_id:id,vehicle_id:vid})));
+    logAction('edit_user',{user_id:id,role});
+    closeModal('userModal'); toast(t('save_success'),'success'); loadUsers();
+
   } else {
-    // Invite new user via Supabase Auth (admin only)
-    const email = document.getElementById('um-email').value;
-    const pass  = document.getElementById('um-password').value;
-    const { data, error } = await sbClient.auth.admin?.createUser({ email, password:pass, user_metadata:{ full_name:name, role } });
-    if (error) { toast(error.message,'error'); return; }
-    toast('ต้องสร้างผู้ใช้ผ่าน Supabase Dashboard หรือ invite email', 'info');
+    // ── Create new user via signUp() ───────────────────────
+    if (!email)       { toast('กรุณากรอก Email','error'); return; }
+    if (pass.length<6){ toast('Password ต้องมีอย่างน้อย 6 ตัวอักษร','error'); return; }
+
+    const saveBtn = document.querySelector('#userModal .btn-primary');
+    saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังสร้าง...';
+
+    // 1) Save admin's current session tokens
+    const { data:{ session:adminSession } } = await sbClient.auth.getSession();
+
+    try {
+      // 2) signUp new user
+      const { data, error } = await sbClient.auth.signUp({
+        email, password:pass,
+        options:{ data:{ full_name:name } }
+      });
+      if (error) throw error;
+      if (!data?.user) throw new Error('ไม่ได้รับข้อมูลผู้ใช้จาก Supabase');
+
+      const newUid = data.user.id;
+
+      // 3) Restore admin session if signUp changed it (email confirm disabled)
+      const { data:{ session:nowSession } } = await sbClient.auth.getSession();
+      if (nowSession?.user?.id !== adminSession?.user?.id && adminSession) {
+        await sbClient.auth.setSession({
+          access_token:  adminSession.access_token,
+          refresh_token: adminSession.refresh_token
+        });
+      }
+
+      // 4) Wait for DB trigger to create user_profiles row (max 1.5s)
+      await new Promise(r => setTimeout(r, 1000));
+
+      // 5) Upsert profile with role / name / dept
+      const { error:profErr } = await sbClient.from('user_profiles').upsert({
+        id: newUid, email, full_name:name, role,
+        department_id: deptId||null
+      });
+      if (profErr) console.warn('profile upsert:', profErr.message);
+
+      // 6) Assign vehicles
+      await sbClient.from('user_vehicles').delete().eq('user_id',newUid);
+      if (checked.length)
+        await sbClient.from('user_vehicles').insert(checked.map(vid=>({user_id:newUid,vehicle_id:vid})));
+
+      logAction('create_user',{email,role});
+
+      const msg = data.session
+        ? `✅ สร้างผู้ใช้ ${email} สำเร็จ!`
+        : `✅ สร้างผู้ใช้สำเร็จ! ส่ง email ยืนยันไปที่ ${email} แล้ว`;
+      closeModal('userModal'); toast(msg,'success'); loadUsers();
+
+    } catch(err) {
+      console.error('createUser error:', err);
+      // Restore admin session on error
+      if (adminSession) {
+        await sbClient.auth.setSession({
+          access_token:  adminSession.access_token,
+          refresh_token: adminSession.refresh_token
+        }).catch(()=>{});
+      }
+      toast(err.message||t('save_error'),'error');
+    } finally {
+      saveBtn.disabled = false; saveBtn.textContent = t('btn_save');
+    }
   }
-  closeModal('userModal'); toast(t('save_success'),'success'); loadUsers();
 }
 
 // ─── ACCESS LOGS ──────────────────────────────────────────
@@ -1457,15 +1555,55 @@ document.addEventListener('DOMContentLoaded', () => {
 // ══════════════════════════════════════════════════
 //  RECEIPT SCANNING (Tesseract OCR)
 // ══════════════════════════════════════════════════
+//  RECEIPT SCANNING — Malaysian petrol station OCR
+// ══════════════════════════════════════════════════
+
+// Fuel grade patterns (MY: Petronas, Shell, BHP, Caltex, PETRONASmart etc.)
+const MY_FUEL_GRADES = [
+  { grade:'RON 95',       patterns:[/ron\s*95/i, /petrol\s*95/i, /r95/i, /95\s*ron/i, /unleaded\s*95/i] },
+  { grade:'RON 97',       patterns:[/ron\s*97/i, /petrol\s*97/i, /r97/i, /97\s*ron/i, /v-power/i] },
+  { grade:'RON 100',      patterns:[/ron\s*100/i, /100\s*ron/i, /v-power\s*100/i, /nitro\+/i] },
+  { grade:'Diesel B10',   patterns:[/b10/i, /diesel\s*b10/i, /biodiesel\s*10/i] },
+  { grade:'Diesel B20',   patterns:[/b20/i, /diesel\s*b20/i, /biodiesel\s*20/i] },
+  { grade:'Euro 5 Diesel',patterns:[/euro\s*5/i, /euro5/i, /diesel\s*euro/i] },
+  { grade:'Diesel B10',   patterns:[/diesel/i, /gas\s*oil/i] }, // generic diesel fallback
+  { grade:'E5 Petrol',    patterns:[/e5/i, /ethanol\s*5/i] },
+  { grade:'E10 Petrol',   patterns:[/e10/i, /ethanol\s*10/i] },
+];
+
+function detectFuelGrade(text) {
+  for (const { grade, patterns } of MY_FUEL_GRADES) {
+    if (patterns.some(p => p.test(text))) return grade;
+  }
+  return null;
+}
+
+function detectLiters(text) {
+  // Patterns: "35.50 L", "LITER : 35.50", "VOLUME 35.50", "QTY 35.50 L"
+  const litPatterns = [
+    /(?:volume|qty|liter[s]?|litre[s]?|isipadu|kuantiti)[^\d]{0,10}(\d{1,4}\.\d{1,3})/gi,
+    /(\d{1,4}\.\d{1,3})\s*(?:l|liter|litre|L)/gi,
+    /jumlah\s+(?:liter|isipadu)[^\d]{0,10}(\d{1,4}\.\d{1,3})/gi,
+  ];
+  for (const re of litPatterns) {
+    re.lastIndex = 0;
+    const m = re.exec(text);
+    if (m) {
+      const v = parseFloat(m[1]);
+      if (v > 0 && v < 500) return v; // sanity: 0–500 liters
+    }
+  }
+  return null;
+}
+
 async function handleReceiptScan(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById('scan-status');
+  const statusEl    = document.getElementById('scan-status');
   const previewWrap = document.getElementById('scan-preview-wrap');
-  const previewImg = document.getElementById('receipt-preview');
-  const amountsEl = document.getElementById('scan-amounts');
+  const previewImg  = document.getElementById('receipt-preview');
+  const amountsEl   = document.getElementById('scan-amounts');
 
-  // Show preview
   const url = URL.createObjectURL(file);
   previewImg.src = url;
   previewWrap.style.display = 'block';
@@ -1473,62 +1611,120 @@ async function handleReceiptScan(event) {
   amountsEl.innerHTML = '';
 
   try {
-    // Check Tesseract available
-    if (typeof Tesseract === 'undefined') {
-      statusEl.textContent = t('scan_error');
-      return;
-    }
+    if (typeof Tesseract === 'undefined') { statusEl.textContent = t('scan_error'); return; }
+
     const result = await Tesseract.recognize(file, 'eng+tha', {});
-    const text = result.data.text;
+    const text   = result.data.text;
+    console.log('[OCR]', text);
 
-    // Extract all numbers that look like money amounts
-    // Patterns: 123.45, 1,234.56, RM123, TOTAL 123
-    const patterns = [
-      /(?:TOTAL|JUMLAH|AMOUNT|GRAND|BAYAR|TUNAI|CASH|CHANGE|PAID)[^\d]*(\d[\d,]*\.?\d{0,2})/gi,
-      /(\d{1,6}(?:[,\.]\d{2,3})*(?:\.\d{2})?)/g
-    ];
+    // ── Detect fuel grade ──────────────────────────────────
+    const fuelGrade = detectFuelGrade(text);
 
-    const found = new Set();
-    // Priority: TOTAL-like patterns
-    let priorityMatch = text.match(/(?:TOTAL|JUMLAH|AMOUNT DUE|GRAND TOTAL)[^\d
-]{0,10}(\d[\d,]*\.?\d{0,2})/i);
-    if (priorityMatch) found.add(priorityMatch[1].replace(/,/g,''));
+    // ── Detect liters ──────────────────────────────────────
+    const liters = detectLiters(text);
 
-    // General numeric extraction
-    const numRe = /(\d{1,6}(?:,\d{3})*(?:\.\d{2})?)/g;
+    // ── Detect amount candidates ───────────────────────────
+    const amountMap = new Map();
+
+    // Priority pattern: TOTAL / JUMLAH / AMOUNT
+    const totalRe = /(?:TOTAL|JUMLAH|AMOUNT\s*DUE?|GRAND\s*TOTAL|BAYAR|PAID|TUNAI|CASH)[^\d
+]{0,12}(RM\s*)?(\d[\d,]*\.?\d{0,2})/gi;
     let m;
+    while ((m = totalRe.exec(text)) !== null) {
+      const v = parseFloat(m[2].replace(/,/g,''));
+      if (v > 0 && v < 99999) amountMap.set(v, 'priority');
+    }
+
+    // RM-prefixed amounts
+    const rmRe = /RM\s*(\d[\d,]*\.\d{2})/gi;
+    while ((m = rmRe.exec(text)) !== null) {
+      const v = parseFloat(m[1].replace(/,/g,''));
+      if (v > 0 && v < 99999) amountMap.set(v, amountMap.get(v)||'rm');
+    }
+
+    // General decimal numbers
+    const numRe = /(\d{1,6}\.\d{2})/g;
     while ((m = numRe.exec(text)) !== null) {
-      const val = parseFloat(m[1].replace(/,/g,''));
-      if (val >= 1 && val <= 999999) found.add(String(val.toFixed(2)));
+      const v = parseFloat(m[1]);
+      if (v > 0 && v < 99999) amountMap.set(v, amountMap.get(v)||'num');
     }
 
-    const sorted = [...found]
-      .map(v => parseFloat(v))
-      .filter(v => v > 0)
-      .sort((a,b) => b-a)
-      .slice(0, 6);
+    const sortedAmounts = [...amountMap.entries()]
+      .sort((a,b) => {
+        const rank = {priority:0, rm:1, num:2};
+        if (rank[a[1]] !== rank[b[1]]) return rank[a[1]] - rank[b[1]];
+        return b[0] - a[0];
+      })
+      .map(e=>e[0])
+      .slice(0,5);
 
-    if (sorted.length === 0) {
+    // ── Build result UI ────────────────────────────────────
+    let html = '';
+
+    if (fuelGrade || liters || sortedAmounts.length > 0) {
+      statusEl.textContent = '✅ ' + t('scan_result');
+
+      // Auto-fill fuel grade
+      if (fuelGrade) {
+        const sel = document.getElementById('ef-fuel-type');
+        if (sel) {
+          for (const opt of sel.options) {
+            if (opt.value === fuelGrade) { sel.value = fuelGrade; break; }
+          }
+        }
+      }
+
+      // Auto-fill liters
+      if (liters) {
+        const litEl = document.getElementById('ef-fuel-liters');
+        if (litEl) litEl.value = liters.toFixed(2);
+        // Recalc total if price already set
+        calcFuelTotal();
+      }
+
+      // Summary chip
+      html += `<div style="background:#f0f7ff;border:1px solid #b0d0f0;border-radius:8px;padding:10px;margin-bottom:8px;font-size:13px">`;
+      if (fuelGrade) html += `⛽ <strong>${fuelGrade}</strong>&nbsp;&nbsp;`;
+      if (liters)    html += `🔢 <strong>${liters.toFixed(2)} L</strong>&nbsp;&nbsp;`;
+      html += `</div>`;
+
+      // Amount buttons
+      if (sortedAmounts.length > 0) {
+        html += `<div style="font-size:12px;color:var(--text-light);margin-bottom:4px">${t('scan_result')} — ${t('scan_confirm')}:</div>`;
+        html += sortedAmounts.map(v =>
+          `<button type="button" class="btn btn-outline btn-sm" style="margin:4px"
+            onclick="applyScannedAmount(${v})">RM ${fmt(v)} ✔</button>`
+        ).join('');
+      }
+
+    } else {
       statusEl.textContent = t('scan_error');
-      return;
     }
 
-    statusEl.textContent = t('scan_result') + ':';
-    amountsEl.innerHTML = sorted.map(v =>
-      `<button type="button" class="btn btn-outline btn-sm" style="margin:4px"
-        onclick="document.getElementById('ef-amount').value=${v};document.getElementById('scan-status').textContent='✅ RM ${v}';document.getElementById('scan-amounts').innerHTML=''">
-        RM ${fmt(v)} &nbsp;✔
-       </button>`
-    ).join('');
+    amountsEl.innerHTML = html;
 
   } catch(err) {
     console.error('OCR error:', err);
     statusEl.textContent = t('scan_error');
   }
-  // Reset input so same file can be re-scanned
   event.target.value = '';
 }
+
+function applyScannedAmount(v) {
+  document.getElementById('ef-amount').value = v;
+  // Recalc liters if price known
+  const price = parseFloat(document.getElementById('ef-fuel-price')?.value)||0;
+  if (price > 0) {
+    document.getElementById('ef-fuel-liters').value = (v/price).toFixed(2);
+  }
+  // Clear amount buttons but keep summary
+  const btns = document.getElementById('scan-amounts').querySelectorAll('button');
+  btns.forEach(b=>b.remove());
+  document.getElementById('scan-status').textContent = `✅ RM ${fmt(v)}`;
+}
+
 
 </script>
 </body>
 </html>
+                               
