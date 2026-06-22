@@ -1373,6 +1373,7 @@ async function submitExpense(e) {
     toast(t('save_success'), 'success');
     updatePendingBadge();
     resetExpenseForm();
+    setTimeout(() => showPage('expenses'), 600);
     return;
   }
 
@@ -1405,6 +1406,7 @@ async function submitExpense(e) {
   }
   updatePendingBadge();
   resetExpenseForm();
+  setTimeout(() => showPage('expenses'), 600);
 }
 
 function resetExpenseForm() {
