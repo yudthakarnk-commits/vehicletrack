@@ -473,18 +473,19 @@ tr:hover td{background:#fafafa}
                 <span class="card-title" data-i18n="usage_log_title">บันทึกการใช้งานรถ</span>
                 <span id="ulCount" class="text-muted" style="font-size:12px"></span>
               </div>
-              <div class="table-wrap" style="overflow-x:auto"><table><thead><tr>
-                <th data-i18n="col_date">วันที่</th>
-                <th data-i18n="col_vehicle">รถ</th>
-                <th data-i18n="col_driver">ผู้ขับ</th>
-                <th data-i18n="col_origin">ต้นทาง</th>
-                <th data-i18n="col_destination">ปลายทาง</th>
-                <th data-i18n="col_purpose">วัตถุประสงค์</th>
-                <th data-i18n="col_odo_start">ไมล์ต้น</th>
-                <th data-i18n="col_odo_end">ไมล์ปลาย</th>
-                <th data-i18n="col_distance_km">ระยะทาง (กม.)</th>
-                <th></th>
+              <div class="table-wrap" style="overflow-x:auto;overflow-y:auto;max-height:480px;border-radius:8px"><table><thead><tr>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_date">วันที่</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_vehicle">รถ</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_driver">ผู้ขับ</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_origin">ต้นทาง</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_destination">ปลายทาง</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_purpose">วัตถุประสงค์</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_odo_start">ไมล์ต้น</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_odo_end">ไมล์ปลาย</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8" data-i18n="col_distance_km">ระยะทาง (กม.)</th>
+                <th style="position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8"></th>
               </tr></thead><tbody id="usageLogsTable"></tbody></table></div>
+              <div id="ulTotal" style="text-align:right;padding:10px 4px 2px;font-size:14px;font-weight:700;color:var(--primary)"></div>
             </div>
           </div>
         </div>
@@ -663,7 +664,7 @@ tr:hover td{background:#fafafa}
         </div>
         <div class="form-group">
           <label data-i18n="vehicle">รถ <span style="color:red">*</span></label>
-          <select id="ulm-vehicle"><option value="" data-i18n="select_vehicle">-- เลือกรถ --</option></select>
+          <select id="ulm-vehicle" onchange="autoFillOdoStart()"><option value="" data-i18n="select_vehicle">-- เลือกรถ --</option></select>
         </div>
         <div class="form-group full">
           <label data-i18n="driver_name_lbl">ชื่อผู้ขับ <span style="color:red">*</span></label>
@@ -771,7 +772,8 @@ let allDepts = [], allVTypes = [], allCats = [], allVehicles = [];
 let chartMonthly = null, chartCategory = null;
 
 // ─── UTILS ────────────────────────────────────────────────
-const fmt = n => new Intl.NumberFormat('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+const fmt   = n => new Intl.NumberFormat('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+const fmtKm = n => new Intl.NumberFormat('en-MY',{minimumFractionDigits:1,maximumFractionDigits:1}).format(n||0);
 const today = () => new Date().toISOString().slice(0,10);
 const fmtDate = d => d ? String(d).slice(0,10) : '';
 const fmtDateTime = d => d ? new Date(d).toLocaleString('en-MY') : '';
@@ -1528,12 +1530,24 @@ async function loadUsageLogs() {
   const rows = data||[];
   document.getElementById('ulCount').textContent = rows.length ? `(${rows.length} รายการ)` : '';
 
+  // คำนวณระยะทางรวม
+  const totalKm = rows.reduce((sum, r) => {
+    if (r.odometer_start != null && r.odometer_end != null && r.odometer_end > r.odometer_start)
+      return sum + (r.odometer_end - r.odometer_start);
+    return sum;
+  }, 0);
+  const hasFilter = vehicleId || from || to;
+  document.getElementById('ulTotal').textContent =
+    (rows.length > 0 && (hasFilter || rows.length > 0))
+      ? `${t('total_label')} ${fmtKm(totalKm)} กม.`
+      : '';
+
   document.getElementById('usageLogsTable').innerHTML = rows.length === 0
     ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('no_usage_logs')}</p></div></td></tr>`
     : rows.map(r => {
-        const dist = (r.odometer_start != null && r.odometer_end != null && r.odometer_end > r.odometer_start)
-          ? (r.odometer_end - r.odometer_start).toFixed(1)
-          : '-';
+        const km = (r.odometer_start != null && r.odometer_end != null && r.odometer_end > r.odometer_start)
+          ? r.odometer_end - r.odometer_start : null;
+        const distCell = km != null ? `<span class="fw-bold" style="color:var(--primary)">${fmtKm(km)} กม.</span>` : '-';
         const veh = r.vehicles ? `${r.vehicles.license_plate}<br><small class="text-muted">${r.vehicles.name}</small>` : '-';
         return `<tr>
           <td>${fmtDate(r.date)}</td>
@@ -1542,9 +1556,9 @@ async function loadUsageLogs() {
           <td>${r.origin||'-'}</td>
           <td>${r.destination||'-'}</td>
           <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.purpose||'-'}</td>
-          <td>${r.odometer_start!=null?r.odometer_start:'-'}</td>
-          <td>${r.odometer_end!=null?r.odometer_end:'-'}</td>
-          <td class="fw-bold" style="color:var(--primary)">${dist !== '-' ? dist + ' กม.' : '-'}</td>
+          <td>${r.odometer_start!=null ? fmtKm(r.odometer_start) : '-'}</td>
+          <td>${r.odometer_end!=null   ? fmtKm(r.odometer_end)   : '-'}</td>
+          <td>${distCell}</td>
           <td>
             <button class="btn btn-outline btn-sm btn-icon" onclick='openUsageModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️</button>
             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUsageLog(${r.id})">🗑️</button>
@@ -1557,9 +1571,28 @@ function calcULDistance() {
   const s = parseFloat(document.getElementById('ulm-odo-start').value);
   const e = parseFloat(document.getElementById('ulm-odo-end').value);
   if (!isNaN(s) && !isNaN(e) && e > s) {
-    document.getElementById('ulm-distance').value = (e - s).toFixed(1) + ' กม.';
+    document.getElementById('ulm-distance').value = fmtKm(e - s) + ' กม.';
   } else {
     document.getElementById('ulm-distance').value = '';
+  }
+}
+
+async function autoFillOdoStart() {
+  // เฉพาะตอน Add ใหม่ (ไม่ใช่ Edit)
+  if (document.getElementById('ulm-id').value) return;
+  const vehicleId = document.getElementById('ulm-vehicle').value;
+  if (!vehicleId) return;
+  const { data } = await sbClient.from('vehicle_usage_logs')
+    .select('odometer_end')
+    .eq('vehicle_id', Number(vehicleId))
+    .not('odometer_end', 'is', null)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (data?.odometer_end != null) {
+    document.getElementById('ulm-odo-start').value = data.odometer_end;
+    calcULDistance();
   }
 }
 
