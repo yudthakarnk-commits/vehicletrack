@@ -668,7 +668,8 @@ async function onSignIn(user) {
     loadMasterData(); loadDashboard();
   });
   if (navigator.onLine) await pullFromServer(sbClient);
-  setLang(profile?.language || currentLang);
+  // localStorage preference takes priority over profile setting
+  setLang(localStorage.getItem('lang') || profile?.language || 'th');
   setDefaultDates();
   loadDashboard();
 }
@@ -744,6 +745,7 @@ function refreshCurrentPage() {
   const name = getCurrentPageName();
   if (!name || !currentUser) return;
   document.getElementById('topbarTitle').textContent = t(PAGE_TITLES[name]) || name;
+  populateSelects(); // rebuild all filter selects with current language
   if (name==='dashboard')   loadDashboard();
   else if (name==='expenses')    loadExpenses();
   else if (name==='vehicles')    loadVehicles();
@@ -751,7 +753,6 @@ function refreshCurrentPage() {
   else if (name==='users')       loadUsers();
   else if (name==='access-logs') loadAccessLogs();
   else if (name==='settings')    { loadDeptTable(); loadVTypeTable(); }
-  else if (name==='add-expense') populateSelects();
 }
 
 window.addEventListener('langChanged', () => { refreshCurrentPage(); });
