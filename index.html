@@ -2366,7 +2366,18 @@ async function exportTravelClaimExcel() {
     // Days with no data: B/C empty → D formula =C-B will show 0 (normal for original form)
   }
 
-  // ── 6. Download ──
+  // ── 6. Remove notes/comments from worksheet ──
+  delete ws['!comments'];
+
+  // ── 7. Keep only current month's sheet (remove MARCH 26, APRIL 26, etc.) ──
+  wb.SheetNames.slice().forEach(name => {
+    if (name !== newName) {
+      delete wb.Sheets[name];
+    }
+  });
+  wb.SheetNames = [newName];
+
+  // ── 8. Download ──
   const filename = `Travelling_Claim_${(d.veh?.license_plate||'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
