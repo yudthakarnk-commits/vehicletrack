@@ -2248,142 +2248,126 @@ async function loadTravelClaim() {
   document.getElementById('tc-export-btn').style.display = '';
 }
 
-function exportTravelClaimExcel() {
+async function exportTravelClaimExcel() {
   if (!tcReportData) return;
   const d = tcReportData;
-  const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
-  const monthStr = monthNames[d.month];
-  const mm = String(d.month).padStart(2,'0');
-  const yy = String(d.year).slice(-2);
+  const mm      = String(d.month).padStart(2,'0');
+  const yy      = String(d.year).slice(-2);
   const lastDay = new Date(d.year, d.month, 0).getDate();
-  const periodStr = `01/${mm}/${yy} - ${String(lastDay).padStart(2,'0')}/${mm}/${yy}`;
+  const endDd   = String(lastDay).padStart(2,'0');
+  const MONTH_SHORT = ['','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
-  // Helper: format date as DD/MM/YYYY
-  const fmtDate = (dateStr) => {
-    const [y, mo, da] = dateStr.split('-');
-    return `${da}/${mo}/${y}`;
+  // ── 1. Load template ──
+  let wb;
+  try {
+    const resp = await fetch('./assets/travelling_claim_template.xlsx');
+    if (!resp.ok) throw new Error('Template not found');
+    const buf = await resp.arrayBuffer();
+    wb = XLSX.read(buf, { type: 'array', cellFormula: true, cellStyles: true });
+  } catch(e) {
+    toast('ไม่พบไฟล์ template: ' + e.message, 'error');
+    return;
+  }
+
+  // ── 2. Use first sheet, rename it ──
+  const origName   = wb.SheetNames[0];
+  const newName    = `${MONTH_SHORT[d.month]} ${yy}`;
+  wb.SheetNames[0] = newName;
+  wb.Sheets[newName] = wb.Sheets[origName];
+  delete wb.Sheets[origName];
+  const ws = wb.Sheets[newName];
+
+  // ── 3. Helper: write a value into a cell (preserve existing cell object if present) ──
+  const sc = (addr, val, type) => {
+    const t = type || (typeof val === 'number' ? 'n' : 's');
+    if (!ws[addr]) ws[addr] = { t };
+    ws[addr].v = val;
+    ws[addr].t = t;
+    ws[addr].w = String(val);
+    // Clear formula if we're overwriting with a value
+    if (ws[addr].f && type !== 'formula') delete ws[addr].f;
   };
-  // Helper: number with 2 decimals, blank if zero
-  const fmtN = (v) => v ? Number(v).toFixed(2) : '';
+  const clr = (addr) => {
+    if (ws[addr]) { ws[addr].v = null; ws[addr].t = 'z'; delete ws[addr].f; delete ws[addr].w; }
+  };
 
-  const wb = XLSX.utils.book_new();
-  const ws_data = [];
+  // ── 4. Section A — Requester details ──
+  sc('C7',  d.company    || '');
+  sc('C8',  d.name       || '');
+  sc('C9',  d.position   || '');
+  sc('C10', d.department || '');
+  sc('C11', d.branch     || '');
+  sc('C12', d.veh?.license_plate || '');
+  sc('J13', d.carType    || 'COMPANY CAR');
+  sc('X13', Number(d.claimRate) || 0.20, 'n');
 
-  // ── Row 1: Company group + form title ──
-  ws_data.push(['AGRO-INDUSTRY BUSINESS GROUP (LIVESTOCK)', '', '', '', '', '', '', '', '', 'TRAVELLING CLAIM FORM']);
+  // Employee ID → one digit per cell L7–U7 (10 cells)
+  const EMP_COLS = ['L','M','N','O','P','Q','R','S','T','U'];
+  const empStr = String(d.empId || '');
+  EMP_COLS.forEach((col, i) => {
+    const ch = empStr[i];
+    if (ch !== undefined) sc(`${col}7`, Number(ch), 'n');
+    else clr(`${col}7`);
+  });
 
-  // ── Row 2: blank ──
-  ws_data.push([]);
+  // PCA → one digit per cell L8–T8 (9 cells)
+  const PCA_COLS = ['L','M','N','O','P','Q','R','S','T'];
+  const pcaStr = String(d.pca || '');
+  PCA_COLS.forEach((col, i) => {
+    const ch = pcaStr[i];
+    if (ch !== undefined) sc(`${col}8`, Number(ch), 'n');
+    else clr(`${col}8`);
+  });
 
-  // ── Row 3: Section A title ──
-  ws_data.push(['SECTION A : REQUESTER DETAILS']);
-  ws_data.push([]);
+  // JG → C9 area — also fill AA11 (reference number count = 1)
+  // (JG shown in G9 in original)
+  sc('G9', d.jg || '');
 
-  // ── Rows 5-10: Requester info (label | value | ... | label | value) ──
-  ws_data.push(['Company:',    d.company,              '', '', '', '', '', '', '', 'Employee ID:', d.empId]);
-  ws_data.push(['Name:',       d.name,                 '', '', '', '', '', '', '', 'PCA:',         d.pca]);
-  ws_data.push(['Position:',   d.position,             '', '', '', '', '', '', '', 'JG:',          d.jg]);
-  ws_data.push(['Department:', d.department,           '', '', '', '', '', '', '', 'Travelling Period:', periodStr]);
-  ws_data.push(['Branch:',     d.branch]);
-  ws_data.push(['Vehicle No.:', d.veh?.license_plate || '', '', '', '', 'Car Type:', d.carType, '', '', 'Claim Rate:', `RM ${Number(d.claimRate).toFixed(2)}/km`]);
-  ws_data.push([]);
+  // Travelling Period → L10–X10 (chars: d1,d2,m1,m2,y1,y2, '-', d1,d2,m1,m2,y1,y2)
+  const periodVals = [
+    ['L10','0'], ['M10','1'],           // start day = 01
+    ['N10', mm[0]], ['O10', mm[1]],    // start month
+    ['P10', yy[0]], ['Q10', yy[1]],    // start year
+    ['R10', '-'],
+    ['S10', endDd[0]], ['T10', endDd[1]],  // end day
+    ['U10', mm[0]], ['V10', mm[1]],        // end month
+    ['W10', yy[0]], ['X10', yy[1]],        // end year
+  ];
+  periodVals.forEach(([addr, val]) => {
+    const n = Number(val);
+    if (!isNaN(n) && val !== '-') sc(addr, n, 'n');
+    else sc(addr, val, 's');
+  });
 
-  // ── Section B title ──
-  ws_data.push(['SECTION B : MILEAGE CLAIM DETAILS']);
-  ws_data.push([]);
+  // ── 5. Section B — Clear all data rows first (B20:Q50), then write ──
+  const DATA_COLS = ['B','C','E','F','G','H','I','J','K','L','Q'];
+  for (let row = 20; row <= 50; row++) {
+    DATA_COLS.forEach(col => clr(`${col}${row}`));
+  }
 
-  // ── Column headers ──
-  ws_data.push([
-    'No.', 'DATE', 'METER READING\n(FROM)', 'METER READING\n(TO)', 'TOTAL\n(km)',
-    'PETROL/\nDIESEL (RM)', 'TOLL\n(RM)', 'PARKING\n(RM)',
-    'AIR FARE\n(RM)', 'ACCOMMODATION\n(RM)', 'OUTSTATION\nALLOWANCE (RM)', 'TRANSPORTATION\n(RM)',
-    'PURPOSE OF TRAVEL / DESTINATION'
-  ]);
-
-  // ── Data rows — ALL days of month (blank if no travel) ──
-  // Build a lookup map: date string → row data
+  // Build date → row lookup
   const rowByDate = {};
   d.rows.forEach(r => { rowByDate[r.date] = r; });
 
   for (let day = 1; day <= lastDay; day++) {
     const dateStr = `${d.year}-${mm}-${String(day).padStart(2,'0')}`;
     const r = rowByDate[dateStr];
-    ws_data.push([
-      day,                                           // No. (= day of month)
-      fmtDate(dateStr),                              // DATE dd/mm/yyyy
-      r && r.odoFrom != null ? r.odoFrom : '',       // Odo From
-      r && r.odoTo   != null ? r.odoTo   : '',       // Odo To
-      r && r.km > 0          ? r.km      : '',       // Total km
-      r ? fmtN(r.fuel)    : '',                      // Petrol/Diesel
-      r ? fmtN(r.toll)    : '',                      // Toll
-      r ? fmtN(r.parking) : '',                      // Parking
-      '', '', '', '',                                // Air Fare / Accom / Outstation / Transport
-      r ? (r.purpose || '') : '',                    // Purpose
-    ]);
+    const xlRow = 19 + day; // day 1 → row 20
+
+    if (r) {
+      if (r.odoFrom != null) sc(`B${xlRow}`, r.odoFrom, 'n');
+      if (r.odoTo   != null) sc(`C${xlRow}`, r.odoTo,   'n');
+      // D column has formula =C-B → leave it (auto-calculates in Excel)
+      if (r.fuel    > 0)     sc(`F${xlRow}`, r.fuel,    'n');
+      if (r.toll    > 0)     sc(`G${xlRow}`, r.toll,    'n');
+      if (r.parking > 0)     sc(`H${xlRow}`, r.parking, 'n');
+      if (r.purpose)         sc(`Q${xlRow}`, r.purpose, 's');
+    }
+    // Days with no data: B/C empty → D formula =C-B will show 0 (normal for original form)
   }
 
-  // ── Totals row ──
-  ws_data.push([
-    'TOTAL', '', '', '',
-    d.totKm,
-    fmtN(d.totFuel), fmtN(d.totToll), fmtN(d.totPark),
-    '', '', '', '', ''
-  ]);
-  ws_data.push([]);
-
-  // ── Cost per km ──
-  ws_data.push([`COST PER KM*`, '', `RM ${d.costPerKm.toFixed(4)}/km`]);
-  ws_data.push([]);
-
-  // ── Section C: Details of Claim ──
-  ws_data.push(['DETAILS OF CLAIM', '', 'RM']);
-  ws_data.push(['PETROL/DIESEL',     '', Number(d.totFuel).toFixed(2)]);
-  ws_data.push(['TOLL',              '', Number(d.totToll).toFixed(2)]);
-  ws_data.push(['PARKING',           '', Number(d.totPark).toFixed(2)]);
-  ws_data.push(['AIR FARE',          '', '0.00']);
-  ws_data.push(['ACCOMMODATION',     '', '0.00']);
-  ws_data.push(['OUTSTATION ALLOW.', '', '0.00']);
-  ws_data.push(['TRANSPORTATION',    '', '0.00']);
-  ws_data.push(['GRAND TOTAL',       '', Number(d.grandTotal).toFixed(2)]);
-  ws_data.push(['Less: Personal Use','', '0.00']);
-  ws_data.push(['ACTUAL CLAIMED',    '', Number(d.grandTotal).toFixed(2)]);
-  ws_data.push([]);
-
-  // ── Signatures ──
-  ws_data.push(['REQUESTED BY', '', '', '', '', 'APPROVED BY HOD / BU HEAD\n(DGM above)', '', '', '', '', 'REVIEWED BY HR']);
-  ws_data.push([]);
-  ws_data.push(['']);
-  ws_data.push([]);
-  ws_data.push([`Name: ${d.name}`, '', '', '', '', 'Name:', '', '', '', '', 'Name:']);
-  ws_data.push([`Date:`,           '', '', '', '', 'Date:', '', '', '', '', 'Date:']);
-
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-
-  // ── Column widths (A–M) ──
-  ws['!cols'] = [
-    {wch:22}, // A: labels / No.
-    {wch:12}, // B: DATE
-    {wch:16}, // C: Odo From
-    {wch:16}, // D: Odo To
-    {wch:11}, // E: Total km
-    {wch:14}, // F: Petrol
-    {wch:10}, // G: Toll
-    {wch:10}, // H: Parking
-    {wch:10}, // I: Air Fare
-    {wch:16}, // J: Accommodation
-    {wch:18}, // K: Outstation
-    {wch:14}, // L: Transportation
-    {wch:42}, // M: Purpose
-  ];
-
-  // ── Row heights for header row ──
-  ws['!rows'] = [];
-  // Row 14 (0-indexed = 13) is the column header row — make it taller for wrapped text
-  ws['!rows'][13] = { hpt: 36 };
-
-  XLSX.utils.book_append_sheet(wb, ws, `${monthStr.slice(0,3).toUpperCase()} ${yy}`);
-
-  const filename = `Travelling_Claim_${(d.veh?.license_plate || 'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
+  // ── 6. Download ──
+  const filename = `Travelling_Claim_${(d.veh?.license_plate||'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
 }
