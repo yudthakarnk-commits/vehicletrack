@@ -2253,91 +2253,137 @@ function exportTravelClaimExcel() {
   const d = tcReportData;
   const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthStr = monthNames[d.month];
+  const mm = String(d.month).padStart(2,'0');
+  const yy = String(d.year).slice(-2);
   const lastDay = new Date(d.year, d.month, 0).getDate();
-  const periodStr = `01/${String(d.month).padStart(2,'0')}/${String(d.year).slice(-2)} - ${String(lastDay).padStart(2,'0')}/${String(d.month).padStart(2,'0')}/${String(d.year).slice(-2)}`;
+  const periodStr = `01/${mm}/${yy} - ${String(lastDay).padStart(2,'0')}/${mm}/${yy}`;
+
+  // Helper: format date as DD/MM/YYYY
+  const fmtDate = (dateStr) => {
+    const [y, mo, da] = dateStr.split('-');
+    return `${da}/${mo}/${y}`;
+  };
+  // Helper: number with 2 decimals, blank if zero
+  const fmtN = (v) => v ? Number(v).toFixed(2) : '';
 
   const wb = XLSX.utils.book_new();
   const ws_data = [];
 
-  // ── Header ──
-  ws_data.push(['AGRO-INDUSTRY BUSINESS GROUP (LIVESTOCK)', '', '', '', '', '', '', '', 'TRAVELLING CLAIM FORM']);
-  ws_data.push([]);
-  ws_data.push(['SECTION A : REQUESTER DETAILS']);
-  ws_data.push([]);
-  ws_data.push(['Company:', d.company, '', '', '', '', '', '', 'Employee ID:', d.empId]);
-  ws_data.push(['Name:', d.name, '', '', '', '', '', '', 'PCA:', d.pca]);
-  ws_data.push(['Position:', d.position, '', '', '', '', '', '', 'JG:', d.jg]);
-  ws_data.push(['Department:', d.department, '', '', '', '', '', '', 'Travelling Period:', periodStr]);
-  ws_data.push(['Branch:', d.branch]);
-  ws_data.push(['Vehicle No.:', d.veh?.license_plate || '', '', '', 'Car Type:', d.carType, '', '', 'Claim Rate:', d.claimRate]);
+  // ── Row 1: Company group + form title ──
+  ws_data.push(['AGRO-INDUSTRY BUSINESS GROUP (LIVESTOCK)', '', '', '', '', '', '', '', '', 'TRAVELLING CLAIM FORM']);
+
+  // ── Row 2: blank ──
   ws_data.push([]);
 
-  // ── Section B header ──
+  // ── Row 3: Section A title ──
+  ws_data.push(['SECTION A : REQUESTER DETAILS']);
+  ws_data.push([]);
+
+  // ── Rows 5-10: Requester info (label | value | ... | label | value) ──
+  ws_data.push(['Company:',    d.company,              '', '', '', '', '', '', '', 'Employee ID:', d.empId]);
+  ws_data.push(['Name:',       d.name,                 '', '', '', '', '', '', '', 'PCA:',         d.pca]);
+  ws_data.push(['Position:',   d.position,             '', '', '', '', '', '', '', 'JG:',          d.jg]);
+  ws_data.push(['Department:', d.department,           '', '', '', '', '', '', '', 'Travelling Period:', periodStr]);
+  ws_data.push(['Branch:',     d.branch]);
+  ws_data.push(['Vehicle No.:', d.veh?.license_plate || '', '', '', '', 'Car Type:', d.carType, '', '', 'Claim Rate:', `RM ${Number(d.claimRate).toFixed(2)}/km`]);
+  ws_data.push([]);
+
+  // ── Section B title ──
   ws_data.push(['SECTION B : MILEAGE CLAIM DETAILS']);
   ws_data.push([]);
+
+  // ── Column headers ──
   ws_data.push([
-    'No.', 'DATE', 'METER READING (FROM)', 'METER READING (TO)', 'TOTAL (km)',
-    'PETROL/DIESEL (RM)', 'TOLL (RM)', 'PARKING (RM)',
-    'AIR FARE (RM)', 'ACCOMMODATION (RM)', 'OUTSTATION ALLOWANCE (RM)', 'TRANSPORTATION (RM)',
+    'No.', 'DATE', 'METER READING\n(FROM)', 'METER READING\n(TO)', 'TOTAL\n(km)',
+    'PETROL/\nDIESEL (RM)', 'TOLL\n(RM)', 'PARKING\n(RM)',
+    'AIR FARE\n(RM)', 'ACCOMMODATION\n(RM)', 'OUTSTATION\nALLOWANCE (RM)', 'TRANSPORTATION\n(RM)',
     'PURPOSE OF TRAVEL / DESTINATION'
   ]);
 
-  // ── Data rows ──
-  d.rows.forEach((r, i) => {
-    const day = parseInt(r.date.slice(8));
+  // ── Data rows — ALL days of month (blank if no travel) ──
+  // Build a lookup map: date string → row data
+  const rowByDate = {};
+  d.rows.forEach(r => { rowByDate[r.date] = r; });
+
+  for (let day = 1; day <= lastDay; day++) {
+    const dateStr = `${d.year}-${mm}-${String(day).padStart(2,'0')}`;
+    const r = rowByDate[dateStr];
     ws_data.push([
-      i + 1,
-      day,
-      r.odoFrom != null ? r.odoFrom : '',
-      r.odoTo != null ? r.odoTo : '',
-      r.km || 0,
-      r.fuel || '',
-      r.toll || '',
-      r.parking || '',
-      '', '', '', '',
-      r.purpose || '',
+      day,                                           // No. (= day of month)
+      fmtDate(dateStr),                              // DATE dd/mm/yyyy
+      r && r.odoFrom != null ? r.odoFrom : '',       // Odo From
+      r && r.odoTo   != null ? r.odoTo   : '',       // Odo To
+      r && r.km > 0          ? r.km      : '',       // Total km
+      r ? fmtN(r.fuel)    : '',                      // Petrol/Diesel
+      r ? fmtN(r.toll)    : '',                      // Toll
+      r ? fmtN(r.parking) : '',                      // Parking
+      '', '', '', '',                                // Air Fare / Accom / Outstation / Transport
+      r ? (r.purpose || '') : '',                    // Purpose
     ]);
-  });
+  }
 
   // ── Totals row ──
   ws_data.push([
     'TOTAL', '', '', '',
-    d.totKm, d.totFuel || '', d.totToll || '', d.totPark || '',
+    d.totKm,
+    fmtN(d.totFuel), fmtN(d.totToll), fmtN(d.totPark),
     '', '', '', '', ''
   ]);
   ws_data.push([]);
 
-  // ── Section C summary ──
-  ws_data.push(['DETAILS OF CLAIM', '', 'RM', '']);
-  ws_data.push(['PETROL/DIESEL', '', d.totFuel]);
-  ws_data.push(['TOLL', '', d.totToll]);
-  ws_data.push(['PARKING', '', d.totPark]);
-  ws_data.push(['AIR FARE', '', 0]);
-  ws_data.push(['ACCOMMODATION', '', 0]);
-  ws_data.push(['OUTSTATION ALLOW.', '', 0]);
-  ws_data.push(['TRANSPORTATION', '', 0]);
-  ws_data.push(['GRAND TOTAL', '', d.grandTotal]);
-  ws_data.push(['Less: Personal Use', '', 0]);
-  ws_data.push(['ACTUAL CLAIMED', '', d.grandTotal]);
+  // ── Cost per km ──
+  ws_data.push([`COST PER KM*`, '', `RM ${d.costPerKm.toFixed(4)}/km`]);
   ws_data.push([]);
-  ws_data.push([`COST PER KM: RM ${d.costPerKm.toFixed(4)}/km`]);
+
+  // ── Section C: Details of Claim ──
+  ws_data.push(['DETAILS OF CLAIM', '', 'RM']);
+  ws_data.push(['PETROL/DIESEL',     '', Number(d.totFuel).toFixed(2)]);
+  ws_data.push(['TOLL',              '', Number(d.totToll).toFixed(2)]);
+  ws_data.push(['PARKING',           '', Number(d.totPark).toFixed(2)]);
+  ws_data.push(['AIR FARE',          '', '0.00']);
+  ws_data.push(['ACCOMMODATION',     '', '0.00']);
+  ws_data.push(['OUTSTATION ALLOW.', '', '0.00']);
+  ws_data.push(['TRANSPORTATION',    '', '0.00']);
+  ws_data.push(['GRAND TOTAL',       '', Number(d.grandTotal).toFixed(2)]);
+  ws_data.push(['Less: Personal Use','', '0.00']);
+  ws_data.push(['ACTUAL CLAIMED',    '', Number(d.grandTotal).toFixed(2)]);
   ws_data.push([]);
-  ws_data.push(['REQUESTED BY', '', '', '', 'APPROVED BY HOD / BU HEAD', '', '', '', 'REVIEWED BY HR']);
+
+  // ── Signatures ──
+  ws_data.push(['REQUESTED BY', '', '', '', '', 'APPROVED BY HOD / BU HEAD\n(DGM above)', '', '', '', '', 'REVIEWED BY HR']);
   ws_data.push([]);
-  ws_data.push([`Name: ${d.name}`, '', '', '', 'Name:', '', '', '', 'Name:']);
-  ws_data.push([`Date:`, '', '', '', 'Date:', '', '', '', 'Date:']);
+  ws_data.push(['']);
+  ws_data.push([]);
+  ws_data.push([`Name: ${d.name}`, '', '', '', '', 'Name:', '', '', '', '', 'Name:']);
+  ws_data.push([`Date:`,           '', '', '', '', 'Date:', '', '', '', '', 'Date:']);
 
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-  // Column widths
+  // ── Column widths (A–M) ──
   ws['!cols'] = [
-    {wch:6},{wch:8},{wch:18},{wch:18},{wch:12},
-    {wch:18},{wch:12},{wch:12},{wch:12},{wch:18},{wch:20},{wch:16},{wch:40}
+    {wch:22}, // A: labels / No.
+    {wch:12}, // B: DATE
+    {wch:16}, // C: Odo From
+    {wch:16}, // D: Odo To
+    {wch:11}, // E: Total km
+    {wch:14}, // F: Petrol
+    {wch:10}, // G: Toll
+    {wch:10}, // H: Parking
+    {wch:10}, // I: Air Fare
+    {wch:16}, // J: Accommodation
+    {wch:18}, // K: Outstation
+    {wch:14}, // L: Transportation
+    {wch:42}, // M: Purpose
   ];
 
-  XLSX.utils.book_append_sheet(wb, ws, `${monthStr.slice(0,3).toUpperCase()} ${String(d.year).slice(-2)}`);
+  // ── Row heights for header row ──
+  ws['!rows'] = [];
+  // Row 14 (0-indexed = 13) is the column header row — make it taller for wrapped text
+  ws['!rows'][13] = { hpt: 36 };
 
-  const filename = `Travelling_Claim_${d.veh?.license_plate || 'vehicle'}_${d.year}${String(d.month).padStart(2,'0')}.xlsx`;
+  XLSX.utils.book_append_sheet(wb, ws, `${monthStr.slice(0,3).toUpperCase()} ${yy}`);
+
+  const filename = `Travelling_Claim_${(d.veh?.license_plate || 'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
 }
