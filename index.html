@@ -1923,7 +1923,31 @@ async function loadReport() {
   const vtype = document.getElementById('rp-vtype').value;
   const group = document.getElementById('rp-group').value;
 
-  const rows = await getOfflineExpenses(from, to, dept, vtype);
+  document.getElementById('reportContent').innerHTML =
+    `<div class="card"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div></div>`;
+
+  let rows = [];
+  try {
+    if (navigator.onLine && sbClient) {
+      // ── Online: query Supabase directly ──
+      let q = sbClient.from('expenses')
+        .select(`*, vehicles!inner(id,name,license_plate,department_id,vehicle_type_id), expense_categories(id,name,icon,color)`)
+        .eq('is_deleted', false)
+        .order('expense_date', { ascending: false });
+      if (from)  q = q.gte('expense_date', from);
+      if (to)    q = q.lte('expense_date', to);
+      if (dept)  q = q.eq('vehicles.department_id', dept);
+      if (vtype) q = q.eq('vehicles.vehicle_type_id', vtype);
+      const { data, error } = await q;
+      if (error) throw error;
+      rows = (data || []).map(r => flattenExpense(r));
+    } else {
+      rows = await getOfflineExpenses(from, to, dept, vtype);
+    }
+  } catch(e) {
+    console.error('loadReport error:', e);
+    rows = await getOfflineExpenses(from, to, dept, vtype);
+  }
   if (rows.length===0) {
     document.getElementById('reportContent').innerHTML=`<div class="card"><div class="empty-state"><div class="empty-icon">📊</div><p>${t('no_data')}</p></div></div>`;
     return;
