@@ -1986,21 +1986,55 @@ function initTravelClaim() {
       yearSel.add(new Option(y, y));
     }
   }
-  // Set default month to current
+  // Set default month/year to current
   const now = new Date();
   const mSel = document.getElementById('tc-month');
   if (mSel) mSel.value = now.getMonth() + 1;
+  if (yearSel) yearSel.value = now.getFullYear();
 
   // Populate vehicle dropdown
   tcPopulateVehicles();
 
-  // Pre-fill name from current user
-  if (currentUser) {
-    const nameEl = document.getElementById('tc-name');
-    if (nameEl && !nameEl.value) nameEl.value = currentUser.full_name || '';
-    const deptEl = document.getElementById('tc-department');
-    if (deptEl && !deptEl.value) deptEl.value = currentUser.department_name || '';
+  // ── Auto-fill from user profile (always override with fresh profile data) ──
+  if (currentProfile) {
+    setVal('tc-name',       currentProfile.full_name || '');
+    setVal('tc-department', currentProfile.departments?.name || '');
   }
+
+  // ── Fill extra fields from localStorage (user fills once, remembered forever) ──
+  const saved = tcLoadSavedProfile();
+  if (saved.company)  setVal('tc-company',  saved.company);
+  if (saved.empId)    setVal('tc-empid',    saved.empId);
+  if (saved.position) setVal('tc-position', saved.position);
+  if (saved.branch)   setVal('tc-branch',   saved.branch);
+  if (saved.jg)       setVal('tc-jg',       saved.jg);
+  if (saved.pca)      setVal('tc-pca',      saved.pca);
+  if (saved.carType)  document.getElementById('tc-car-type').value = saved.carType;
+  if (saved.claimRate) setVal('tc-claim-rate', saved.claimRate);
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+}
+
+function tcLoadSavedProfile() {
+  try { return JSON.parse(localStorage.getItem('tc_profile') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function tcSaveProfile() {
+  const data = {
+    company:   document.getElementById('tc-company').value,
+    empId:     document.getElementById('tc-empid').value,
+    position:  document.getElementById('tc-position').value,
+    branch:    document.getElementById('tc-branch').value,
+    jg:        document.getElementById('tc-jg').value,
+    pca:       document.getElementById('tc-pca').value,
+    carType:   document.getElementById('tc-car-type').value,
+    claimRate: document.getElementById('tc-claim-rate').value,
+  };
+  localStorage.setItem('tc_profile', JSON.stringify(data));
 }
 
 function tcPopulateVehicles() {
@@ -2027,6 +2061,7 @@ function tcVehicleChanged() {
 async function loadTravelClaim() {
   const vehicleId = document.getElementById('tc-vehicle').value;
   if (!vehicleId) { toast('กรุณาเลือกรถ', 'error'); return; }
+  tcSaveProfile(); // remember user's extra fields for next time
 
   const month = parseInt(document.getElementById('tc-month').value);
   const year  = parseInt(document.getElementById('tc-year').value);
@@ -2039,11 +2074,12 @@ async function loadTravelClaim() {
     `<div class="card"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div></div>`;
 
   // ── Pull usage logs ──
-  const { data: ulRows } = await sbClient.from('vehicle_usage_logs')
-    .select('date, odometer_start, odometer_end, from_location, to_location, purpose, driver_name')
+  const { data: ulRows, error: ulError } = await sbClient.from('vehicle_usage_logs')
+    .select('date, odometer_start, odometer_end, origin, destination, purpose, driver_name')
     .eq('vehicle_id', Number(vehicleId))
     .gte('date', fromDate).lte('date', toDate)
-    .order('date').order('odometer_start');
+    .order('date', { ascending: true });
+  if (ulError) console.error('TC usage_logs error:', ulError.message);
 
   // ── Pull expenses ──
   const { data: expRows } = await sbClient.from('expenses')
@@ -2079,7 +2115,7 @@ async function loadTravelClaim() {
     if (r.odometer_end != null && Number(r.odometer_end) > (d.odoTo || 0))
       d.odoTo = Number(r.odometer_end);
     if (km > 0) d.km += km;
-    const dest = [r.from_location, r.to_location].filter(Boolean).join(' → ');
+    const dest = [r.origin, r.destination].filter(Boolean).join(' → ');
     if (dest && !d.purposes.includes(dest)) d.purposes.push(dest);
   });
 
@@ -2115,17 +2151,18 @@ async function loadTravelClaim() {
   const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
 
   // Cache for export
+  const g = id => document.getElementById(id)?.value || '';
   tcReportData = { rows, totKm, totFuel, totToll, totPark, grandTotal, costPerKm, month, year, veh,
-    company:   document.getElementById('tc-company').value,
-    empId:     document.getElementById('tc-empid').value,
-    name:      document.getElementById('tc-name').value,
-    position:  document.getElementById('tc-position').value,
-    department:document.getElementById('tc-department').value,
-    branch:    document.getElementById('tc-branch').value,
-    jg:        document.getElementById('tc-jg').value,
-    pca:       document.getElementById('tc-pca').value,
-    carType:   document.getElementById('tc-car-type').value,
-    claimRate: parseFloat(document.getElementById('tc-claim-rate').value) || 0.20,
+    company:    g('tc-company'),
+    empId:      g('tc-empid'),
+    name:       g('tc-name'),
+    position:   g('tc-position'),
+    department: g('tc-department'),
+    branch:     g('tc-branch'),
+    jg:         g('tc-jg'),
+    pca:        g('tc-pca'),
+    carType:    g('tc-car-type'),
+    claimRate:  parseFloat(g('tc-claim-rate')) || 0.20,
   };
 
   // ── Render preview table ──
