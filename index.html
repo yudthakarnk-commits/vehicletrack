@@ -2158,9 +2158,9 @@ async function loadTravelClaim() {
   const effectiveRate = carTypeVal === 'MOTORCYCLE'
     ? claimRateVal
     : Math.min(actualPerKm, claimRateVal);
-  const fuelClaim  = totKm * effectiveRate;         // claimable petrol
+  const fuelClaim  = totKm * effectiveRate;         // claimable petrol (capped)
   const grandTotal = fuelClaim + totToll + totPark; // matches Excel D63
-  const costPerKm  = effectiveRate;                 // matches Excel D53
+  const costPerKm  = totKm > 0 ? totFuel / totKm : 0; // actual cost/km = fuel ÷ km
 
   // Get vehicle info
   const veh = (allVehicles || []).find(v => v.id == vehicleId);
