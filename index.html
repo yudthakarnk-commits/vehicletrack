@@ -20,6 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Tesseract OCR -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Config & i18n (load first) -->
 <script src="js/config.js"></script>
 <script src="js/i18n.js"></script>
@@ -536,6 +538,102 @@ tr:hover td{background:#fafafa}
           <div id="reportContent"></div>
         </div>
 
+        <!-- ══ TRAVELLING CLAIMS FORM ══ -->
+        <div class="page" id="page-travel-claim">
+          <!-- Section A: Requester Details -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">
+              <span class="card-title">📋 <span data-i18n="tc_section_a">Section A : Requester Details</span></span>
+            </div>
+            <div style="padding:16px">
+              <div class="grid-2" style="gap:10px">
+                <div class="form-group">
+                  <label data-i18n="tc_company">Company</label>
+                  <input type="text" id="tc-company" value="PK Agro-Industrial Products (M) Sdn Bhd" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_emp_id">Employee ID</label>
+                  <input type="text" id="tc-empid" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_name">Name</label>
+                  <input type="text" id="tc-name" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_position">Position</label>
+                  <input type="text" id="tc-position" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_department">Department</label>
+                  <input type="text" id="tc-department" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_branch">Branch</label>
+                  <input type="text" id="tc-branch" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_jg">JG</label>
+                  <input type="text" id="tc-jg" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_pca">PCA</label>
+                  <input type="text" id="tc-pca" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+              </div>
+              <div class="grid-2" style="gap:10px;margin-top:10px">
+                <div class="form-group">
+                  <label data-i18n="tc_vehicle_no">Vehicle No.</label>
+                  <select id="tc-vehicle" onchange="tcVehicleChanged()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="">-- เลือกรถ --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_car_type">Car Type</label>
+                  <select id="tc-car-type" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="COMPANY CAR" data-i18n="tc_car_company">Company Car</option>
+                    <option value="PRIVATE CAR (PETROL)" data-i18n="tc_car_private_p">Private Car (Petrol)</option>
+                    <option value="PRIVATE CAR (DIESEL)" data-i18n="tc_car_private_d">Private Car (Diesel)</option>
+                    <option value="PRIVATE CAR (ELECTRIC)" data-i18n="tc_car_private_e">Private Car (Electric)</option>
+                    <option value="MOTORCYCLE" data-i18n="tc_car_motorcycle">Motorcycle</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label data-i18n="tc_claim_rate">Claim Rate (RM/km)</label>
+                  <input type="number" id="tc-claim-rate" value="0.20" step="0.01" min="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <div class="form-group" style="display:flex;gap:8px">
+                  <div style="flex:1">
+                    <label data-i18n="tc_month">Month</label>
+                    <select id="tc-month" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                      <option value="1">January</option><option value="2">February</option>
+                      <option value="3">March</option><option value="4">April</option>
+                      <option value="5">May</option><option value="6">June</option>
+                      <option value="7">July</option><option value="8">August</option>
+                      <option value="9">September</option><option value="10">October</option>
+                      <option value="11">November</option><option value="12">December</option>
+                    </select>
+                  </div>
+                  <div style="flex:1">
+                    <label data-i18n="tc_year">Year</label>
+                    <select id="tc-year" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px"></select>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="loadTravelClaim()">
+                  📊 <span data-i18n="tc_btn_generate">Generate Report</span>
+                </button>
+                <button class="btn btn-outline" id="tc-export-btn" onclick="exportTravelClaimExcel()" style="display:none">
+                  📥 <span data-i18n="tc_btn_export">Export Excel</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section B: Table Preview -->
+          <div id="tc-report-content"></div>
+        </div>
+
         <!-- ══ USERS (admin only) ══ -->
         <div class="page" id="page-users">
           <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
@@ -888,6 +986,7 @@ function buildSidebar() {
     { page:'expenses',     icon:'📋', key:'nav_expenses',     roles:['admin','manager','user'] },
     { page:'vehicles',     icon:'🚙', key:'nav_vehicles',     roles:['admin','manager'] },
     { page:'report',       icon:'📈', key:'nav_report',       roles:['admin','manager','user'] },
+    { page:'travel-claim', icon:'📋', key:'nav_travel_claim', roles:['admin','manager','user'] },
     { page:'users',        icon:'👥', key:'nav_users',        roles:['admin'] },
     { page:'access-logs',  icon:'🔍', key:'nav_access_logs',  roles:['admin','manager'] },
     { page:'settings',     icon:'⚙️', key:'nav_settings',      roles:['admin'] },
@@ -912,8 +1011,8 @@ function buildSidebar() {
 // ─── NAVIGATION ───────────────────────────────────────────
 const PAGE_TITLES = {
   dashboard:'nav_dashboard', 'add-expense':'nav_add_expense', expenses:'nav_expenses',
-  vehicles:'nav_vehicles', report:'nav_report', users:'nav_users',
-  'access-logs':'nav_access_logs', settings:'nav_settings'
+  vehicles:'nav_vehicles', report:'nav_report', 'travel-claim':'nav_travel_claim',
+  users:'nav_users', 'access-logs':'nav_access_logs', settings:'nav_settings'
 };
 function getCurrentPageName() {
   const active = document.querySelector('.page.active');
@@ -928,8 +1027,9 @@ function refreshCurrentPage() {
   if (name==='dashboard')   loadDashboard();
   else if (name==='expenses')    loadExpenses();
   else if (name==='vehicles')    { switchVehicleTab('list'); loadVehicles(); }
-  else if (name==='report')      loadReport();
-  else if (name==='users')       loadUsers();
+  else if (name==='report')       loadReport();
+  else if (name==='travel-claim') initTravelClaim();
+  else if (name==='users')        loadUsers();
   else if (name==='access-logs') loadAccessLogs();
   else if (name==='settings')    { loadDeptTable(); loadVTypeTable(); }
 }
@@ -947,6 +1047,7 @@ function showPage(name) {
   if (name==='expenses')     loadExpenses();
   if (name==='vehicles')     { switchVehicleTab('list'); loadVehicles(); }
   if (name==='report')       loadReport();
+  if (name==='travel-claim') initTravelClaim();
   if (name==='users')        loadUsers();
   if (name==='access-logs')  loadAccessLogs();
   if (name==='settings')     { loadDeptTable(); loadVTypeTable(); }
@@ -1871,6 +1972,337 @@ async function loadReport() {
       </table></div>
     </div>`;
   logAction('view_report', { from, to, group });
+}
+
+// ─── TRAVELLING CLAIMS FORM ───────────────────────────────
+let tcReportData = null; // cache for export
+
+function initTravelClaim() {
+  // Populate year dropdown
+  const yearSel = document.getElementById('tc-year');
+  if (yearSel && yearSel.options.length === 0) {
+    const thisYear = new Date().getFullYear();
+    for (let y = thisYear; y >= thisYear - 5; y--) {
+      yearSel.add(new Option(y, y));
+    }
+  }
+  // Set default month to current
+  const now = new Date();
+  const mSel = document.getElementById('tc-month');
+  if (mSel) mSel.value = now.getMonth() + 1;
+
+  // Populate vehicle dropdown
+  tcPopulateVehicles();
+
+  // Pre-fill name from current user
+  if (currentUser) {
+    const nameEl = document.getElementById('tc-name');
+    if (nameEl && !nameEl.value) nameEl.value = currentUser.full_name || '';
+    const deptEl = document.getElementById('tc-department');
+    if (deptEl && !deptEl.value) deptEl.value = currentUser.department_name || '';
+  }
+}
+
+function tcPopulateVehicles() {
+  const sel = document.getElementById('tc-vehicle');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรถ --</option>';
+  (allVehicles || []).forEach(v => {
+    const opt = new Option(`${v.license_plate} – ${v.name}`, v.id);
+    sel.add(opt);
+  });
+  if (current) sel.value = current;
+}
+
+function tcVehicleChanged() {
+  const sel = document.getElementById('tc-vehicle');
+  const v = (allVehicles || []).find(v => v.id == sel.value);
+  if (v) {
+    const noEl = document.getElementById('tc-vehicle-no-display');
+    if (noEl) noEl.textContent = v.license_plate;
+  }
+}
+
+async function loadTravelClaim() {
+  const vehicleId = document.getElementById('tc-vehicle').value;
+  if (!vehicleId) { toast('กรุณาเลือกรถ', 'error'); return; }
+
+  const month = parseInt(document.getElementById('tc-month').value);
+  const year  = parseInt(document.getElementById('tc-year').value);
+
+  const fromDate = `${year}-${String(month).padStart(2,'0')}-01`;
+  const lastDay  = new Date(year, month, 0).getDate();
+  const toDate   = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+
+  document.getElementById('tc-report-content').innerHTML =
+    `<div class="card"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div></div>`;
+
+  // ── Pull usage logs ──
+  const { data: ulRows } = await sbClient.from('vehicle_usage_logs')
+    .select('date, odometer_start, odometer_end, from_location, to_location, purpose, driver_name')
+    .eq('vehicle_id', Number(vehicleId))
+    .gte('date', fromDate).lte('date', toDate)
+    .order('date').order('odometer_start');
+
+  // ── Pull expenses ──
+  const { data: expRows } = await sbClient.from('expenses')
+    .select('expense_date, amount, category_id, expense_categories(name, name_en)')
+    .eq('vehicle_id', Number(vehicleId))
+    .eq('is_deleted', false)
+    .gte('expense_date', fromDate).lte('expense_date', toDate);
+
+  // Categorise expenses by date
+  const fuelByDate = {}, tollByDate = {}, parkByDate = {};
+  (expRows || []).forEach(e => {
+    const catEn = (e.expense_categories?.name_en || '').toLowerCase();
+    const catTh = (e.expense_categories?.name || '');
+    const d = e.expense_date;
+    const isFuel = catEn.includes('fuel') || catTh.includes('น้ำมัน');
+    const isToll = catEn.includes('toll') || catTh.includes('ด่าน') || catTh.includes('ทางด่วน');
+    const isPark = catEn.includes('park') || catTh.includes('จอดรถ');
+    if (isFuel) fuelByDate[d] = (fuelByDate[d]||0) + Number(e.amount||0);
+    if (isToll) tollByDate[d] = (tollByDate[d]||0) + Number(e.amount||0);
+    if (isPark) parkByDate[d] = (parkByDate[d]||0) + Number(e.amount||0);
+  });
+
+  // ── Aggregate by day ──
+  const dayMap = {};
+  (ulRows || []).forEach(r => {
+    if (!dayMap[r.date]) {
+      dayMap[r.date] = { date: r.date, odoFrom: null, odoTo: null, km: 0, purposes: [] };
+    }
+    const d = dayMap[r.date];
+    const km = (Number(r.odometer_end||0) - Number(r.odometer_start||0));
+    if (r.odometer_start != null && (d.odoFrom === null || Number(r.odometer_start) < d.odoFrom))
+      d.odoFrom = Number(r.odometer_start);
+    if (r.odometer_end != null && Number(r.odometer_end) > (d.odoTo || 0))
+      d.odoTo = Number(r.odometer_end);
+    if (km > 0) d.km += km;
+    const dest = [r.from_location, r.to_location].filter(Boolean).join(' → ');
+    if (dest && !d.purposes.includes(dest)) d.purposes.push(dest);
+  });
+
+  // Build rows for all days with data
+  const rows = Object.values(dayMap).sort((a,b) => a.date.localeCompare(b.date)).map(d => ({
+    date:    d.date,
+    odoFrom: d.odoFrom,
+    odoTo:   d.odoTo,
+    km:      d.km,
+    fuel:    fuelByDate[d.date] || 0,
+    toll:    tollByDate[d.date] || 0,
+    parking: parkByDate[d.date] || 0,
+    purpose: d.purposes.join(' / '),
+  }));
+
+  if (rows.length === 0) {
+    document.getElementById('tc-report-content').innerHTML =
+      `<div class="card"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('tc_no_data')}</p></div></div>`;
+    document.getElementById('tc-export-btn').style.display = 'none';
+    return;
+  }
+
+  // Compute totals
+  const totKm   = rows.reduce((s,r) => s + r.km, 0);
+  const totFuel  = rows.reduce((s,r) => s + r.fuel, 0);
+  const totToll  = rows.reduce((s,r) => s + r.toll, 0);
+  const totPark  = rows.reduce((s,r) => s + r.parking, 0);
+  const grandTotal = totFuel + totToll + totPark;
+  const costPerKm  = totKm > 0 ? grandTotal / totKm : 0;
+
+  // Get vehicle info
+  const veh = (allVehicles || []).find(v => v.id == vehicleId);
+  const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Cache for export
+  tcReportData = { rows, totKm, totFuel, totToll, totPark, grandTotal, costPerKm, month, year, veh,
+    company:   document.getElementById('tc-company').value,
+    empId:     document.getElementById('tc-empid').value,
+    name:      document.getElementById('tc-name').value,
+    position:  document.getElementById('tc-position').value,
+    department:document.getElementById('tc-department').value,
+    branch:    document.getElementById('tc-branch').value,
+    jg:        document.getElementById('tc-jg').value,
+    pca:       document.getElementById('tc-pca').value,
+    carType:   document.getElementById('tc-car-type').value,
+    claimRate: parseFloat(document.getElementById('tc-claim-rate').value) || 0.20,
+  };
+
+  // ── Render preview table ──
+  const rowsHtml = rows.map((r, i) => `<tr>
+    <td class="text-center">${i+1}</td>
+    <td class="text-center">${r.date.slice(8)}</td>
+    <td class="text-right">${r.odoFrom != null ? fmtKm(r.odoFrom) : '-'}</td>
+    <td class="text-right">${r.odoTo != null ? fmtKm(r.odoTo) : '-'}</td>
+    <td class="text-right fw-bold" style="color:var(--primary)">${fmtKm(r.km)}</td>
+    <td class="text-right">${r.fuel ? fmt(r.fuel) : '-'}</td>
+    <td class="text-right">${r.toll ? fmt(r.toll) : '-'}</td>
+    <td class="text-right">${r.parking ? fmt(r.parking) : '-'}</td>
+    <td style="font-size:12px;color:var(--text-light)">${r.purpose || '-'}</td>
+  </tr>`).join('');
+
+  document.getElementById('tc-report-content').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 ${t('tc_section_b')} — ${monthNames[month]} ${year}</span>
+        <span style="font-size:12px;color:var(--text-light)">${veh?.license_plate || ''}</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr style="background:var(--primary);color:#fff">
+              <th class="text-center" style="width:40px">${t('tc_col_no')}</th>
+              <th class="text-center" style="width:50px">${t('tc_col_date')}</th>
+              <th class="text-right">${t('tc_col_odo_from')}</th>
+              <th class="text-right">${t('tc_col_odo_to')}</th>
+              <th class="text-right">${t('tc_col_total_km')}</th>
+              <th class="text-right">${t('tc_col_fuel')}</th>
+              <th class="text-right">${t('tc_col_toll')}</th>
+              <th class="text-right">${t('tc_col_parking')}</th>
+              <th>${t('tc_col_purpose')}</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+          <tfoot>
+            <tr style="background:var(--bg);font-weight:700;font-size:13px">
+              <td colspan="4" class="text-right" style="padding-right:12px">${t('tc_total')}</td>
+              <td class="text-right" style="color:var(--primary)">${fmtKm(totKm)}</td>
+              <td class="text-right">${totFuel ? fmt(totFuel) : '-'}</td>
+              <td class="text-right">${totToll ? fmt(totToll) : '-'}</td>
+              <td class="text-right">${totPark ? fmt(totPark) : '-'}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section C: Summary -->
+    <div class="card" style="margin-top:12px">
+      <div class="card-header"><span class="card-title">💰 ${t('tc_section_c')}</span></div>
+      <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+        <div style="padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_total_km')}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--primary)">${fmtKm(totKm)} km</div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_fuel')}</div>
+          <div style="font-size:22px;font-weight:700">RM ${fmt(totFuel)}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_toll')}</div>
+          <div style="font-size:22px;font-weight:700">RM ${fmt(totToll)}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_parking')}</div>
+          <div style="font-size:22px;font-weight:700">RM ${fmt(totPark)}</div>
+        </div>
+        <div style="padding:12px;background:var(--primary);border-radius:8px;color:#fff">
+          <div style="font-size:12px;opacity:.8">${t('tc_grand_total')}</div>
+          <div style="font-size:22px;font-weight:700">RM ${fmt(grandTotal)}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-light)">${t('tc_cost_per_km')}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--accent)">RM ${costPerKm.toFixed(4)}/km</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('tc-export-btn').style.display = '';
+}
+
+function exportTravelClaimExcel() {
+  if (!tcReportData) return;
+  const d = tcReportData;
+  const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthStr = monthNames[d.month];
+  const lastDay = new Date(d.year, d.month, 0).getDate();
+  const periodStr = `01/${String(d.month).padStart(2,'0')}/${String(d.year).slice(-2)} - ${String(lastDay).padStart(2,'0')}/${String(d.month).padStart(2,'0')}/${String(d.year).slice(-2)}`;
+
+  const wb = XLSX.utils.book_new();
+  const ws_data = [];
+
+  // ── Header ──
+  ws_data.push(['AGRO-INDUSTRY BUSINESS GROUP (LIVESTOCK)', '', '', '', '', '', '', '', 'TRAVELLING CLAIM FORM']);
+  ws_data.push([]);
+  ws_data.push(['SECTION A : REQUESTER DETAILS']);
+  ws_data.push([]);
+  ws_data.push(['Company:', d.company, '', '', '', '', '', '', 'Employee ID:', d.empId]);
+  ws_data.push(['Name:', d.name, '', '', '', '', '', '', 'PCA:', d.pca]);
+  ws_data.push(['Position:', d.position, '', '', '', '', '', '', 'JG:', d.jg]);
+  ws_data.push(['Department:', d.department, '', '', '', '', '', '', 'Travelling Period:', periodStr]);
+  ws_data.push(['Branch:', d.branch]);
+  ws_data.push(['Vehicle No.:', d.veh?.license_plate || '', '', '', 'Car Type:', d.carType, '', '', 'Claim Rate:', d.claimRate]);
+  ws_data.push([]);
+
+  // ── Section B header ──
+  ws_data.push(['SECTION B : MILEAGE CLAIM DETAILS']);
+  ws_data.push([]);
+  ws_data.push([
+    'No.', 'DATE', 'METER READING (FROM)', 'METER READING (TO)', 'TOTAL (km)',
+    'PETROL/DIESEL (RM)', 'TOLL (RM)', 'PARKING (RM)',
+    'AIR FARE (RM)', 'ACCOMMODATION (RM)', 'OUTSTATION ALLOWANCE (RM)', 'TRANSPORTATION (RM)',
+    'PURPOSE OF TRAVEL / DESTINATION'
+  ]);
+
+  // ── Data rows ──
+  d.rows.forEach((r, i) => {
+    const day = parseInt(r.date.slice(8));
+    ws_data.push([
+      i + 1,
+      day,
+      r.odoFrom != null ? r.odoFrom : '',
+      r.odoTo != null ? r.odoTo : '',
+      r.km || 0,
+      r.fuel || '',
+      r.toll || '',
+      r.parking || '',
+      '', '', '', '',
+      r.purpose || '',
+    ]);
+  });
+
+  // ── Totals row ──
+  ws_data.push([
+    'TOTAL', '', '', '',
+    d.totKm, d.totFuel || '', d.totToll || '', d.totPark || '',
+    '', '', '', '', ''
+  ]);
+  ws_data.push([]);
+
+  // ── Section C summary ──
+  ws_data.push(['DETAILS OF CLAIM', '', 'RM', '']);
+  ws_data.push(['PETROL/DIESEL', '', d.totFuel]);
+  ws_data.push(['TOLL', '', d.totToll]);
+  ws_data.push(['PARKING', '', d.totPark]);
+  ws_data.push(['AIR FARE', '', 0]);
+  ws_data.push(['ACCOMMODATION', '', 0]);
+  ws_data.push(['OUTSTATION ALLOW.', '', 0]);
+  ws_data.push(['TRANSPORTATION', '', 0]);
+  ws_data.push(['GRAND TOTAL', '', d.grandTotal]);
+  ws_data.push(['Less: Personal Use', '', 0]);
+  ws_data.push(['ACTUAL CLAIMED', '', d.grandTotal]);
+  ws_data.push([]);
+  ws_data.push([`COST PER KM: RM ${d.costPerKm.toFixed(4)}/km`]);
+  ws_data.push([]);
+  ws_data.push(['REQUESTED BY', '', '', '', 'APPROVED BY HOD / BU HEAD', '', '', '', 'REVIEWED BY HR']);
+  ws_data.push([]);
+  ws_data.push([`Name: ${d.name}`, '', '', '', 'Name:', '', '', '', 'Name:']);
+  ws_data.push([`Date:`, '', '', '', 'Date:', '', '', '', 'Date:']);
+
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:6},{wch:8},{wch:18},{wch:18},{wch:12},
+    {wch:18},{wch:12},{wch:12},{wch:12},{wch:18},{wch:20},{wch:16},{wch:40}
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, `${monthStr.slice(0,3).toUpperCase()} ${String(d.year).slice(-2)}`);
+
+  const filename = `Travelling_Claim_${d.veh?.license_plate || 'vehicle'}_${d.year}${String(d.month).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
 }
 
 // ─── USERS ────────────────────────────────────────────────
