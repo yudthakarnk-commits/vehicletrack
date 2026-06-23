@@ -541,55 +541,55 @@ tr:hover td{background:#fafafa}
         <!-- ══ TRAVELLING CLAIMS FORM ══ -->
         <div class="page" id="page-travel-claim">
           <!-- Section A: Requester Details -->
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-header">
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-header" style="padding:10px 16px">
               <span class="card-title">📋 <span data-i18n="tc_section_a">Section A : Requester Details</span></span>
             </div>
-            <div style="padding:16px">
-              <div class="grid-2" style="gap:10px">
-                <div class="form-group">
-                  <label data-i18n="tc_company">Company</label>
-                  <input type="text" id="tc-company" value="PK Agro-Industrial Products (M) Sdn Bhd" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+            <div style="padding:10px 16px">
+              <!-- Row 1: Company + EmpID | Name + Position | Dept + Branch | JG + PCA -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_company">Company</label>
+                  <input type="text" id="tc-company" value="PK Agro-Industrial Products (M) Sdn Bhd" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_emp_id">Employee ID</label>
-                  <input type="text" id="tc-empid" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_emp_id">Employee ID</label>
+                  <input type="text" id="tc-empid" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_name">Name</label>
-                  <input type="text" id="tc-name" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_name">Name</label>
+                  <input type="text" id="tc-name" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_position">Position</label>
-                  <input type="text" id="tc-position" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_position">Position</label>
+                  <input type="text" id="tc-position" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_department">Department</label>
-                  <input type="text" id="tc-department" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_department">Department</label>
+                  <input type="text" id="tc-department" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_branch">Branch</label>
-                  <input type="text" id="tc-branch" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_branch">Branch</label>
+                  <input type="text" id="tc-branch" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_jg">JG</label>
-                  <input type="text" id="tc-jg" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_jg">JG</label>
+                  <input type="text" id="tc-jg" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_pca">PCA</label>
-                  <input type="text" id="tc-pca" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_pca">PCA</label>
+                  <input type="text" id="tc-pca" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-              </div>
-              <div class="grid-2" style="gap:10px;margin-top:10px">
-                <div class="form-group">
-                  <label data-i18n="tc_vehicle_no">Vehicle No.</label>
-                  <select id="tc-vehicle" onchange="tcVehicleChanged()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                    <option value="">-- เลือกรถ --</option>
+                <!-- Row 2: Vehicle | CarType | ClaimRate | Month+Year -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_vehicle_no">Vehicle No.</label>
+                  <select id="tc-vehicle" onchange="tcVehicleChanged()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="" data-i18n="select_vehicle">-- Select Vehicle --</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_car_type">Car Type</label>
-                  <select id="tc-car-type" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_car_type">Car Type</label>
+                  <select id="tc-car-type" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                     <option value="COMPANY CAR" data-i18n="tc_car_company">Company Car</option>
                     <option value="PRIVATE CAR (PETROL)" data-i18n="tc_car_private_p">Private Car (Petrol)</option>
                     <option value="PRIVATE CAR (DIESEL)" data-i18n="tc_car_private_d">Private Car (Diesel)</option>
@@ -597,14 +597,14 @@ tr:hover td{background:#fafafa}
                     <option value="MOTORCYCLE" data-i18n="tc_car_motorcycle">Motorcycle</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label data-i18n="tc_claim_rate">Claim Rate (RM/km)</label>
-                  <input type="number" id="tc-claim-rate" value="0.20" step="0.01" min="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_claim_rate">Claim Rate (RM/km)</label>
+                  <input type="number" id="tc-claim-rate" value="0.20" step="0.01" min="0" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group" style="display:flex;gap:8px">
+                <div class="form-group" style="margin:0;display:flex;gap:8px">
                   <div style="flex:1">
-                    <label data-i18n="tc_month">Month</label>
-                    <select id="tc-month" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_month">Month</label>
+                    <select id="tc-month" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                       <option value="1">January</option><option value="2">February</option>
                       <option value="3">March</option><option value="4">April</option>
                       <option value="5">May</option><option value="6">June</option>
@@ -614,12 +614,12 @@ tr:hover td{background:#fafafa}
                     </select>
                   </div>
                   <div style="flex:1">
-                    <label data-i18n="tc_year">Year</label>
-                    <select id="tc-year" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px"></select>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_year">Year</label>
+                    <select id="tc-year" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px"></select>
                   </div>
                 </div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
                 <button class="btn btn-primary" onclick="loadTravelClaim()">
                   📊 <span data-i18n="tc_btn_generate">Generate Report</span>
                 </button>
@@ -629,6 +629,9 @@ tr:hover td{background:#fafafa}
               </div>
             </div>
           </div>
+
+          <!-- Claim Summary (populated by loadTravelClaim) -->
+          <div id="tc-claim-summary" style="display:none;margin-bottom:10px"></div>
 
           <!-- Section B: Table Preview -->
           <div id="tc-report-content"></div>
@@ -2041,7 +2044,7 @@ function tcPopulateVehicles() {
   const sel = document.getElementById('tc-vehicle');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = '<option value="">-- เลือกรถ --</option>';
+  sel.innerHTML = `<option value="">${t('select_vehicle')}</option>`;
   (allVehicles || []).forEach(v => {
     const opt = new Option(`${v.license_plate} – ${v.name}`, v.id);
     sel.add(opt);
@@ -2132,6 +2135,7 @@ async function loadTravelClaim() {
   }));
 
   if (rows.length === 0) {
+    document.getElementById('tc-claim-summary').style.display = 'none';
     document.getElementById('tc-report-content').innerHTML =
       `<div class="card"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('tc_no_data')}</p></div></div>`;
     document.getElementById('tc-export-btn').style.display = 'none';
@@ -2139,12 +2143,24 @@ async function loadTravelClaim() {
   }
 
   // Compute totals
-  const totKm   = rows.reduce((s,r) => s + r.km, 0);
+  const totKm    = rows.reduce((s,r) => s + r.km, 0);
   const totFuel  = rows.reduce((s,r) => s + r.fuel, 0);
   const totToll  = rows.reduce((s,r) => s + r.toll, 0);
   const totPark  = rows.reduce((s,r) => s + r.parking, 0);
-  const grandTotal = totFuel + totToll + totPark;
-  const costPerKm  = totKm > 0 ? grandTotal / totKm : 0;
+
+  // ── Claimable fuel = same cap logic as HR form Excel formula ──
+  // D53 = MIN(F51/D51, claimRate)  →  fuelPerKmActual vs claimRate
+  // D56 = D51 × D53  →  km × effectiveRate
+  const claimRateVal = parseFloat(document.getElementById('tc-claim-rate')?.value) || 0.20;
+  const carTypeVal   = document.getElementById('tc-car-type')?.value || 'COMPANY CAR';
+  const actualPerKm  = totKm > 0 ? totFuel / totKm : 0;
+  // MOTORCYCLE uses fixed rate; all others cap at claimRate
+  const effectiveRate = carTypeVal === 'MOTORCYCLE'
+    ? claimRateVal
+    : Math.min(actualPerKm, claimRateVal);
+  const fuelClaim  = totKm * effectiveRate;         // claimable petrol
+  const grandTotal = fuelClaim + totToll + totPark; // matches Excel D63
+  const costPerKm  = effectiveRate;                 // matches Excel D53
 
   // Get vehicle info
   const veh = (allVehicles || []).find(v => v.id == vehicleId);
@@ -2152,7 +2168,7 @@ async function loadTravelClaim() {
 
   // Cache for export
   const g = id => document.getElementById(id)?.value || '';
-  tcReportData = { rows, totKm, totFuel, totToll, totPark, grandTotal, costPerKm, month, year, veh,
+  tcReportData = { rows, totKm, totFuel, fuelClaim, totToll, totPark, grandTotal, costPerKm, month, year, veh,
     company:    g('tc-company'),
     empId:      g('tc-empid'),
     name:       g('tc-name'),
@@ -2178,6 +2194,45 @@ async function loadTravelClaim() {
     <td style="font-size:12px;color:var(--text-light)">${r.purpose || '-'}</td>
   </tr>`).join('');
 
+  // ── Claim Summary (shown right below form) ──
+  const summaryEl = document.getElementById('tc-claim-summary');
+  summaryEl.style.display = '';
+  summaryEl.innerHTML = `
+    <div class="card">
+      <div class="card-header" style="padding:8px 16px">
+        <span class="card-title">💰 ${t('tc_section_c')}</span>
+        <span style="font-size:11px;color:var(--text-light)">${monthNames[month]} ${year} · ${veh?.license_plate || ''}</span>
+      </div>
+      <div style="padding:10px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_total_km')}</div>
+          <div style="font-size:20px;font-weight:700;color:var(--primary)">${fmtKm(totKm)} km</div>
+        </div>
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_fuel')} (RM)</div>
+          <div style="font-size:20px;font-weight:700">RM ${fmt(fuelClaim)}</div>
+          ${totFuel > fuelClaim ? `<div style="font-size:10px;color:var(--text-light)">Actual: RM ${fmt(totFuel)}</div>` : ''}
+        </div>
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_toll')} (RM)</div>
+          <div style="font-size:20px;font-weight:700">RM ${fmt(totToll)}</div>
+        </div>
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_parking')} (RM)</div>
+          <div style="font-size:20px;font-weight:700">RM ${fmt(totPark)}</div>
+        </div>
+        <div style="padding:10px 12px;background:var(--primary);border-radius:8px;color:#fff">
+          <div style="font-size:11px;opacity:.8">${t('tc_grand_total')}</div>
+          <div style="font-size:20px;font-weight:700">RM ${fmt(grandTotal)}</div>
+        </div>
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:11px;color:var(--text-light)">${t('tc_cost_per_km')}</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">RM ${costPerKm.toFixed(4)}/km</div>
+        </div>
+      </div>
+    </div>`;
+
+  // ── Section B: Detail table ──
   document.getElementById('tc-report-content').innerHTML = `
     <div class="card">
       <div class="card-header">
@@ -2211,37 +2266,6 @@ async function loadTravelClaim() {
             </tr>
           </tfoot>
         </table>
-      </div>
-    </div>
-
-    <!-- Section C: Summary -->
-    <div class="card" style="margin-top:12px">
-      <div class="card-header"><span class="card-title">💰 ${t('tc_section_c')}</span></div>
-      <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-        <div style="padding:12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_total_km')}</div>
-          <div style="font-size:22px;font-weight:700;color:var(--primary)">${fmtKm(totKm)} km</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_fuel')}</div>
-          <div style="font-size:22px;font-weight:700">RM ${fmt(totFuel)}</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_toll')}</div>
-          <div style="font-size:22px;font-weight:700">RM ${fmt(totToll)}</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-light)">${t('tc_col_parking')}</div>
-          <div style="font-size:22px;font-weight:700">RM ${fmt(totPark)}</div>
-        </div>
-        <div style="padding:12px;background:var(--primary);border-radius:8px;color:#fff">
-          <div style="font-size:12px;opacity:.8">${t('tc_grand_total')}</div>
-          <div style="font-size:22px;font-weight:700">RM ${fmt(grandTotal)}</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-light)">${t('tc_cost_per_km')}</div>
-          <div style="font-size:22px;font-weight:700;color:var(--accent)">RM ${costPerKm.toFixed(4)}/km</div>
-        </div>
       </div>
     </div>`;
 
