@@ -442,6 +442,7 @@ tr:hover td{background:#fafafa}
           <div class="page-tabs">
             <button class="tab-btn active" id="tab-vehicle-list" onclick="switchVehicleTab('list')">🚗 <span data-i18n="tab_vehicle_list">รายการรถ</span></button>
             <button class="tab-btn" id="tab-usage-log" onclick="switchVehicleTab('log')">📋 <span data-i18n="tab_usage_log">บันทึกการใช้งาน</span></button>
+            <button class="tab-btn" id="tab-vehicle-import" onclick="switchVehicleTab('import')">📥 <span data-i18n="tab_import">นำเข้าข้อมูล</span></button>
           </div>
 
           <!-- Tab 1: Vehicle List -->
@@ -459,6 +460,50 @@ tr:hover td{background:#fafafa}
                 <th data-i18n="col_brand">ยี่ห้อ/รุ่น</th><th data-i18n="col_year">ปี</th>
                 <th data-i18n="col_fuel">เชื้อเพลิง</th><th></th>
               </tr></thead><tbody id="vehiclesTable"></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Import -->
+          <div id="vtab-import" style="display:none">
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-header">
+                <span class="card-title">📥 <span data-i18n="import_vehicles_title">นำเข้าข้อมูลรถ</span></span>
+              </div>
+              <div style="padding:16px">
+                <!-- Step 1: Download Template -->
+                <div style="background:var(--bg);border-radius:8px;padding:14px;margin-bottom:14px">
+                  <div style="font-weight:700;margin-bottom:6px;font-size:14px">① <span data-i18n="import_step1">ดาวน์โหลด Template</span></div>
+                  <p style="font-size:13px;color:var(--text-light);margin:0 0 10px">Template มีตัวอย่างข้อมูลและรายการค่าที่ใช้ได้ (Department, Vehicle Type) แนบมาด้วย</p>
+                  <button class="btn btn-outline" onclick="downloadImportTemplate('vehicles')">
+                    📄 <span data-i18n="btn_download_template">ดาวน์โหลด Template Excel</span>
+                  </button>
+                </div>
+                <!-- Step 2: Upload -->
+                <div style="background:var(--bg);border-radius:8px;padding:14px;margin-bottom:14px">
+                  <div style="font-weight:700;margin-bottom:6px;font-size:14px">② <span data-i18n="import_step2">อัพโหลดไฟล์ที่กรอกแล้ว</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <label class="btn btn-primary" style="cursor:pointer;margin:0">
+                      📂 <span data-i18n="btn_choose_file">เลือกไฟล์ .xlsx</span>
+                      <input type="file" id="import-vehicles-file" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile('vehicles',this)">
+                    </label>
+                    <span id="import-vehicles-filename" style="font-size:13px;color:var(--text-light)">ยังไม่ได้เลือกไฟล์</span>
+                  </div>
+                </div>
+                <!-- Step 3: Preview + Confirm -->
+                <div id="import-vehicles-preview" style="display:none">
+                  <div style="font-weight:700;margin-bottom:8px;font-size:14px">③ <span data-i18n="import_step3">ตรวจสอบและยืนยัน</span></div>
+                  <div id="import-vehicles-preview-content"></div>
+                  <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-primary" id="import-vehicles-confirm-btn" onclick="confirmImport('vehicles')">
+                      ✅ <span data-i18n="btn_import_confirm">Import เข้าระบบ</span>
+                    </button>
+                    <button class="btn btn-outline" onclick="resetImport('vehicles')">
+                      🔄 <span data-i18n="btn_reset">เริ่มใหม่</span>
+                    </button>
+                  </div>
+                </div>
+                <div id="import-vehicles-result" style="display:none;margin-top:12px"></div>
+              </div>
             </div>
           </div>
 
@@ -639,8 +684,47 @@ tr:hover td{background:#fafafa}
 
         <!-- ══ USERS (admin only) ══ -->
         <div class="page" id="page-users">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="toggleUsersImport()" style="font-weight:600">📥 <span data-i18n="btn_import_users">นำเข้าผู้ใช้</span></button>
             <button class="btn btn-accent" onclick="openUserModal()" style="font-weight:700">+ <span data-i18n="add_user">เพิ่มผู้ใช้</span></button>
+          </div>
+
+          <!-- Import Panel (hidden by default) -->
+          <div id="users-import-panel" style="display:none;margin-bottom:12px">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">📥 <span data-i18n="import_users_title">นำเข้าข้อมูลผู้ใช้</span></span>
+                <button class="btn btn-outline btn-sm" onclick="toggleUsersImport()">✕</button>
+              </div>
+              <div style="padding:14px">
+                <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:7px;padding:10px;font-size:12px;margin-bottom:12px">
+                  ⚠️ Import จะ <strong>อัพเดทโปรไฟล์</strong> ผู้ใช้ที่มีอยู่แล้ว (จับคู่จาก Email) หากเป็นผู้ใช้ใหม่จะแสดงรายการให้เพิ่มทีละคน
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div style="background:var(--bg);border-radius:8px;padding:12px">
+                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">① ดาวน์โหลด Template</div>
+                    <button class="btn btn-outline btn-sm" onclick="downloadImportTemplate('users')">📄 Template Excel</button>
+                  </div>
+                  <div style="background:var(--bg);border-radius:8px;padding:12px">
+                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">② อัพโหลดไฟล์</div>
+                    <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0">
+                      📂 เลือกไฟล์ .xlsx
+                      <input type="file" id="import-users-file" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile('users',this)">
+                    </label>
+                    <span id="import-users-filename" style="font-size:12px;color:var(--text-light);display:block;margin-top:4px">ยังไม่ได้เลือกไฟล์</span>
+                  </div>
+                </div>
+                <div id="import-users-preview" style="display:none;margin-top:12px">
+                  <div style="font-weight:700;margin-bottom:8px;font-size:13px">③ ตรวจสอบและยืนยัน</div>
+                  <div id="import-users-preview-content"></div>
+                  <div style="display:flex;gap:8px;margin-top:10px">
+                    <button class="btn btn-primary btn-sm" id="import-users-confirm-btn" onclick="confirmImport('users')">✅ Import เข้าระบบ</button>
+                    <button class="btn btn-outline btn-sm" onclick="resetImport('users')">🔄 เริ่มใหม่</button>
+                  </div>
+                </div>
+                <div id="import-users-result" style="display:none;margin-top:10px"></div>
+              </div>
+            </div>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title" data-i18n="user_management">จัดการผู้ใช้</span></div>
@@ -1724,12 +1808,12 @@ async function deleteVehicle(id) {
 let assignedVehicleIds = []; // vehicles this user can log usage for
 
 function switchVehicleTab(tab) {
-  const isList = tab === 'list';
-  document.getElementById('vtab-list').style.display = isList ? '' : 'none';
-  document.getElementById('vtab-log').style.display  = isList ? 'none' : '';
-  document.getElementById('tab-vehicle-list').classList.toggle('active', isList);
-  document.getElementById('tab-usage-log').classList.toggle('active', !isList);
-  if (!isList) { loadAssignedVehicles().then(() => { populateULVehicleSelects(); loadUsageLogs(); }); }
+  const tabIdMap = { list:'tab-vehicle-list', log:'tab-usage-log', import:'tab-vehicle-import' };
+  ['list','log','import'].forEach(t => {
+    document.getElementById(`vtab-${t}`).style.display = tab === t ? '' : 'none';
+    document.getElementById(tabIdMap[t]).classList.toggle('active', tab === t);
+  });
+  if (tab === 'log') { loadAssignedVehicles().then(() => { populateULVehicleSelects(); loadUsageLogs(); }); }
 }
 
 async function loadAssignedVehicles() {
@@ -2429,6 +2513,346 @@ async function exportTravelClaimExcel() {
   const filename = `Travelling_Claim_${(d.veh?.license_plate||'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
+}
+
+// ─── IMPORT DATA ──────────────────────────────────────────
+
+// Parsed rows waiting for confirmation
+let importPendingData = { vehicles: [], users: [] };
+
+// ── Toggle Users import panel ──
+function toggleUsersImport() {
+  const p = document.getElementById('users-import-panel');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+  if (p.style.display === '') resetImport('users');
+}
+
+// ── Download Template ──
+function downloadImportTemplate(type) {
+  const wb = XLSX.utils.book_new();
+
+  if (type === 'vehicles') {
+    // ── Sheet 1: Data ──
+    const deptList  = (allDepts  || []).map(d => useName(d)).filter(Boolean);
+    const vtypeList = (allVTypes || []).map(v => useName(v)).filter(Boolean);
+    const fuelList  = ['gasoline','diesel','electric','hybrid'];
+
+    const headers = [
+      'license_plate*','name*','department_name*','vehicle_type_name*',
+      'brand','model','year','fuel_type'
+    ];
+    const notes = [
+      'ทะเบียนรถ (required)','ชื่อ/รุ่นรถ (required)',
+      'ชื่อหน่วยงาน (ดูชีท Valid Values)','ชนิดรถ (ดูชีท Valid Values)',
+      'ยี่ห้อ','รุ่น','ปี ค.ศ. เช่น 2022','gasoline/diesel/electric/hybrid'
+    ];
+    const sample1 = ['VQG8991','Toyota Hilux', deptList[0]||'Chengkau', vtypeList[0]||'Pickup','Toyota','Hilux',2022,'diesel'];
+    const sample2 = ['ABC1234','Honda City',   deptList[0]||'Chengkau', vtypeList[1]||'Sedan', 'Honda','City', 2023,'gasoline'];
+
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['VEHICLE IMPORT TEMPLATE — กรอกข้อมูลรถจากแถวที่ 4 เป็นต้นไป'],
+      notes,
+      headers,
+      sample1,
+      sample2,
+    ]);
+    // Style: header row = row index 2 (0-based)
+    ws['!cols'] = [{wch:14},{wch:20},{wch:20},{wch:20},{wch:12},{wch:12},{wch:6},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Vehicles');
+
+    // ── Sheet 2: Valid Values ──
+    const maxLen = Math.max(deptList.length, vtypeList.length, fuelList.length);
+    const vvData = [['Department Name','Vehicle Type Name','fuel_type']];
+    for (let i = 0; i < maxLen; i++) {
+      vvData.push([deptList[i]||'', vtypeList[i]||'', fuelList[i]||'']);
+    }
+    const wsVV = XLSX.utils.aoa_to_sheet(vvData);
+    wsVV['!cols'] = [{wch:22},{wch:22},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, wsVV, 'Valid Values');
+
+    XLSX.writeFile(wb, 'vehicle_import_template.xlsx');
+
+  } else {
+    // ── Users template ──
+    const deptList = (allDepts || []).map(d => useName(d)).filter(Boolean);
+    const headers  = ['full_name*','email*','role','department_name'];
+    const notes    = ['ชื่อ-นามสกุล (required)','Email (required)','admin/manager/user (ค่าเริ่มต้น: user)','ชื่อหน่วยงาน (ดูชีท Valid Values)'];
+    const sample1  = ['Somchai Jaidee','somchai@example.com','user', deptList[0]||'Chengkau'];
+    const sample2  = ['Malee Sriwan',  'malee@example.com',  'manager', deptList[0]||'Chengkau'];
+
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['USER IMPORT TEMPLATE — กรอกข้อมูลผู้ใช้จากแถวที่ 4 เป็นต้นไป'],
+      notes,
+      headers,
+      sample1,
+      sample2,
+    ]);
+    ws['!cols'] = [{wch:24},{wch:28},{wch:10},{wch:20}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Users');
+
+    const vvData = [['Department Name'],['role values: admin / manager / user'], ...deptList.map(d => [d])];
+    const wsVV   = XLSX.utils.aoa_to_sheet(vvData);
+    wsVV['!cols'] = [{wch:24}];
+    XLSX.utils.book_append_sheet(wb, wsVV, 'Valid Values');
+
+    XLSX.writeFile(wb, 'user_import_template.xlsx');
+  }
+
+  toast('ดาวน์โหลด template สำเร็จ', 'success');
+}
+
+// ── Parse uploaded file and show preview ──
+function handleImportFile(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById(`import-${type}-filename`).textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb  = XLSX.read(e.target.result, { type: 'array' });
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Find header row (row with license_plate* or full_name*)
+      let headerIdx = -1;
+      for (let i = 0; i < Math.min(raw.length, 6); i++) {
+        const row = raw[i].map(c => String(c).toLowerCase().replace('*','').trim());
+        if (type === 'vehicles' && row.includes('license_plate')) { headerIdx = i; break; }
+        if (type === 'users'    && row.includes('full_name'))      { headerIdx = i; break; }
+      }
+      if (headerIdx === -1) { toast('ไม่พบ header row ในไฟล์ กรุณาใช้ template ที่ดาวน์โหลด', 'error'); return; }
+
+      const headers = raw[headerIdx].map(c => String(c).replace('*','').trim().toLowerCase());
+      const dataRows = raw.slice(headerIdx + 1).filter(r => r.some(c => String(c).trim()));
+
+      // Parse rows
+      const parsed = dataRows.map(row => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = String(row[i] ?? '').trim(); });
+        return obj;
+      });
+
+      if (type === 'vehicles') parseVehicleRows(parsed);
+      else                     parseUserRows(parsed);
+    } catch(err) {
+      toast('ไม่สามารถอ่านไฟล์ได้: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Validate & enrich vehicle rows ──
+function parseVehicleRows(rows) {
+  const result = rows.map(r => {
+    const errors = [];
+    if (!r.license_plate) errors.push('ไม่มีทะเบียน');
+    if (!r.name)          errors.push('ไม่มีชื่อรถ');
+
+    const dept  = (allDepts  || []).find(d => useName(d).toLowerCase() === (r.department_name||'').toLowerCase());
+    const vtype = (allVTypes || []).find(v => useName(v).toLowerCase() === (r.vehicle_type_name||'').toLowerCase());
+    if (!dept)  errors.push(`ไม่พบ Department: "${r.department_name}"`);
+    if (!vtype) errors.push(`ไม่พบ Vehicle Type: "${r.vehicle_type_name}"`);
+
+    const existing = (allVehicles || []).find(v => v.license_plate?.toLowerCase() === r.license_plate?.toLowerCase());
+    return {
+      ...r,
+      _dept_id:    dept?.id,
+      _vtype_id:   vtype?.id,
+      _errors:     errors,
+      _action:     existing ? 'update' : 'insert',
+      _existingId: existing?.id,
+    };
+  });
+
+  importPendingData.vehicles = result;
+  showImportPreview('vehicles', result);
+}
+
+// ── Validate & enrich user rows ──
+async function parseUserRows(rows) {
+  // Fetch existing profiles to check which emails already exist
+  const { data: profiles } = await sbClient.from('user_profiles').select('id, email');
+  const emailMap = {};
+  (profiles || []).forEach(p => { if(p.email) emailMap[p.email.toLowerCase()] = p.id; });
+
+  const validRoles = ['admin','manager','user'];
+  const result = rows.map(r => {
+    const errors = [];
+    if (!r.full_name) errors.push('ไม่มีชื่อ');
+    if (!r.email || !r.email.includes('@')) errors.push('Email ไม่ถูกต้อง');
+
+    const dept = (allDepts || []).find(d => useName(d).toLowerCase() === (r.department_name||'').toLowerCase());
+    const role = validRoles.includes((r.role||'').toLowerCase()) ? r.role.toLowerCase() : 'user';
+    const existingId = emailMap[(r.email||'').toLowerCase()];
+
+    if (r.department_name && !dept) errors.push(`ไม่พบ Department: "${r.department_name}"`);
+
+    return {
+      ...r,
+      role,
+      _dept_id:    dept?.id || null,
+      _errors:     errors,
+      _action:     existingId ? 'update' : 'new',
+      _existingId: existingId,
+    };
+  });
+
+  importPendingData.users = result;
+  showImportPreview('users', result);
+}
+
+// ── Render preview table ──
+function showImportPreview(type, rows) {
+  const validRows   = rows.filter(r => r._errors.length === 0);
+  const invalidRows = rows.filter(r => r._errors.length  > 0);
+  const updateRows  = validRows.filter(r => r._action === 'update');
+  const insertRows  = validRows.filter(r => r._action === 'insert' || r._action === 'new');
+
+  let html = `
+    <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="padding:8px 14px;background:#e8f5e9;border-radius:6px;font-size:13px">
+        ✅ พร้อม import: <strong>${validRows.length} รายการ</strong>
+        (เพิ่มใหม่ ${insertRows.length}, อัพเดท ${updateRows.length})
+      </div>
+      ${invalidRows.length ? `<div style="padding:8px 14px;background:#ffebee;border-radius:6px;font-size:13px">❌ ข้อผิดพลาด: <strong>${invalidRows.length} รายการ</strong></div>` : ''}
+    </div>`;
+
+  // Preview table
+  if (type === 'vehicles') {
+    html += `<div class="table-wrap"><table><thead><tr style="background:var(--primary);color:#fff">
+      <th>สถานะ</th><th>ทะเบียน</th><th>ชื่อรถ</th><th>หน่วยงาน</th><th>ชนิดรถ</th><th>ยี่ห้อ/รุ่น</th><th>ปี</th><th>เชื้อเพลิง</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+      const ok  = r._errors.length === 0;
+      const bg  = ok ? '' : 'background:#fff8f8';
+      const act = r._action === 'update' ? '🔄 อัพเดท' : '➕ เพิ่มใหม่';
+      html += `<tr style="${bg}">
+        <td style="font-size:12px">${ok ? `<span style="color:green">${act}</span>` : `<span style="color:red">❌ ${r._errors.join(', ')}</span>`}</td>
+        <td><strong>${r.license_plate}</strong></td>
+        <td>${r.name}</td>
+        <td>${r.department_name}</td>
+        <td>${r.vehicle_type_name}</td>
+        <td>${[r.brand,r.model].filter(Boolean).join(' ')}</td>
+        <td>${r.year}</td>
+        <td>${r.fuel_type||'gasoline'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += `<div class="table-wrap"><table><thead><tr style="background:var(--primary);color:#fff">
+      <th>สถานะ</th><th>ชื่อ</th><th>Email</th><th>สิทธิ์</th><th>หน่วยงาน</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+      const ok  = r._errors.length === 0;
+      const bg  = ok ? '' : 'background:#fff8f8';
+      const act = r._action === 'update' ? '🔄 อัพเดทโปรไฟล์' : '👤 ผู้ใช้ใหม่ (ต้องสมัครเอง)';
+      html += `<tr style="${bg}">
+        <td style="font-size:12px">${ok ? `<span style="color:${r._action==='update'?'#388e3c':'#1565c0'}">${act}</span>` : `<span style="color:red">❌ ${r._errors.join(', ')}</span>`}</td>
+        <td>${r.full_name}</td>
+        <td>${r.email}</td>
+        <td>${r.role}</td>
+        <td>${r.department_name||'-'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  const previewEl  = document.getElementById(`import-${type}-preview`);
+  const contentEl  = document.getElementById(`import-${type}-preview-content`);
+  const confirmBtn = document.getElementById(`import-${type}-confirm-btn`);
+  previewEl.style.display  = '';
+  contentEl.innerHTML      = html;
+  if (confirmBtn) confirmBtn.disabled = validRows.length === 0;
+}
+
+// ── Execute import ──
+async function confirmImport(type) {
+  const rows      = importPendingData[type].filter(r => r._errors.length === 0);
+  const confirmBtn = document.getElementById(`import-${type}-confirm-btn`);
+  if (!rows.length) return;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = '⏳ กำลัง import...';
+
+  let success = 0, failed = 0, errors = [];
+
+  if (type === 'vehicles') {
+    for (const r of rows) {
+      const body = {
+        license_plate:   r.license_plate,
+        name:            r.name,
+        department_id:   r._dept_id,
+        vehicle_type_id: r._vtype_id,
+        brand:           r.brand   || null,
+        model:           r.model   || null,
+        year:            r.year    || null,
+        fuel_type:       r.fuel_type || 'gasoline',
+        is_active:       true,
+      };
+      let err;
+      if (r._action === 'update') {
+        ({ error: err } = await sbClient.from('vehicles').update(body).eq('id', r._existingId));
+      } else {
+        ({ error: err } = await sbClient.from('vehicles').insert(body));
+      }
+      if (err) { failed++; errors.push(`${r.license_plate}: ${err.message}`); }
+      else success++;
+    }
+    // Reload master data
+    await loadMasterData();
+    loadVehicles();
+
+  } else {
+    // Users: update existing profiles only (new users must sign up themselves)
+    const updateRows = rows.filter(r => r._action === 'update');
+    const newRows    = rows.filter(r => r._action === 'new');
+
+    for (const r of updateRows) {
+      const { error: err } = await sbClient.from('user_profiles').update({
+        full_name:     r.full_name,
+        role:          r.role,
+        department_id: r._dept_id || null,
+      }).eq('id', r._existingId);
+      if (err) { failed++; errors.push(`${r.email}: ${err.message}`); }
+      else success++;
+    }
+
+    // New users: cannot create auth from client — show instructions
+    if (newRows.length) {
+      const resultEl = document.getElementById(`import-users-result`);
+      resultEl.style.display = '';
+      resultEl.innerHTML = `
+        <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:7px;padding:12px;font-size:13px;margin-top:8px">
+          <strong>👤 ผู้ใช้ใหม่ ${newRows.length} คน</strong> — ต้องสมัครบัญชีก่อนจึงจะอัพเดทโปรไฟล์ได้<br>
+          <small>Email ที่รอ: ${newRows.map(r=>`<strong>${r.email}</strong>`).join(', ')}</small>
+        </div>`;
+    }
+    loadUsers();
+  }
+
+  const resultEl = document.getElementById(`import-${type}-result`);
+  resultEl.style.display = '';
+  resultEl.innerHTML = `
+    <div style="padding:12px;border-radius:7px;font-size:13px;background:${failed?'#fff3e0':'#e8f5e9'};border:1px solid ${failed?'#ffb74d':'#a5d6a7'}">
+      ${success ? `✅ สำเร็จ <strong>${success} รายการ</strong>` : ''}
+      ${failed  ? ` &nbsp;❌ ล้มเหลว <strong>${failed} รายการ</strong><br><small style="color:red">${errors.join('<br>')}</small>` : ''}
+    </div>`;
+
+  confirmBtn.textContent = '✅ Import เสร็จแล้ว';
+  toast(`Import สำเร็จ ${success} รายการ${failed?`, ล้มเหลว ${failed} รายการ`:''}`, failed?'error':'success');
+}
+
+// ── Reset import state ──
+function resetImport(type) {
+  importPendingData[type] = [];
+  const fileInput = document.getElementById(`import-${type}-file`);
+  if (fileInput) fileInput.value = '';
+  const fname = document.getElementById(`import-${type}-filename`);
+  if (fname) fname.textContent = 'ยังไม่ได้เลือกไฟล์';
+  document.getElementById(`import-${type}-preview`).style.display = 'none';
+  document.getElementById(`import-${type}-result`).style.display  = 'none';
+  const btn = document.getElementById(`import-${type}-confirm-btn`);
+  if (btn) { btn.disabled = false; btn.innerHTML = '✅ <span>Import เข้าระบบ</span>'; }
 }
 
 // ─── USERS ────────────────────────────────────────────────
