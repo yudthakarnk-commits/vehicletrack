@@ -193,8 +193,26 @@ tr:hover td{background:#fafafa}
     <div class="login-logo">
       <div class="logo-row">
         <svg width="62" height="62" viewBox="0 0 62 62" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="logo-lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient></defs>
+          <defs>
+            <linearGradient id="logo-lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient>
+            <clipPath id="clip-login"><rect width="62" height="62" rx="16"/></clipPath>
+          </defs>
           <rect width="62" height="62" rx="16" fill="url(#logo-lg)"/>
+          <!-- Faint map roads -->
+          <g clip-path="url(#clip-login)" stroke="rgba(255,255,255,0.18)" fill="none" stroke-linecap="round">
+            <line x1="-2" y1="24" x2="44" y2="24" stroke-width="2.5"/>
+            <line x1="18" y1="38" x2="64" y2="38" stroke-width="1.5"/>
+            <line x1="20" y1="-2" x2="20" y2="38" stroke-width="2.5"/>
+            <line x1="44" y1="22" x2="44" y2="64" stroke-width="1.5"/>
+            <line x1="-2" y1="54" x2="26" y2="22" stroke-width="1.5"/>
+            <line x1="36" y1="4" x2="64" y2="32" stroke-width="1.5"/>
+            <line x1="6" y1="10" x2="6" y2="26" stroke-width="1"/>
+            <line x1="56" y1="36" x2="56" y2="54" stroke-width="1"/>
+            <line x1="0" y1="50" x2="20" y2="50" stroke-width="1"/>
+            <circle cx="20" cy="24" r="2.5" fill="rgba(255,255,255,0.25)" stroke="none"/>
+            <circle cx="44" cy="38" r="2" fill="rgba(255,255,255,0.2)" stroke="none"/>
+            <circle cx="44" cy="24" r="1.5" fill="rgba(255,255,255,0.2)" stroke="none"/>
+          </g>
           <path d="M14 16 L31 41 L48 16" stroke="white" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           <circle cx="31" cy="48" r="7.5" fill="#F97316"/>
           <circle cx="31" cy="48" r="3" fill="white"/>
@@ -256,8 +274,22 @@ tr:hover td{background:#fafafa}
     <div class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="logo-sb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient></defs>
+          <defs>
+            <linearGradient id="logo-sb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient>
+            <clipPath id="clip-sb"><rect width="36" height="36" rx="9"/></clipPath>
+          </defs>
           <rect width="36" height="36" rx="9" fill="url(#logo-sb)"/>
+          <!-- Faint map roads -->
+          <g clip-path="url(#clip-sb)" stroke="rgba(255,255,255,0.18)" fill="none" stroke-linecap="round">
+            <line x1="-1" y1="14" x2="26" y2="14" stroke-width="1.5"/>
+            <line x1="10" y1="22" x2="37" y2="22" stroke-width="1"/>
+            <line x1="12" y1="-1" x2="12" y2="22" stroke-width="1.5"/>
+            <line x1="26" y1="12" x2="26" y2="37" stroke-width="1"/>
+            <line x1="-1" y1="32" x2="16" y2="13" stroke-width="1"/>
+            <line x1="20" y1="3" x2="37" y2="20" stroke-width="1"/>
+            <circle cx="12" cy="14" r="1.4" fill="rgba(255,255,255,0.25)" stroke="none"/>
+            <circle cx="26" cy="22" r="1.2" fill="rgba(255,255,255,0.2)" stroke="none"/>
+          </g>
           <path d="M8 9 L18 23 L28 9" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           <circle cx="18" cy="28" r="4.5" fill="#F97316"/>
           <circle cx="18" cy="28" r="1.8" fill="white"/>

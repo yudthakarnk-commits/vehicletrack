@@ -256,6 +256,18 @@ const TRANSLATIONS = {
     tc_car_private_e:   'รถส่วนตัว (ไฟฟ้า)',
     tc_car_motorcycle:  'รถมอเตอร์ไซค์',
     tc_no_data:         'ไม่มีข้อมูลในช่วงเวลาที่เลือก',
+
+    // Import
+    tab_import:            'นำเข้าข้อมูลรถ',
+    import_vehicles_title: 'นำเข้าข้อมูลรถ',
+    import_users_title:    'นำเข้าข้อมูลผู้ใช้',
+    btn_import_users:      'นำเข้าข้อมูลผู้ใช้',
+    import_step1:          'ดาวน์โหลด Template',
+    import_step2:          'อัพโหลดไฟล์ที่กรอกแล้ว',
+    import_step3:          'ตรวจสอบและยืนยัน',
+    btn_download_template: 'ดาวน์โหลด Template Excel',
+    btn_choose_file:       'เลือกไฟล์ .xlsx',
+    btn_import_confirm:    'Import เข้าระบบ',
   },
   en: {
     nav_dashboard:    'Dashboard',
@@ -496,6 +508,18 @@ const TRANSLATIONS = {
     tc_car_private_e:   'Private Car (Electric)',
     tc_car_motorcycle:  'Motorcycle',
     tc_no_data:         'No data for the selected period',
+
+    // Import
+    tab_import:            'Import Vehicle Data',
+    import_vehicles_title: 'Import Vehicle Data',
+    import_users_title:    'Import User Data',
+    btn_import_users:      'Import User Data',
+    import_step1:          'Download Template',
+    import_step2:          'Upload Completed File',
+    import_step3:          'Review & Confirm',
+    btn_download_template: 'Download Excel Template',
+    btn_choose_file:       'Choose .xlsx File',
+    btn_import_confirm:    'Import to System',
   }
 };
 
