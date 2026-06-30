@@ -505,7 +505,7 @@ tr:hover td{background:#fafafa}
                 <!-- Step 1: Download Template -->
                 <div style="background:var(--bg);border-radius:8px;padding:14px;margin-bottom:14px">
                   <div style="font-weight:700;margin-bottom:6px;font-size:14px">① <span data-i18n="import_step1">ดาวน์โหลด Template</span></div>
-                  <p style="font-size:13px;color:var(--text-light);margin:0 0 10px">Template มีตัวอย่างข้อมูลและรายการค่าที่ใช้ได้ (Department, Vehicle Type) แนบมาด้วย</p>
+                  <p style="font-size:13px;color:var(--text-light);margin:0 0 10px" data-i18n="import_vehicles_desc">Template มีตัวอย่างข้อมูลและรายการค่าที่ใช้ได้ (Department, Vehicle Type) แนบมาด้วย</p>
                   <button class="btn btn-outline" onclick="downloadImportTemplate('vehicles')">
                     📄 <span data-i18n="btn_download_template">ดาวน์โหลด Template Excel</span>
                   </button>
@@ -518,7 +518,7 @@ tr:hover td{background:#fafafa}
                       📂 <span data-i18n="btn_choose_file">เลือกไฟล์ .xlsx</span>
                       <input type="file" id="import-vehicles-file" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile('vehicles',this)">
                     </label>
-                    <span id="import-vehicles-filename" style="font-size:13px;color:var(--text-light)">ยังไม่ได้เลือกไฟล์</span>
+                    <span id="import-vehicles-filename" style="font-size:13px;color:var(--text-light)" data-i18n="import_no_file">ยังไม่ได้เลือกไฟล์</span>
                   </div>
                 </div>
                 <!-- Step 3: Preview + Confirm -->
@@ -730,28 +730,28 @@ tr:hover td{background:#fafafa}
               </div>
               <div style="padding:14px">
                 <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:7px;padding:10px;font-size:12px;margin-bottom:12px">
-                  ⚠️ Import จะ <strong>อัพเดทโปรไฟล์</strong> ผู้ใช้ที่มีอยู่แล้ว (จับคู่จาก Email) หากเป็นผู้ใช้ใหม่จะแสดงรายการให้เพิ่มทีละคน
+                  ⚠️ <span data-i18n="import_warning_users">Import จะอัพเดทโปรไฟล์ผู้ใช้ที่มีอยู่แล้ว (จับคู่จาก Email) หากเป็นผู้ใช้ใหม่จะแสดงรายการให้เพิ่มทีละคน</span>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                   <div style="background:var(--bg);border-radius:8px;padding:12px">
-                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">① ดาวน์โหลด Template</div>
-                    <button class="btn btn-outline btn-sm" onclick="downloadImportTemplate('users')">📄 Template Excel</button>
+                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">① <span data-i18n="import_step1">ดาวน์โหลด Template</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="downloadImportTemplate('users')">📄 <span data-i18n="btn_download_template">ดาวน์โหลด Template Excel</span></button>
                   </div>
                   <div style="background:var(--bg);border-radius:8px;padding:12px">
-                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">② อัพโหลดไฟล์</div>
+                    <div style="font-weight:700;margin-bottom:6px;font-size:13px">② <span data-i18n="import_step2">อัพโหลดไฟล์ที่กรอกแล้ว</span></div>
                     <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0">
-                      📂 เลือกไฟล์ .xlsx
+                      📂 <span data-i18n="btn_choose_file">เลือกไฟล์ .xlsx</span>
                       <input type="file" id="import-users-file" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile('users',this)">
                     </label>
-                    <span id="import-users-filename" style="font-size:12px;color:var(--text-light);display:block;margin-top:4px">ยังไม่ได้เลือกไฟล์</span>
+                    <span id="import-users-filename" style="font-size:12px;color:var(--text-light);display:block;margin-top:4px" data-i18n="import_no_file">ยังไม่ได้เลือกไฟล์</span>
                   </div>
                 </div>
                 <div id="import-users-preview" style="display:none;margin-top:12px">
-                  <div style="font-weight:700;margin-bottom:8px;font-size:13px">③ ตรวจสอบและยืนยัน</div>
+                  <div style="font-weight:700;margin-bottom:8px;font-size:13px">③ <span data-i18n="import_step3">ตรวจสอบและยืนยัน</span></div>
                   <div id="import-users-preview-content"></div>
                   <div style="display:flex;gap:8px;margin-top:10px">
-                    <button class="btn btn-primary btn-sm" id="import-users-confirm-btn" onclick="confirmImport('users')">✅ Import เข้าระบบ</button>
-                    <button class="btn btn-outline btn-sm" onclick="resetImport('users')">🔄 เริ่มใหม่</button>
+                    <button class="btn btn-primary btn-sm" id="import-users-confirm-btn" onclick="confirmImport('users')">✅ <span data-i18n="btn_import_confirm">Import เข้าระบบ</span></button>
+                    <button class="btn btn-outline btn-sm" onclick="resetImport('users')">🔄 <span data-i18n="btn_start_over">เริ่มใหม่</span></button>
                   </div>
                 </div>
                 <div id="import-users-result" style="display:none;margin-top:10px"></div>
