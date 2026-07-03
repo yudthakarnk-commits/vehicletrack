@@ -13,6 +13,8 @@ const TRANSLATIONS = {
     nav_users:        'จัดการผู้ใช้',
     nav_access_logs:  'ประวัติการใช้งาน',
     nav_settings:     'ตั้งค่า',
+    nav_more:         'เพิ่มเติม',
+    dark_mode:        'โหมดกลางคืน',
 
     // Auth
     login_title:      'เข้าสู่ระบบ',
@@ -350,6 +352,8 @@ const TRANSLATIONS = {
     nav_users:        'User Management',
     nav_access_logs:  'Access Logs',
     nav_settings:     'Settings',
+    nav_more:         'More',
+    dark_mode:        'Dark Mode',
 
     login_title:      'Sign In',
     email:            'Email',

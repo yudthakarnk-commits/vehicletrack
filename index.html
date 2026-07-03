@@ -30,7 +30,43 @@
 <script src="js/i18n.js"></script>
 <script src="js/offline.js"></script>
 <style>
-:root{--primary:#2563EB;--primary-light:#3B82F6;--accent:#F97316;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#F1F5F9;--card:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--sidebar-w:230px;--sidebar-col:60px;--header-h:60px}
+:root{--primary:#2563EB;--primary-light:#3B82F6;--accent:#F97316;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#F1F5F9;--card:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--hover:#F8FAFC;--sidebar-w:230px;--sidebar-col:60px;--header-h:60px;--bottom-nav-h:0px}
+[data-theme="dark"]{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--text-light:#94A3B8;--border:#334155;--hover:#263148;--bottom-nav-h:64px}
+[data-theme="dark"] body{background:linear-gradient(145deg,#0F172A 0%,#1E3A5F 50%,#2D1B69 100%) fixed}
+[data-theme="dark"] .topbar{background:rgba(15,23,42,.92);border-bottom:1px solid rgba(255,255,255,.08)}
+[data-theme="dark"] .filter-bar{background:rgba(30,41,59,.95)}
+[data-theme="dark"] .card{background:rgba(30,41,59,.97);border:1px solid rgba(255,255,255,.08)}
+[data-theme="dark"] .kpi-card{background:rgba(30,41,59,.97);box-shadow:0 4px 20px rgba(0,0,0,.4)}
+[data-theme="dark"] th{background:#1a2744;color:#94A3B8}
+[data-theme="dark"] td{border-bottom:1px solid #263148}
+[data-theme="dark"] tr:hover td{background:#263148}
+[data-theme="dark"] .av-dropdown{background:#1E293B;border-color:#334155}
+[data-theme="dark"] .av-drop-hd{background:#0F172A}
+[data-theme="dark"] .av-drop-item:hover{background:#263148}
+[data-theme="dark"] .av-drop-item.danger:hover{background:#3B1111}
+[data-theme="dark"] .av-drop-nm{color:#F1F5F9}
+[data-theme="dark"] .notif-panel{background:#1E293B;border-color:#334155}
+[data-theme="dark"] .notif-panel-hd{border-bottom-color:#334155}
+[data-theme="dark"] .notif-item{border-bottom-color:#334155}
+[data-theme="dark"] .notif-item:hover{background:#263148}
+[data-theme="dark"] .notif-item.unread{background:#1a2744}
+[data-theme="dark"] .modal{background:#1E293B !important;color:#F1F5F9}
+[data-theme="dark"] .modal-header{border-bottom-color:#334155}
+[data-theme="dark"] .modal-footer{border-top-color:#334155}
+[data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#0F172A;color:#F1F5F9;border-color:#334155}
+[data-theme="dark"] .filter-group select,[data-theme="dark"] .filter-group input{background:#0F172A;color:#F1F5F9;border-color:#334155}
+[data-theme="dark"] .page-tabs,[data-theme="dark"] .tabs{background:rgba(30,41,59,.95)}
+[data-theme="dark"] .tab-btn{color:#94A3B8}
+[data-theme="dark"] .tab-btn.active{background:var(--primary);color:#fff}
+[data-theme="dark"] .login-card{background:#1E293B}
+[data-theme="dark"] #login-screen{background:linear-gradient(145deg,#0F172A 0%,#1E3A5F 50%,#2D1B69 100%)}
+[data-theme="dark"] .btn-outline{border-color:#334155;color:#CBD5E1}
+[data-theme="dark"] .btn-outline:hover{background:#263148}
+[data-theme="dark"] .lang-toggle{border-color:#334155;color:#94A3B8}
+[data-theme="dark"] .lang-toggle:hover{border-color:var(--primary);color:var(--primary)}
+[data-theme="dark"] #mobile-bottom-nav{background:rgba(15,23,42,.96);border-top-color:#334155}
+[data-theme="dark"] .mob-nav-item.active .mob-nav-icon{color:var(--primary)}
+[data-theme="dark"] .skeleton{background:linear-gradient(90deg,#1E293B 25%,#263148 50%,#1E293B 75%);background-size:400% 100%}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(145deg,#1D4ED8 0%,#2563EB 50%,#7C3AED 100%) fixed;background-attachment:fixed;color:var(--text);min-height:100vh}
 /* LOGIN */
@@ -183,6 +219,62 @@ tr:hover td{background:#fafafa}
 .notif-empty{padding:32px 16px;text-align:center;color:var(--text-light);font-size:13px}
 @keyframes notif-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
 .notif-shake{animation:notif-shake .5s ease}
+
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton{background:linear-gradient(90deg,#e8edf3 25%,#f4f7fb 50%,#e8edf3 75%);background-size:400% 100%;animation:shimmer 1.6s infinite;border-radius:6px;display:inline-block}
+.skeleton-row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.skeleton-cell{height:14px;border-radius:4px}
+.skeleton-table{width:100%}
+
+/* ── EMPTY STATE ── */
+.empty-state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:16px;text-align:center}
+.empty-state-box svg{opacity:.55}
+.empty-state-box .es-title{font-size:15px;font-weight:600;color:var(--text)}
+.empty-state-box .es-sub{font-size:13px;color:var(--text-light);max-width:280px;line-height:1.5}
+
+/* ── MOBILE BOTTOM NAV ── */
+#mobile-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:64px;background:rgba(255,255,255,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--border);z-index:500;padding-bottom:env(safe-area-inset-bottom)}
+.mob-nav-inner{display:flex;height:64px;align-items:stretch}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;padding:0;position:relative;transition:all .15s}
+.mob-nav-icon{font-size:22px;line-height:1;transition:transform .2s}
+.mob-nav-label{font-size:9.5px;font-weight:600;color:var(--text-light);letter-spacing:.02em;transition:color .15s}
+.mob-nav-item.active .mob-nav-icon{transform:scale(1.15)}
+.mob-nav-item.active .mob-nav-label{color:var(--primary)}
+.mob-nav-item .mob-badge{position:absolute;top:6px;right:calc(50% - 16px);background:#e53e3e;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--card)}
+.mob-nav-more-panel{position:fixed;bottom:64px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:16px;z-index:499;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -8px 32px rgba(0,0,0,.15)}
+.mob-nav-more-panel.open{transform:translateY(0)}
+.mob-more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.mob-more-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:10px;cursor:pointer;background:var(--bg);transition:background .15s}
+.mob-more-item:hover{background:var(--hover)}
+.mob-more-icon{font-size:22px}
+.mob-more-label{font-size:10px;font-weight:600;color:var(--text-light);text-align:center}
+@media(max-width:768px){
+  #mobile-bottom-nav{display:block}
+  .sidebar{display:none !important}
+  .content{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  .menu-btn{display:none}
+}
+
+/* ── KPI ANIMATED COUNTER ── */
+@keyframes kpi-pop{0%{transform:scale(.85);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+.kpi-card{animation:kpi-pop .4s ease forwards}
+.kpi-card:nth-child(1){animation-delay:.05s}
+.kpi-card:nth-child(2){animation-delay:.1s}
+.kpi-card:nth-child(3){animation-delay:.15s}
+.kpi-card:nth-child(4){animation-delay:.2s}
+.kpi-value{transition:color .3s}
+
+/* ── DARK MODE TOGGLE in profile ── */
+.dark-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.dark-toggle-label{font-size:13px;font-weight:500;color:var(--text)}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#CBD5E1;border-radius:24px;transition:.3s}
+.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+input:checked + .toggle-slider{background:var(--primary)}
+input:checked + .toggle-slider:before{transform:translateX(20px)}
+
 /* RECEIPT VIEWER MODAL */
 #receiptViewerModal .modal{max-width:480px;background:var(--card)}
 #receiptViewerModal img{width:100%;border-radius:8px;display:block}
@@ -310,6 +402,41 @@ tr:hover td{background:#fafafa}
 
 <!-- MAIN APP -->
 <div id="app">
+  <!-- Mobile Bottom Nav -->
+  <nav id="mobile-bottom-nav">
+    <div class="mob-nav-inner">
+      <button class="mob-nav-item active" id="mob-nav-dashboard" onclick="mobNav('dashboard')">
+        <span class="mob-nav-icon">📊</span>
+        <span class="mob-nav-label" data-i18n="nav_dashboard">แดชบอร์ด</span>
+      </button>
+      <button class="mob-nav-item" id="mob-nav-add-expense" onclick="mobNav('add-expense')">
+        <span class="mob-nav-icon">➕</span>
+        <span class="mob-nav-label" data-i18n="nav_add_expense">บันทึก</span>
+      </button>
+      <button class="mob-nav-item" id="mob-nav-expenses" onclick="mobNav('expenses')">
+        <span class="mob-nav-icon">📋</span>
+        <span class="mob-nav-label" data-i18n="nav_expenses">รายการ</span>
+      </button>
+      <button class="mob-nav-item" id="mob-nav-travel-claim" onclick="mobNav('travel-claim')">
+        <span class="mob-nav-icon">🧾</span>
+        <span class="mob-nav-label" data-i18n="nav_travel_claim">ใบเบิก</span>
+        <span class="mob-badge" id="mob-approve-badge" style="display:none"></span>
+      </button>
+      <button class="mob-nav-item" id="mob-nav-more" onclick="toggleMobMore()">
+        <span class="mob-nav-icon">⋯</span>
+        <span class="mob-nav-label" data-i18n="nav_more">เพิ่มเติม</span>
+      </button>
+    </div>
+  </nav>
+  <!-- Mobile More Panel -->
+  <div class="mob-nav-more-panel" id="mob-more-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700;font-size:15px" data-i18n="nav_more">เพิ่มเติม</span>
+      <button onclick="closeMobMore()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-light)">✕</button>
+    </div>
+    <div class="mob-more-grid" id="mob-more-grid"></div>
+  </div>
+  <div id="mob-more-overlay" onclick="closeMobMore()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:498"></div>
   <!-- Topbar -->
   <div class="topbar">
     <!-- Brand: logo + name -->
@@ -1064,6 +1191,15 @@ tr:hover td{background:#fafafa}
           <button class="btn" id="ps-lang-en" onclick="selectProfileLang('en')" style="flex:1;justify-content:center">🇺🇸 English</button>
         </div>
       </div>
+      <div class="form-group">
+        <div class="dark-toggle">
+          <span class="dark-toggle-label">🌙 <span data-i18n="dark_mode">Dark Mode</span></span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ps-dark-mode" onchange="toggleDarkMode(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeProfileSettings()" data-i18n="btn_cancel">ยกเลิก</button>
@@ -1575,6 +1711,9 @@ function openProfileSettings() {
   const roleLabels = { admin: t('role_admin'), manager: t('role_manager'), user: t('role_user') };
   const roleEl = document.getElementById('ps-preview-role');
   if (roleEl) roleEl.textContent = roleLabels[currentProfile?.role] || '';
+  // Sync dark mode toggle
+  const darkCb = document.getElementById('ps-dark-mode');
+  if (darkCb) darkCb.checked = (document.documentElement.getAttribute('data-theme') === 'dark');
   document.getElementById('profileModal').style.display = 'flex';
 }
 
@@ -1910,6 +2049,9 @@ async function calcExpenseDistance() {
 
 // ─── DASHBOARD ────────────────────────────────────────────
 async function loadDashboard() {
+  // Show skeleton while loading
+  const kpiEl = document.getElementById('kpiGrid');
+  if (kpiEl) kpiEl.innerHTML = skeletonKPI(4);
   const period = document.getElementById('db-period').value;
   const { from, to } = getPeriodDates(period);
   const dept  = document.getElementById('db-dept').value;
@@ -1963,14 +2105,19 @@ async function loadDashboard() {
 
   document.getElementById('kpiGrid').innerHTML = `
     <div class="kpi-card"><div class="kpi-label">💰 ${t('total_expense')}</div>
-      <div class="kpi-value">RM ${fmt(total)}</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
+      <div class="kpi-value" id="kv-expense">RM 0</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
     <div class="kpi-card accent"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
-      <div class="kpi-value">${vehicles}</div><div class="kpi-sub">${t('cars_unit')}</div></div>
+      <div class="kpi-value" id="kv-vehicles">0</div><div class="kpi-sub">${t('cars_unit')}</div></div>
     <div class="kpi-card success"><div class="kpi-label">📍 ${t('total_km')}</div>
-      <div class="kpi-value">${fmtKm(totalKm)}</div><div class="kpi-sub">${t('km_unit')}</div></div>
+      <div class="kpi-value" id="kv-km">0</div><div class="kpi-sub">${t('km_unit')}</div></div>
     <div class="kpi-card danger"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
-      <div class="kpi-value">RM ${fmt(fuelTotal)}</div>
+      <div class="kpi-value" id="kv-fuel">RM 0</div>
       <div class="kpi-sub">${totalKm>0?'RM '+fmt(fuelTotal/totalKm)+'/km':'-'}</div></div>`;
+  // Animated counters
+  animateCounter(document.getElementById('kv-expense'), total, 'RM ', '', 2);
+  animateCounter(document.getElementById('kv-vehicles'), vehicles, '', '', 0);
+  animateCounter(document.getElementById('kv-km'), totalKm, '', '', 1);
+  animateCounter(document.getElementById('kv-fuel'), fuelTotal, 'RM ', '', 2);
 
   loadServiceAlerts();
 
@@ -2224,6 +2371,9 @@ function resetExpenseForm() {
 
 // ─── EXPENSES LIST ────────────────────────────────────────
 async function loadExpenses() {
+  // Show skeleton while loading
+  const expTbody = document.getElementById('expensesTable');
+  if (expTbody) expTbody.innerHTML = skeletonRows(9, 6);
   const from  = document.getElementById('exp-from').value;
   const to    = document.getElementById('exp-to').value;
   const dept  = document.getElementById('exp-dept').value;
@@ -2251,7 +2401,7 @@ async function loadExpenses() {
   document.getElementById('expCount').textContent = `${rows.length} ${t('transactions')}`;
   document.getElementById('expTotal').textContent = rows.length ? `${t('total_label')} RM ${fmt(total)}` : '';
   document.getElementById('expensesTable').innerHTML = rows.length===0
-    ? `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>${t('no_data')}</p></div></td></tr>`
+    ? `<tr><td colspan="9">${emptyState('expenses', t('no_data'))}</td></tr>`
     : rows.map(e=>`<tr>
         <td>${fmtDate(e.expense_date)}</td>
         <td>${e.department_name||'-'}</td>
@@ -2341,7 +2491,7 @@ async function loadVehicles() {
   if (error) { console.error('loadVehicles:', error.message); }
   const rows = data||[];
   document.getElementById('vehiclesTable').innerHTML = rows.length===0
-    ? `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚗</div><p>${t('no_vehicles')}</p></div></td></tr>`
+    ? `<tr><td colspan="8">${emptyState('vehicles', t('no_vehicles'))}</td></tr>`
     : rows.map(v=>`<tr>
         <td class="fw-bold">${v.license_plate}</td>
         <td>${v.name}</td>
@@ -2391,6 +2541,150 @@ async function deleteVehicle(id) {
   if (!confirm(t('confirm_del_veh'))) return;
   await sbClient.from('vehicles').update({is_active:false}).eq('id',id);
   toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
+}
+
+// ─── DARK MODE ────────────────────────────────────────────
+function toggleDarkMode(on) {
+  document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+  localStorage.setItem('darkMode', on ? 'dark' : 'light');
+  // Update meta theme-color
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', on ? '#0F172A' : '#2563EB');
+  // Sync toggle checkbox if open
+  const cb = document.getElementById('ps-dark-mode');
+  if (cb) cb.checked = on;
+}
+
+function initDarkMode() {
+  const saved = localStorage.getItem('darkMode');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : prefersDark;
+  toggleDarkMode(isDark);
+}
+// Init immediately so no flash-of-light
+initDarkMode();
+
+// ─── SKELETON LOADING ──────────────────────────────────────
+function skeletonRows(cols = 5, rows = 5) {
+  const widths = [60, 120, 80, 100, 70, 90, 60, 80];
+  return Array.from({length: rows}, (_, i) => `
+    <tr>${Array.from({length: cols}, (_, j) => `
+      <td><span class="skeleton skeleton-cell" style="width:${widths[(i*cols+j)%widths.length]}px"></span></td>
+    `).join('')}</tr>
+  `).join('');
+}
+
+function skeletonKPI(count = 4) {
+  return `<div class="kpi-grid">${Array.from({length: count}, () => `
+    <div class="kpi-card" style="opacity:.6">
+      <div class="skeleton" style="width:80px;height:12px;margin-bottom:10px"></div>
+      <div class="skeleton" style="width:120px;height:28px;margin-bottom:6px"></div>
+      <div class="skeleton" style="width:60px;height:10px"></div>
+    </div>`).join('')}</div>`;
+}
+
+// ─── EMPTY STATES ──────────────────────────────────────────
+const EMPTY_SVGS = {
+  expenses: `<svg width="120" height="90" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="10" width="90" height="70" rx="8" fill="#E2E8F0"/>
+    <rect x="25" y="25" width="50" height="6" rx="3" fill="#CBD5E1"/>
+    <rect x="25" y="38" width="70" height="4" rx="2" fill="#E2E8F0"/>
+    <rect x="25" y="50" width="55" height="4" rx="2" fill="#E2E8F0"/>
+    <circle cx="90" cy="70" r="18" fill="#3B82F6" opacity=".85"/>
+    <text x="90" y="76" text-anchor="middle" font-size="20" fill="#fff">💸</text></svg>`,
+  vehicles: `<svg width="120" height="90" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="35" width="80" height="32" rx="10" fill="#DBEAFE"/>
+    <rect x="30" y="20" width="45" height="22" rx="6" fill="#BFDBFE"/>
+    <circle cx="38" cy="70" r="10" fill="#1E40AF"/>
+    <circle cx="82" cy="70" r="10" fill="#1E40AF"/>
+    <circle cx="38" cy="70" r="5" fill="#93C5FD"/>
+    <circle cx="82" cy="70" r="5" fill="#93C5FD"/></svg>`,
+  notifications: `<svg width="100" height="90" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 15 C35 15 25 25 25 40 L25 58 L15 68 L85 68 L75 58 L75 40 C75 25 65 15 50 15Z" fill="#DBEAFE"/>
+    <rect x="40" y="68" width="20" height="8" rx="4" fill="#93C5FD"/>
+    <circle cx="72" cy="22" r="10" fill="#22C55E"/>
+    <text x="72" y="27" text-anchor="middle" font-size="12" fill="#fff">✓</text></svg>`,
+  service: `<svg width="110" height="90" viewBox="0 0 110 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="55" cy="45" r="30" fill="#FEF3C7"/>
+    <text x="55" y="55" text-anchor="middle" font-size="30">🔧</text></svg>`,
+  default: `<svg width="110" height="90" viewBox="0 0 110 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="15" width="70" height="60" rx="8" fill="#E2E8F0"/>
+    <rect x="32" y="30" width="46" height="5" rx="2.5" fill="#CBD5E1"/>
+    <rect x="32" y="43" width="35" height="4" rx="2" fill="#E2E8F0"/>
+    <rect x="32" y="54" width="40" height="4" rx="2" fill="#E2E8F0"/>
+    <text x="55" y="85" text-anchor="middle" font-size="11" fill="#94A3B8">ไม่พบข้อมูล</text></svg>`,
+};
+
+function emptyState(type = 'default', message = null, subMessage = null) {
+  const svg = EMPTY_SVGS[type] || EMPTY_SVGS.default;
+  const msg = message || t('no_data');
+  const sub = subMessage || '';
+  return `<div class="empty-state-box">
+    ${svg}
+    <div class="es-title">${msg}</div>
+    ${sub ? `<div class="es-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+// ─── ANIMATED KPI COUNTER ──────────────────────────────────
+function animateCounter(el, target, prefix = '', suffix = '', decimals = 0, duration = 900) {
+  if (!el) return;
+  const start = performance.now();
+  const startVal = 0;
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = startVal + (target - startVal) * ease;
+    el.textContent = prefix + (decimals > 0 ? current.toFixed(decimals) : Math.round(current).toLocaleString()) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+    else el.textContent = prefix + (decimals > 0 ? target.toFixed(decimals) : target.toLocaleString()) + suffix;
+  }
+  requestAnimationFrame(update);
+}
+
+// ─── MOBILE BOTTOM NAV ─────────────────────────────────────
+const MOB_NAV_PAGES = ['dashboard','expenses','vehicles','report','travel-claim'];
+
+function mobNav(page) {
+  closeMobMore();
+  showPage(page);
+  // Update active state
+  document.querySelectorAll('.mob-nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`mob-nav-${page}`);
+  if (btn) btn.classList.add('active');
+}
+
+function buildMobMoreGrid() {
+  const morePages = [
+    { page:'vehicles',     icon:'🚗', key:'nav_vehicles' },
+    { page:'report',       icon:'📊', key:'nav_report' },
+    { page:'users',        icon:'👥', key:'nav_users',  roles:['admin','manager'] },
+    { page:'access-logs',  icon:'📜', key:'nav_access_logs', roles:['admin'] },
+    { page:'settings',     icon:'⚙️',  key:'nav_settings',   roles:['admin'] },
+  ];
+  const role = currentProfile?.role || 'user';
+  const grid = document.getElementById('mob-more-grid');
+  if (!grid) return;
+  grid.innerHTML = morePages
+    .filter(p => !p.roles || p.roles.includes(role))
+    .map(p => `<div class="mob-more-item" onclick="mobNav('${p.page}')">
+      <span class="mob-more-icon">${p.icon}</span>
+      <span class="mob-more-label" data-i18n="${p.key}">${t(p.key)}</span>
+    </div>`).join('');
+}
+
+function toggleMobMore() {
+  buildMobMoreGrid();
+  document.getElementById('mob-more-panel').classList.toggle('open');
+  document.getElementById('mob-more-overlay').style.display =
+    document.getElementById('mob-more-panel').classList.contains('open') ? 'block' : 'none';
+}
+
+function closeMobMore() {
+  document.getElementById('mob-more-panel')?.classList.remove('open');
+  const ov = document.getElementById('mob-more-overlay');
+  if (ov) ov.style.display = 'none';
 }
 
 // ─── NOTIFICATIONS ────────────────────────────────────────
@@ -2656,7 +2950,7 @@ async function loadServiceSchedule() {
   const tbody = document.getElementById('serviceTable');
   const sumEl = document.getElementById('svc-summary');
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">⏳ Loading...</td></tr>`;
+  tbody.innerHTML = skeletonRows(8, 5);
 
   const vFilter    = document.getElementById('svc-filter-vehicle')?.value || '';
   const typeFilter = document.getElementById('svc-filter-type')?.value    || '';
@@ -2688,7 +2982,7 @@ async function loadServiceSchedule() {
   `;
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8">${emptyState('service', t('no_data'))}</td></tr>`;
     return;
   }
 
@@ -3152,7 +3446,7 @@ async function loadMyClaims() {
     .order('submitted_at', { ascending: false });
 
   if (error || !data?.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">${emptyState('default', t('no_data'))}</td></tr>`;
     return;
   }
 
@@ -3188,7 +3482,7 @@ async function loadPendingApprovals() {
 
   const { data, error } = await q;
   if (error || !data?.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9">${emptyState('default', t('no_data'))}</td></tr>`;
     return;
   }
 
@@ -3219,15 +3513,21 @@ async function loadApprovalBadge() {
   const role = currentProfile?.role;
   const btn = document.getElementById('tctab-approve');
   const badge = document.getElementById('approve-badge');
-  if (!btn || !['manager','admin'].includes(role)) return;
-  btn.style.display = '';
+  const mobBadge = document.getElementById('mob-approve-badge');
+  if (!['manager','admin'].includes(role)) {
+    if (mobBadge) mobBadge.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = '';
   const { count } = await sbClient.from('travel_claims')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'submitted');
-  if (badge) {
-    if (count > 0) { badge.textContent = count; badge.style.display = ''; }
-    else badge.style.display = 'none';
-  }
+  // Sync both desktop tab badge and mobile bottom nav badge
+  [badge, mobBadge].forEach(el => {
+    if (!el) return;
+    if (count > 0) { el.textContent = count; el.style.display = ''; }
+    else el.style.display = 'none';
+  });
 }
 
 async function approveClaim(id) {
