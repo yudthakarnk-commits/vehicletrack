@@ -609,25 +609,11 @@ tr:hover td{background:#fafafa}
                 </div>
                 <div class="filter-group">
                   <label data-i18n="svc_type">ประเภทงาน</label>
-                  <select id="svc-filter-type" onchange="loadServiceSchedule()">
-                    <option value="">— <span data-i18n="all">ทั้งหมด</span> —</option>
-                    <option value="oil_change">🔧 เปลี่ยนน้ำมันเครื่อง</option>
-                    <option value="tax">📋 ต่อภาษี</option>
-                    <option value="insurance">🛡️ ประกัน</option>
-                    <option value="inspection">🔍 ตรวจสภาพ (พรบ.)</option>
-                    <option value="tire">🔄 เปลี่ยนยาง</option>
-                    <option value="ac">❄️ ล้างแอร์</option>
-                    <option value="other">⚙️ อื่นๆ</option>
-                  </select>
+                  <select id="svc-filter-type" onchange="loadServiceSchedule()"></select>
                 </div>
                 <div class="filter-group">
                   <label data-i18n="svc_status">สถานะ</label>
-                  <select id="svc-filter-status" onchange="loadServiceSchedule()">
-                    <option value="" data-i18n="all">ทั้งหมด</option>
-                    <option value="overdue">🔴 เกินกำหนด</option>
-                    <option value="soon">🟡 ใกล้ถึงกำหนด</option>
-                    <option value="ok">🟢 ปกติ</option>
-                  </select>
+                  <select id="svc-filter-status" onchange="loadServiceSchedule()"></select>
                 </div>
               </div>
               <!-- Summary badges -->
@@ -979,15 +965,7 @@ tr:hover td{background:#fafafa}
         </div>
         <div class="form-group">
           <label data-i18n="svc_type">ประเภทงาน</label>
-          <select id="svc-type">
-            <option value="oil_change">🔧 เปลี่ยนน้ำมันเครื่อง</option>
-            <option value="tax">📋 ต่อภาษี</option>
-            <option value="insurance">🛡️ ประกัน</option>
-            <option value="inspection">🔍 ตรวจสภาพ (พรบ.)</option>
-            <option value="tire">🔄 เปลี่ยนยาง</option>
-            <option value="ac">❄️ ล้างแอร์</option>
-            <option value="other">⚙️ อื่นๆ</option>
-          </select>
+          <select id="svc-type"></select>
         </div>
         <div class="form-group">
           <label data-i18n="svc_last_date">ซ่อมล่าสุด</label>
@@ -1537,6 +1515,7 @@ window.addEventListener('langChanged', () => {
   const btn = document.getElementById('lang-toggle-btn');
   if (btn) btn.textContent = currentLang === 'th' ? 'EN' : 'TH';
   updateTopbarUser();
+  populateSvcSelects();   // re-render service type/status dropdowns in current language
   refreshCurrentPage();
 });
 
@@ -2317,6 +2296,39 @@ function svcStatus(nextDate, reminderDays = 30) {
   return                           { key:'ok',      label:`🟢 ${t('svc_ok')}`,         color:'#38a169', days: diff };
 }
 
+function populateSvcSelects() {
+  const typeItems = Object.entries(SVC_TYPES)
+    .map(([k,s]) => `<option value="${k}">${s.icon} ${s.label(t)}</option>`).join('');
+
+  // Filter type dropdown (has "All" option)
+  const ftSel = document.getElementById('svc-filter-type');
+  if (ftSel) {
+    const v = ftSel.value;
+    ftSel.innerHTML = `<option value="">— ${t('all')} —</option>` + typeItems;
+    ftSel.value = v;
+  }
+
+  // Modal type select (no "All", defaults to oil_change)
+  const mtSel = document.getElementById('svc-type');
+  if (mtSel) {
+    const v = mtSel.value;
+    mtSel.innerHTML = typeItems;
+    mtSel.value = v || 'oil_change';
+  }
+
+  // Status filter
+  const stSel = document.getElementById('svc-filter-status');
+  if (stSel) {
+    const sv = stSel.value;
+    stSel.innerHTML = `
+      <option value="">${t('all')}</option>
+      <option value="overdue">🔴 ${t('svc_overdue')}</option>
+      <option value="soon">🟡 ${t('svc_due_soon')}</option>
+      <option value="ok">🟢 ${t('svc_ok')}</option>`;
+    stSel.value = sv;
+  }
+}
+
 function populateSvcVehicleFilter() {
   const sel = document.getElementById('svc-filter-vehicle');
   if (!sel) return;
@@ -2324,6 +2336,7 @@ function populateSvcVehicleFilter() {
   sel.innerHTML = `<option value="">${t('all')}</option>` +
     (allVehicles||[]).map(v => `<option value="${v.id}">${v.name} (${v.license_plate})</option>`).join('');
   sel.value = cur;
+  populateSvcSelects();
 }
 
 async function loadServiceSchedule() {
