@@ -25,6 +25,17 @@ const TRANSLATIONS = {
     tc_btn_pdf:       'Export PDF',
     login_error:      'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
 
+    // Notifications
+    notif_title:           'การแจ้งเตือน',
+    notif_mark_all:        'อ่านทั้งหมด',
+    notif_empty:           'ไม่มีการแจ้งเตือน',
+    notif_just_now:        'เมื่อกี้',
+    notif_min_ago:         'นาทีที่แล้ว',
+    notif_hr_ago:          'ชั่วโมงที่แล้ว',
+    notif_new_claim:       'มีใบเบิกใหม่รออนุมัติ',
+    notif_claim_approved:  'ใบเบิกของคุณได้รับการอนุมัติ',
+    notif_claim_rejected:  'ใบเบิกของคุณถูกปฏิเสธ',
+
     // Approval Workflow
     tc_tab_generate:       'สร้างใบเบิก',
     tc_tab_mine:           'ประวัติที่ส่ง',
@@ -349,6 +360,17 @@ const TRANSLATIONS = {
     receipt_image:    'Receipt Image',
     tc_btn_pdf:       'Export PDF',
     login_error:      'Invalid email or password',
+
+    // Notifications
+    notif_title:           'Notifications',
+    notif_mark_all:        'Mark all read',
+    notif_empty:           'No notifications',
+    notif_just_now:        'Just now',
+    notif_min_ago:         'min ago',
+    notif_hr_ago:          'hr ago',
+    notif_new_claim:       'New claim awaiting approval',
+    notif_claim_approved:  'Your claim has been approved',
+    notif_claim_rejected:  'Your claim has been rejected',
 
     // Approval Workflow
     tc_tab_generate:       'Generate Claim',

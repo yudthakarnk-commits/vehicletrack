@@ -162,6 +162,27 @@ tr:hover td{background:#fafafa}
 /* RECEIPT THUMBNAIL */
 .receipt-thumb{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
 .receipt-thumb:hover{transform:scale(1.1)}
+/* ── Notification Bell ── */
+.notif-wrap{position:relative}
+.notif-btn{position:relative;background:none;border:none;cursor:pointer;font-size:1.2rem;padding:4px 6px;border-radius:8px;transition:background .15s;line-height:1}
+.notif-btn:hover{background:var(--hover)}
+.notif-badge{position:absolute;top:-2px;right:-2px;background:#e53e3e;color:#fff;border-radius:50%;min-width:17px;height:17px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--card)}
+.notif-panel{position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:300;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity .15s,transform .15s;overflow:hidden}
+.notif-panel.open{opacity:1;pointer-events:all;transform:translateY(0)}
+.notif-panel-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px}
+.notif-list{max-height:360px;overflow-y:auto}
+.notif-item{display:flex;gap:10px;align-items:flex-start;padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.notif-item:hover{background:var(--hover)}
+.notif-item.unread{background:var(--primary-light,#eff6ff)}
+.notif-item:last-child{border-bottom:none}
+.notif-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px}
+.notif-body{flex:1;min-width:0}
+.notif-ttl{font-weight:600;font-size:13px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-msg{font-size:12px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-time{font-size:11px;color:var(--text-light);margin-top:3px}
+.notif-empty{padding:32px 16px;text-align:center;color:var(--text-light);font-size:13px}
+@keyframes notif-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
+.notif-shake{animation:notif-shake .5s ease}
 /* RECEIPT VIEWER MODAL */
 #receiptViewerModal .modal{max-width:480px;background:var(--card)}
 #receiptViewerModal img{width:100%;border-radius:8px;display:block}
@@ -327,6 +348,20 @@ tr:hover td{background:#fafafa}
       <div class="online-bar" id="online-bar"></div>
       <!-- Single lang toggle -->
       <button class="lang-toggle" id="lang-toggle-btn" onclick="toggleLang()">TH</button>
+      <!-- Bell notification -->
+      <div class="notif-wrap" id="notif-wrap">
+        <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" aria-label="Notifications">
+          🔔
+          <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+        </button>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-panel-hd">
+            <span data-i18n="notif_title">การแจ้งเตือน</span>
+            <button class="btn btn-outline btn-sm" onclick="markAllRead()" data-i18n="notif_mark_all">อ่านทั้งหมด</button>
+          </div>
+          <div id="notif-list" class="notif-list"></div>
+        </div>
+      </div>
       <!-- Avatar menu -->
       <div class="avatar-menu" id="avatar-menu">
         <div class="topbar-av" id="topbar-av" onclick="toggleAvatarMenu()">?</div>
@@ -1390,14 +1425,18 @@ async function onSignIn(user) {
   setDefaultDates();
   loadDashboard();
   loadApprovalBadge();
+  refreshNotifBadge();
+  initNotifRealtime();
 }
 
 async function doLogout() {
   logAction('logout', { email: currentUser?.email });
   cleanupPresence();
+  cleanupNotifRealtime();
   await sbClient.auth.signOut();
   currentUser = null; currentProfile = null;
   document.getElementById('online-bar').innerHTML = '';
+  document.getElementById('notif-badge').style.display = 'none';
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-screen').style.display = 'flex';
 }
@@ -2354,6 +2393,157 @@ async function deleteVehicle(id) {
   toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
 }
 
+// ─── NOTIFICATIONS ────────────────────────────────────────
+const NOTIF_ICONS = {
+  claim_submitted: '📤',
+  claim_approved:  '✅',
+  claim_rejected:  '❌',
+  service_due:     '🔧',
+  default:         '🔔',
+};
+
+let notifChannel = null;
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  const isOpen = panel.classList.toggle('open');
+  if (isOpen) {
+    loadNotifications();
+    // close avatar dropdown if open
+    document.getElementById('av-dropdown')?.classList.remove('open');
+  }
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('notif-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('notif-panel')?.classList.remove('open');
+  }
+});
+
+async function loadNotifications() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  list.innerHTML = `<div class="notif-empty">⏳</div>`;
+
+  const { data, error } = await sbClient.from('notifications')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error || !data?.length) {
+    list.innerHTML = `<div class="notif-empty">🔕 ${t('notif_empty')}</div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="clickNotif(${n.id},'${n.link_page||''}','${n.link_tab||''}')">
+      <div class="notif-icon">${NOTIF_ICONS[n.type] || NOTIF_ICONS.default}</div>
+      <div class="notif-body">
+        <div class="notif-ttl">${n.title}</div>
+        ${n.message ? `<div class="notif-msg">${n.message}</div>` : ''}
+        <div class="notif-time">${timeAgo(n.created_at)}</div>
+      </div>
+      ${!n.is_read ? `<div style="width:8px;height:8px;border-radius:50%;background:#3182ce;flex-shrink:0;margin-top:6px"></div>` : ''}
+    </div>`).join('');
+}
+
+async function clickNotif(id, page, tab) {
+  // Mark as read
+  await sbClient.from('notifications').update({ is_read: true }).eq('id', id);
+  refreshNotifBadge();
+  // Navigate
+  if (page) {
+    document.getElementById('notif-panel')?.classList.remove('open');
+    showPage(page);
+    if (tab) setTimeout(() => switchTCTab(tab), 150);
+  }
+}
+
+async function markAllRead() {
+  await sbClient.from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', currentUser.id)
+    .eq('is_read', false);
+  refreshNotifBadge();
+  loadNotifications();
+}
+
+async function refreshNotifBadge() {
+  const badge = document.getElementById('notif-badge');
+  if (!badge || !currentUser) return;
+  const { count } = await sbClient.from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .eq('is_read', false);
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function initNotifRealtime() {
+  if (notifChannel) notifChannel.unsubscribe();
+  notifChannel = sbClient.channel(`notif-${currentUser.id}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${currentUser.id}`,
+    }, payload => {
+      refreshNotifBadge();
+      // Shake the bell briefly
+      const btn = document.getElementById('notif-btn');
+      btn?.classList.add('notif-shake');
+      setTimeout(() => btn?.classList.remove('notif-shake'), 600);
+      // If panel is open, refresh list
+      if (document.getElementById('notif-panel')?.classList.contains('open')) {
+        loadNotifications();
+      }
+    })
+    .subscribe();
+}
+
+function cleanupNotifRealtime() {
+  if (notifChannel) { notifChannel.unsubscribe(); notifChannel = null; }
+}
+
+// Helper: human-readable time ago
+function timeAgo(iso) {
+  const diff = Math.round((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60)   return t('notif_just_now');
+  if (diff < 3600) return `${Math.floor(diff/60)} ${t('notif_min_ago')}`;
+  if (diff < 86400) return `${Math.floor(diff/3600)} ${t('notif_hr_ago')}`;
+  return fmtDate(iso);
+}
+
+// Send a notification to a specific user
+async function sendNotif(userId, type, title, message, linkPage = '', linkTab = '') {
+  if (!userId) return;
+  await sbClient.from('notifications').insert({
+    user_id:   userId,
+    type, title, message,
+    link_page: linkPage,
+    link_tab:  linkTab,
+  });
+}
+
+// Send notification to all managers/admins
+async function notifyManagers(type, title, message, linkPage, linkTab) {
+  const { data } = await sbClient.from('user_profiles')
+    .select('user_id')
+    .in('role', ['manager', 'admin']);
+  if (!data?.length) return;
+  const rows = data
+    .filter(p => p.user_id !== currentUser.id) // don't notify yourself
+    .map(p => ({ user_id: p.user_id, type, title, message, link_page: linkPage, link_tab: linkTab }));
+  if (rows.length) await sbClient.from('notifications').insert(rows);
+}
+
 // ─── SERVICE ALERTS (Dashboard widget) ────────────────────
 async function loadServiceAlerts() {
   const el = document.getElementById('service-alerts-widget');
@@ -2937,6 +3127,16 @@ async function submitTravelClaim() {
     claimStatusBadge('submitted') + ` <small style="color:var(--text-light)">${new Date().toLocaleString()}</small>`;
   btn.style.display = 'none';
 
+  // Notify managers/admins
+  const submitterName = currentProfile?.full_name || currentUser.email;
+  const mth = MONTH_NAMES_EN[payload.month];
+  notifyManagers(
+    'claim_submitted',
+    `📤 ${t('notif_new_claim')}`,
+    `${submitterName} — ${mth} ${payload.year} (RM ${fmt(payload.total_amount)})`,
+    'travel-claim', 'approve'
+  );
+
   // Update pending badge count
   loadApprovalBadge();
 }
@@ -3032,6 +3232,7 @@ async function loadApprovalBadge() {
 
 async function approveClaim(id) {
   if (!confirm(t('ap_confirm_approve'))) return;
+  const { data: claim } = await sbClient.from('travel_claims').select('user_id,name,month,year,total_amount').eq('id', id).single();
   const { error } = await sbClient.from('travel_claims').update({
     status:      'approved',
     reviewed_by: currentUser.id,
@@ -3040,6 +3241,16 @@ async function approveClaim(id) {
   }).eq('id', id);
   if (error) { toast(t('save_error'), 'error'); return; }
   toast('✅ ' + t('ap_approved_ok'), 'success');
+  // Notify submitter
+  if (claim) {
+    sendNotif(
+      claim.user_id,
+      'claim_approved',
+      `✅ ${t('notif_claim_approved')}`,
+      `${MONTH_NAMES_EN[claim.month]} ${claim.year} — RM ${fmt(claim.total_amount)}`,
+      'travel-claim', 'mine'
+    );
+  }
   loadPendingApprovals();
   loadApprovalBadge();
 }
@@ -3063,6 +3274,17 @@ async function confirmRejectClaim() {
   }).eq('id', id);
   if (error) { toast(t('save_error'), 'error'); return; }
   toast('❌ ' + t('ap_rejected_ok'), 'success');
+  // Notify submitter
+  const { data: claim } = await sbClient.from('travel_claims').select('user_id,month,year,total_amount').eq('id', id).single();
+  if (claim) {
+    sendNotif(
+      claim.user_id,
+      'claim_rejected',
+      `❌ ${t('notif_claim_rejected')}`,
+      `${MONTH_NAMES_EN[claim.month]} ${claim.year} — ${reason}`,
+      'travel-claim', 'mine'
+    );
+  }
   closeModal('rejectModal');
   loadPendingApprovals();
   loadApprovalBadge();
