@@ -22,6 +22,9 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <!-- SheetJS for Excel export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF + html2canvas for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Config & i18n (load first) -->
 <script src="js/config.js"></script>
 <script src="js/i18n.js"></script>
@@ -749,6 +752,9 @@ tr:hover td{background:#fafafa}
                 </button>
                 <button class="btn btn-outline" id="tc-export-btn" onclick="exportTravelClaimExcel()" style="display:none">
                   📥 <span data-i18n="tc_btn_export">Export Excel</span>
+                </button>
+                <button class="btn btn-outline" id="tc-pdf-btn" onclick="exportTravelClaimPDF()" style="display:none">
+                  📄 <span data-i18n="tc_btn_pdf">Export PDF</span>
                 </button>
               </div>
             </div>
@@ -2378,6 +2384,7 @@ async function loadReport() {
     <div class="card">
       <div class="card-header">
         <span class="card-title">📊 ${t('report_title')} ${from||''} - ${to||''}</span>
+        <button class="btn btn-outline btn-sm" onclick="exportReportPDF()">📄 PDF</button>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ ${t('btn_print')}</button>
       </div>
       <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;display:flex;gap:24px;flex-wrap:wrap">
@@ -2570,6 +2577,7 @@ async function loadTravelClaim() {
     document.getElementById('tc-report-content').innerHTML =
       `<div class="card"><div class="empty-state"><div class="empty-icon">📋</div><p>${t('tc_no_data')}</p></div></div>`;
     document.getElementById('tc-export-btn').style.display = 'none';
+    document.getElementById('tc-pdf-btn').style.display = 'none';
     return;
   }
 
@@ -2701,6 +2709,7 @@ async function loadTravelClaim() {
     </div>`;
 
   document.getElementById('tc-export-btn').style.display = '';
+  document.getElementById('tc-pdf-btn').style.display = '';
 }
 
 async function exportTravelClaimExcel() {
@@ -3327,6 +3336,134 @@ async function loadAccessLogs() {
         <td><span class="action-tag" style="background:${ACTION_COLORS[l.action]||'#ccc'}22;color:${ACTION_COLORS[l.action]||'#666'}">${l.action}</span></td>
         <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${l.details?JSON.stringify(l.details):'-'}</td>
       </tr>`).join('');
+}
+
+// ─── PDF EXPORT ───────────────────────────────────────────
+async function exportReportPDF() {
+  const content = document.getElementById('reportContent');
+  if (!content || !content.innerHTML.trim()) { toast(t('no_data'), 'error'); return; }
+  toast('กำลัง Export PDF...', 'info');
+  try {
+    const { jsPDF } = window.jspdf;
+    const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    const doc     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW   = doc.internal.pageSize.getWidth();
+    const pageH   = doc.internal.pageSize.getHeight();
+    const margin  = 10;
+    const usableW = pageW - margin * 2;
+    const imgH    = (canvas.height * usableW) / canvas.width;
+
+    // Header bar
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pageW, 16, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.text('VehicleTrack — Expense Report', margin, 11);
+    doc.setFontSize(9);
+    doc.text(new Date().toLocaleDateString(), pageW - margin, 11, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+
+    let yPos = 20;
+    // Paginate if content is taller than a page
+    if (imgH <= pageH - yPos - margin) {
+      doc.addImage(imgData, 'PNG', margin, yPos, usableW, imgH);
+    } else {
+      const sliceH = ((pageH - yPos - margin) / imgH) * canvas.height;
+      let srcY = 0;
+      while (srcY < canvas.height) {
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = Math.min(sliceH, canvas.height - srcY);
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+        const sliceImg = sliceCanvas.toDataURL('image/png');
+        const renderedH = (sliceCanvas.height * usableW) / canvas.width;
+        doc.addImage(sliceImg, 'PNG', margin, yPos, usableW, renderedH);
+        srcY += sliceCanvas.height;
+        if (srcY < canvas.height) { doc.addPage(); yPos = 10; }
+      }
+    }
+    // Footer
+    const pages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8); doc.setTextColor(150);
+      doc.text(`Page ${i} / ${pages}`, pageW / 2, pageH - 5, { align: 'center' });
+    }
+    const from = document.getElementById('rp-date-from')?.value || '';
+    const to   = document.getElementById('rp-date-to')?.value   || '';
+    doc.save(`expense-report_${from}_${to}.pdf`);
+    toast('Export PDF สำเร็จ ✅', 'success');
+  } catch(e) {
+    console.error('exportReportPDF:', e);
+    toast('Export PDF ล้มเหลว: ' + e.message, 'error');
+  }
+}
+
+async function exportTravelClaimPDF() {
+  if (!tcReportData) return;
+  const d = tcReportData;
+  const content = document.getElementById('tc-report-content');
+  if (!content) return;
+  toast('กำลัง Export PDF...', 'info');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc    = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW  = doc.internal.pageSize.getWidth();
+    const pageH  = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const MONTH_TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+    // Header
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pageW, 18, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.text('Travelling Claim Report', margin, 8);
+    doc.setFontSize(9);
+    doc.text(`${MONTH_TH[d.month] || d.month} ${d.year}  |  ${d.veh?.license_plate || ''}`, margin, 14);
+    doc.text(`${d.name}  |  ${d.department}  |  ${d.position}`, pageW - margin, 14, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+
+    // Capture report table
+    const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    const usableW = pageW - margin * 2;
+    const imgH    = (canvas.height * usableW) / canvas.width;
+    const yStart  = 22;
+
+    if (imgH <= pageH - yStart - margin) {
+      doc.addImage(imgData, 'PNG', margin, yStart, usableW, imgH);
+    } else {
+      const sliceH = ((pageH - yStart - margin) / imgH) * canvas.height;
+      let srcY = 0, yPos = yStart;
+      while (srcY < canvas.height) {
+        const sc2 = document.createElement('canvas');
+        sc2.width  = canvas.width;
+        sc2.height = Math.min(sliceH, canvas.height - srcY);
+        sc2.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sc2.height, 0, 0, canvas.width, sc2.height);
+        const renderedH = (sc2.height * usableW) / canvas.width;
+        doc.addImage(sc2.toDataURL('image/png'), 'PNG', margin, yPos, usableW, renderedH);
+        srcY += sc2.height;
+        if (srcY < canvas.height) { doc.addPage(); yPos = 10; }
+      }
+    }
+
+    // Footer summary
+    const pages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8); doc.setTextColor(150);
+      doc.text(`Page ${i} / ${pages}  |  Total: RM ${fmt(d.grandTotal)}  |  KM: ${fmtKm(d.totKm)}`, pageW / 2, pageH - 4, { align: 'center' });
+    }
+    doc.save(`travel-claim_${d.year}-${String(d.month).padStart(2,'0')}_${d.name}.pdf`);
+    toast('Export PDF สำเร็จ ✅', 'success');
+  } catch(e) {
+    console.error('exportTravelClaimPDF:', e);
+    toast('Export PDF ล้มเหลว: ' + e.message, 'error');
+  }
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────
