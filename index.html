@@ -27,7 +27,7 @@
 <script src="js/i18n.js"></script>
 <script src="js/offline.js"></script>
 <style>
-:root{--primary:#2563EB;--primary-light:#3B82F6;--accent:#F97316;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#F1F5F9;--card:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--sidebar-w:230px;--header-h:60px}
+:root{--primary:#2563EB;--primary-light:#3B82F6;--accent:#F97316;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#F1F5F9;--card:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--sidebar-w:230px;--sidebar-col:60px;--header-h:60px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(145deg,#1D4ED8 0%,#2563EB 50%,#7C3AED 100%) fixed;background-attachment:fixed;color:var(--text);min-height:100vh}
 /* LOGIN */
@@ -47,16 +47,43 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(145deg,
 #app{display:none;height:100vh;overflow:hidden;flex-direction:column}
 #app.ready{display:flex}
 /* TOPBAR */
-.topbar{height:var(--header-h);background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.25);display:flex;align-items:center;padding:0 16px;gap:12px;box-shadow:0 2px 16px rgba(0,0,0,.14);flex-shrink:0;z-index:101;position:relative}
-.menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer}
-.topbar-title{font-size:16px;font-weight:600;flex:1}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.lang-switch{display:flex;gap:2px;background:var(--bg);border-radius:6px;padding:2px}
-.lang-btn{padding:3px 10px;border:none;background:transparent;cursor:pointer;border-radius:4px;font-size:12px;font-weight:600}
-.lang-btn.active-lang{background:var(--primary);color:#fff}
-.user-chip{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px}
-.role-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#eaf2ff;color:var(--primary)}
-#sync-status{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg)}
+.topbar{height:var(--header-h);background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.25);display:flex;align-items:center;padding:0 14px;gap:8px;box-shadow:0 2px 16px rgba(0,0,0,.14);flex-shrink:0;z-index:101;position:relative}
+.topbar-brand{display:flex;align-items:center;gap:7px;flex-shrink:0;text-decoration:none}
+.brand-name{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;white-space:nowrap}
+.brand-name span{color:var(--primary)}
+.menu-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:6px 8px;border-radius:6px;color:var(--text-light);transition:background .15s;flex-shrink:0;line-height:1}
+.menu-btn:hover{background:var(--bg)}
+.topbar-title{font-size:15px;font-weight:600;flex:1;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* Single-button lang toggle */
+.lang-toggle{padding:4px 11px;border:1.5px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;font-size:12px;font-weight:700;color:var(--text-light);transition:all .15s;flex-shrink:0}
+.lang-toggle:hover{border-color:var(--primary);color:var(--primary)}
+/* Online presence bar */
+.online-bar{display:flex;align-items:center;gap:0}
+.ov-wrap{position:relative;cursor:default;margin-left:-7px}
+.ov-wrap:first-child{margin-left:0}
+.ov-wrap:hover{z-index:10}
+.online-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .15s;user-select:none}
+.ov-wrap:hover .online-av{transform:scale(1.15)}
+.online-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:4px 9px;border-radius:5px;font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:20}
+.ov-wrap:hover .online-tip{opacity:1}
+.online-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--text)}
+/* Avatar menu */
+.avatar-menu{position:relative;flex-shrink:0}
+.topbar-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;border:2.5px solid rgba(255,255,255,.8);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s;user-select:none}
+.topbar-av:hover{transform:scale(1.07);box-shadow:0 3px 12px rgba(0,0,0,.3)}
+.av-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;overflow:hidden;z-index:200;border:1px solid var(--border);opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity .15s,transform .15s}
+.av-dropdown.open{opacity:1;pointer-events:all;transform:translateY(0)}
+.av-drop-hd{padding:14px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.av-drop-lg{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.av-drop-nm{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.av-drop-role{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#eaf2ff;color:var(--primary);display:inline-block;margin-top:2px}
+.av-drop-item{padding:10px 16px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--text);transition:background .12s}
+.av-drop-item:hover{background:var(--bg)}
+.av-drop-item.danger{color:var(--danger)}
+.av-drop-item.danger:hover{background:#fff1f0}
+.av-drop-sep{margin:4px 0;border:none;border-top:1px solid var(--border)}
+#sync-status{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg);flex-shrink:0}
 .sync-syncing{background:#fff3cd}
 .sync-done{background:#d4edda;color:#155724}
 .sync-offline{background:#f8d7da;color:#721c24}
@@ -68,15 +95,20 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(145deg,
 /* LAYOUT */
 .layout{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
 /* SIDEBAR */
-.sidebar{width:var(--sidebar-w);background:rgba(25,70,200,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-right:1px solid rgba(255,255,255,.1);color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s;z-index:100;overflow-y:auto}
-.sidebar-brand{padding:16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
-.sidebar-brand h2{font-size:14px;opacity:.7;font-weight:400}
-.nav-item{display:flex;align-items:center;gap:10px;padding:12px 18px;cursor:pointer;font-size:14.5px;font-weight:500;color:rgba(255,255,255,.88);border-left:3px solid transparent;transition:all .2s}
+.sidebar{width:var(--sidebar-w);background:rgba(25,70,200,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-right:1px solid rgba(255,255,255,.1);color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:width .25s ease;z-index:100;overflow:hidden}
+.sidebar.collapsed{width:var(--sidebar-col)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 18px;cursor:pointer;font-size:14.5px;font-weight:500;color:rgba(255,255,255,.88);border-left:3px solid transparent;transition:background .2s,border-color .2s,padding .25s;white-space:nowrap}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-item.active{background:rgba(255,255,255,.18);border-left-color:var(--accent);color:#fff;font-weight:700}
-.nav-icon{font-size:19px;width:24px;text-align:center}
-.nav-section{padding:8px 18px 4px;font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;margin-top:8px}
-.pending-badge{background:var(--accent);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:auto}
+.sidebar.collapsed .nav-item{padding:14px;justify-content:center;gap:0;border-left-color:transparent}
+.sidebar.collapsed .nav-item.active{border-left-color:var(--accent)}
+.nav-icon{font-size:19px;width:24px;text-align:center;flex-shrink:0}
+.nav-label{overflow:hidden;max-width:160px;opacity:1;transition:opacity .2s,max-width .25s;flex:1}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0}
+.nav-section{padding:8px 18px 4px;font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;white-space:nowrap;overflow:hidden;transition:opacity .2s}
+.sidebar.collapsed .nav-section{opacity:0;height:0;padding:0;margin:0}
+.pending-badge{background:var(--accent);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:auto;flex-shrink:0}
+.sidebar.collapsed .pending-badge{display:none}
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:transparent}
 .content{flex:1;overflow-y:auto;padding:20px;background:transparent}
@@ -170,15 +202,15 @@ tr:hover td{background:#fafafa}
 .action-tag{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
 /* MOBILE */
 @media(max-width:768px){
-  .sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%)}
+  .sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%);width:var(--sidebar-w) !important;transition:transform .3s !important;overflow-y:auto}
   .sidebar.open{transform:translateX(0)}
-  .menu-btn{display:block}
+  .sidebar.collapsed{width:var(--sidebar-w) !important}
   .grid-2,.grid-3{grid-template-columns:1fr}
   .kpi-grid{grid-template-columns:1fr 1fr}
   .content{padding:12px}
   .form-grid{grid-template-columns:1fr}
-  .user-chip span:not(.role-badge){display:none}
   #sync-status{display:none}
+  .brand-name{display:none}
 }
 @media(max-width:480px){.kpi-grid{grid-template-columns:1fr}.topbar-right .btn span{display:none}}
 </style>
@@ -250,56 +282,65 @@ tr:hover td{background:#fafafa}
 <div id="app">
   <!-- Topbar -->
   <div class="topbar">
-    <button class="menu-btn" id="menuBtn">☰</button>
+    <!-- Brand: logo + name -->
+    <div class="topbar-brand">
+      <svg width="32" height="32" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="logo-tb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient>
+          <clipPath id="clip-tb"><rect width="36" height="36" rx="9"/></clipPath>
+        </defs>
+        <rect width="36" height="36" rx="9" fill="url(#logo-tb)"/>
+        <g clip-path="url(#clip-tb)" stroke="rgba(255,255,255,0.18)" fill="none" stroke-linecap="round">
+          <line x1="-1" y1="14" x2="26" y2="14" stroke-width="1.5"/>
+          <line x1="10" y1="22" x2="37" y2="22" stroke-width="1"/>
+          <line x1="12" y1="-1" x2="12" y2="22" stroke-width="1.5"/>
+          <line x1="26" y1="12" x2="26" y2="37" stroke-width="1"/>
+          <line x1="-1" y1="32" x2="16" y2="13" stroke-width="1"/>
+          <line x1="20" y1="3" x2="37" y2="20" stroke-width="1"/>
+          <circle cx="12" cy="14" r="1.4" fill="rgba(255,255,255,0.25)" stroke="none"/>
+          <circle cx="26" cy="22" r="1.2" fill="rgba(255,255,255,0.2)" stroke="none"/>
+        </g>
+        <path d="M8 9 L18 23 L28 9" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="18" cy="28" r="4.5" fill="#F97316"/>
+        <circle cx="18" cy="28" r="1.8" fill="white"/>
+      </svg>
+      <span class="brand-name">Vehicle<span>Track</span></span>
+    </div>
+    <!-- Sidebar toggle -->
+    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
+    <!-- Page title -->
     <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    <!-- Right side -->
     <div class="topbar-right">
       <span id="sync-status" class="sync-badge"></span>
       <span id="pending-count" style="font-size:11px;color:var(--warning);display:none"></span>
-      <div class="lang-switch">
-        <button class="lang-btn active-lang" id="lang-th-app" onclick="setLang('th')">TH</button>
-        <button class="lang-btn" id="lang-en-app" onclick="setLang('en')">EN</button>
+      <!-- Online users presence -->
+      <div class="online-bar" id="online-bar"></div>
+      <!-- Single lang toggle -->
+      <button class="lang-toggle" id="lang-toggle-btn" onclick="toggleLang()">TH</button>
+      <!-- Avatar menu -->
+      <div class="avatar-menu" id="avatar-menu">
+        <div class="topbar-av" id="topbar-av" onclick="toggleAvatarMenu()">?</div>
+        <div class="av-dropdown" id="av-dropdown">
+          <div class="av-drop-hd">
+            <div class="av-drop-lg" id="av-drop-lg">?</div>
+            <div>
+              <div class="av-drop-nm" id="av-drop-nm">-</div>
+              <span class="av-drop-role" id="av-drop-role">-</span>
+            </div>
+          </div>
+          <div class="av-drop-item" onclick="openProfileSettings()">⚙️ <span data-i18n="profile_settings">ตั้งค่าโปรไฟล์</span></div>
+          <hr class="av-drop-sep">
+          <div class="av-drop-item danger" onclick="doLogout()">🚪 <span data-i18n="btn_logout">ออกจากระบบ</span></div>
+        </div>
       </div>
-      <div class="user-chip">
-        <span id="user-name-chip">-</span>
-        <span class="role-badge" id="user-role-chip">-</span>
-      </div>
-      <button class="btn btn-outline btn-sm" onclick="doLogout()">
-        <span data-i18n="btn_logout">ออกจากระบบ</span>
-      </button>
     </div>
   </div>
 
   <div class="layout">
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-      <div class="sidebar-brand">
-        <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="logo-sb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient>
-            <clipPath id="clip-sb"><rect width="36" height="36" rx="9"/></clipPath>
-          </defs>
-          <rect width="36" height="36" rx="9" fill="url(#logo-sb)"/>
-          <!-- Faint map roads -->
-          <g clip-path="url(#clip-sb)" stroke="rgba(255,255,255,0.18)" fill="none" stroke-linecap="round">
-            <line x1="-1" y1="14" x2="26" y2="14" stroke-width="1.5"/>
-            <line x1="10" y1="22" x2="37" y2="22" stroke-width="1"/>
-            <line x1="12" y1="-1" x2="12" y2="22" stroke-width="1.5"/>
-            <line x1="26" y1="12" x2="26" y2="37" stroke-width="1"/>
-            <line x1="-1" y1="32" x2="16" y2="13" stroke-width="1"/>
-            <line x1="20" y1="3" x2="37" y2="20" stroke-width="1"/>
-            <circle cx="12" cy="14" r="1.4" fill="rgba(255,255,255,0.25)" stroke="none"/>
-            <circle cx="26" cy="22" r="1.2" fill="rgba(255,255,255,0.2)" stroke="none"/>
-          </g>
-          <path d="M8 9 L18 23 L28 9" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <circle cx="18" cy="28" r="4.5" fill="#F97316"/>
-          <circle cx="18" cy="28" r="1.8" fill="white"/>
-        </svg>
-        <div>
-          <div style="font-size:15px;font-weight:700;color:white;letter-spacing:-.3px;line-height:1.3">Vehicle<span style="color:#FB923C">Track</span></div>
-          <div style="font-size:10px;opacity:.45;color:white">v2.0</div>
-        </div>
-      </div>
-      <nav id="sidebarNav" style="padding:8px 0"></nav>
+      <nav id="sidebarNav" style="padding:10px 0"></nav>
     </div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -813,6 +854,41 @@ tr:hover td{background:#fafafa}
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- PROFILE SETTINGS MODAL -->
+<div class="modal-overlay" id="profileModal" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3 data-i18n="profile_settings">ตั้งค่าโปรไฟล์</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeProfileSettings()">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+      <!-- Avatar preview -->
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px">
+        <div id="ps-avatar-preview" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0"></div>
+        <div>
+          <div id="ps-preview-name" style="font-weight:600;font-size:14px">-</div>
+          <div id="ps-preview-role" style="font-size:11px;color:var(--text-light);margin-top:2px"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="col_fullname">ชื่อ-นามสกุล</label>
+        <input type="text" id="ps-name" oninput="updateProfilePreview()">
+      </div>
+      <div class="form-group">
+        <label>Language / ภาษา</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="ps-lang-th" onclick="selectProfileLang('th')" style="flex:1;justify-content:center">🇹🇭 ภาษาไทย</button>
+          <button class="btn" id="ps-lang-en" onclick="selectProfileLang('en')" style="flex:1;justify-content:center">🇺🇸 English</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProfileSettings()" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveProfileSettings()">💾 <span data-i18n="btn_save">บันทึก</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALS -->
 <div class="modal-overlay" id="deptModal">
   <div class="modal" style="max-width:380px">
@@ -1055,10 +1131,9 @@ async function onSignIn(user) {
   // Show app
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').classList.add('ready');
-  document.getElementById('user-name-chip').textContent = profile?.full_name || user.email;
-  const roleLabels = { admin: t('role_admin'), manager: t('role_manager'), user: t('role_user') };
-  document.getElementById('user-role-chip').textContent = roleLabels[profile?.role] || profile?.role;
+  updateTopbarUser();
   buildSidebar();
+  initPresence();
   await loadMasterData();
   initNetworkListeners(sbClient, () => {
     loadMasterData(); loadDashboard();
@@ -1072,8 +1147,10 @@ async function onSignIn(user) {
 
 async function doLogout() {
   logAction('logout', { email: currentUser?.email });
+  cleanupPresence();
   await sbClient.auth.signOut();
   currentUser = null; currentProfile = null;
+  document.getElementById('online-bar').innerHTML = '';
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-screen').style.display = 'flex';
 }
@@ -1096,6 +1173,160 @@ async function logAction(action, details = {}) {
   } catch(e) {}
 }
 
+// ─── TOPBAR / AVATAR HELPERS ──────────────────────────────
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function userColor(id) {
+  const COLORS = ['#E53E3E','#DD6B20','#D69E2E','#38A169','#319795','#3182CE','#805AD5','#D53F8C'];
+  let hash = 0;
+  for (let i = 0; i < (id||'').length; i++) hash = (hash * 31 + id.charCodeAt(i)) & 0xffffffff;
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
+function updateTopbarUser() {
+  if (!currentProfile && !currentUser) return;
+  const name     = currentProfile?.full_name || currentUser?.email?.split('@')[0] || '?';
+  const id       = currentUser?.id || '';
+  const color    = userColor(id);
+  const initials = getInitials(name);
+  const roleLabels = { admin: t('role_admin'), manager: t('role_manager'), user: t('role_user') };
+  const roleText   = roleLabels[currentProfile?.role] || currentProfile?.role || '';
+
+  const av = document.getElementById('topbar-av');
+  if (av) { av.textContent = initials; av.style.background = color; }
+  const lg = document.getElementById('av-drop-lg');
+  if (lg) { lg.textContent = initials; lg.style.background = color; }
+  const nm = document.getElementById('av-drop-nm');
+  if (nm) nm.textContent = name;
+  const rl = document.getElementById('av-drop-role');
+  if (rl) rl.textContent = roleText;
+}
+
+// ─── SIDEBAR TOGGLE ───────────────────────────────────────
+function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('open');
+    overlay?.classList.toggle('open');
+  } else {
+    const collapsed = sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+  }
+}
+
+// ─── LANGUAGE TOGGLE ──────────────────────────────────────
+function toggleLang() {
+  const next = currentLang === 'th' ? 'en' : 'th';
+  localStorage.setItem('lang', next);
+  setLang(next);
+}
+
+// ─── AVATAR DROPDOWN ──────────────────────────────────────
+function toggleAvatarMenu() {
+  document.getElementById('av-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('avatar-menu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('av-dropdown')?.classList.remove('open');
+  }
+});
+
+// ─── SUPABASE REALTIME PRESENCE ───────────────────────────
+let presenceChannel = null;
+
+function initPresence() {
+  if (presenceChannel) { presenceChannel.unsubscribe(); presenceChannel = null; }
+  const name  = currentProfile?.full_name || currentUser?.email?.split('@')[0] || '?';
+  const id    = currentUser?.id || '';
+  const color = userColor(id);
+  presenceChannel = sbClient.channel('online-users', { config: { presence: { key: id } } });
+  presenceChannel
+    .on('presence', { event: 'sync' }, () => renderOnlineUsers(presenceChannel.presenceState()))
+    .subscribe(async status => {
+      if (status === 'SUBSCRIBED') {
+        await presenceChannel.track({ user_id: id, full_name: name, color });
+      }
+    });
+}
+
+function renderOnlineUsers(state) {
+  const bar = document.getElementById('online-bar');
+  if (!bar) return;
+  const myId   = currentUser?.id;
+  const others = Object.values(state).flat().filter(p => p.user_id !== myId);
+  if (!others.length) { bar.innerHTML = ''; return; }
+  bar.innerHTML = others.map(p => {
+    const ini = getInitials(p.full_name || '?');
+    const col = p.color || userColor(p.user_id);
+    return `<div class="ov-wrap">
+      <div class="online-av" style="background:${col}">${ini}</div>
+      <div class="online-tip">${p.full_name || p.user_id}</div>
+    </div>`;
+  }).join('');
+}
+
+function cleanupPresence() {
+  if (presenceChannel) { presenceChannel.unsubscribe(); presenceChannel = null; }
+}
+
+// ─── PROFILE SETTINGS MODAL ───────────────────────────────
+let _profileLang = null;
+
+function openProfileSettings() {
+  document.getElementById('av-dropdown')?.classList.remove('open');
+  _profileLang = currentProfile?.language || localStorage.getItem('lang') || 'th';
+  const nameInput = document.getElementById('ps-name');
+  if (nameInput) nameInput.value = currentProfile?.full_name || '';
+  updateProfilePreview();
+  selectProfileLang(_profileLang);
+  const roleLabels = { admin: t('role_admin'), manager: t('role_manager'), user: t('role_user') };
+  const roleEl = document.getElementById('ps-preview-role');
+  if (roleEl) roleEl.textContent = roleLabels[currentProfile?.role] || '';
+  document.getElementById('profileModal').style.display = 'flex';
+}
+
+function closeProfileSettings() {
+  document.getElementById('profileModal').style.display = 'none';
+}
+
+function updateProfilePreview() {
+  const name  = document.getElementById('ps-name')?.value || currentUser?.email?.split('@')[0] || '?';
+  const color = userColor(currentUser?.id || '');
+  const av    = document.getElementById('ps-avatar-preview');
+  const nm    = document.getElementById('ps-preview-name');
+  if (av) { av.textContent = getInitials(name); av.style.background = color; }
+  if (nm) nm.textContent = name;
+}
+
+function selectProfileLang(lang) {
+  _profileLang = lang;
+  document.getElementById('ps-lang-th')?.classList.toggle('active', lang === 'th');
+  document.getElementById('ps-lang-en')?.classList.toggle('active', lang === 'en');
+}
+
+async function saveProfileSettings() {
+  const name = document.getElementById('ps-name')?.value.trim();
+  if (!name) return;
+  try {
+    await sbClient.from('user_profiles').update({ full_name: name, language: _profileLang })
+      .eq('id', currentUser.id);
+    if (currentProfile) { currentProfile.full_name = name; currentProfile.language = _profileLang; }
+    localStorage.setItem('lang', _profileLang);
+    setLang(_profileLang);
+    updateTopbarUser();
+    closeProfileSettings();
+  } catch(e) {
+    alert('Save failed: ' + e.message);
+  }
+}
+
 // ─── SIDEBAR ──────────────────────────────────────────────
 function buildSidebar() {
   const role = currentProfile?.role;
@@ -1108,19 +1339,22 @@ function buildSidebar() {
     { page:'travel-claim', icon:'📋', key:'nav_travel_claim', roles:['admin','manager','user'] },
     { page:'users',        icon:'👥', key:'nav_users',        roles:['admin'] },
     { page:'access-logs',  icon:'🔍', key:'nav_access_logs',  roles:['admin','manager'] },
-    { page:'settings',     icon:'⚙️', key:'nav_settings',      roles:['admin'] },
+    { page:'settings',     icon:'⚙️', key:'nav_settings',     roles:['admin'] },
   ];
   const nav = document.getElementById('sidebarNav');
   nav.innerHTML = items
     .filter(i => i.roles.includes(role))
-    .map(i => `<div class="nav-item${i.page==='dashboard'?' active':''}" data-page="${i.page}">
+    .map(i => `<div class="nav-item${i.page==='dashboard'?' active':''}" data-page="${i.page}" title="${t(i.key)}">
       <span class="nav-icon">${i.icon}</span>
-      <span data-i18n="${i.key}">${t(i.key)}</span>
+      <span class="nav-label" data-i18n="${i.key}">${t(i.key)}</span>
     </div>`).join('');
   nav.querySelectorAll('.nav-item').forEach(el => {
     el.addEventListener('click', () => showPage(el.dataset.page));
   });
-  // Hide add-vehicle btn for non-admin/manager
+  // Restore collapsed state
+  if (localStorage.getItem('sidebarCollapsed') === '1' && window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
   if (!['admin','manager'].includes(role)) {
     const btn = document.getElementById('add-vehicle-btn');
     if (btn) btn.style.display = 'none';
@@ -1153,7 +1387,12 @@ function refreshCurrentPage() {
   else if (name==='settings')    { loadDeptTable(); loadVTypeTable(); }
 }
 
-window.addEventListener('langChanged', () => { refreshCurrentPage(); });
+window.addEventListener('langChanged', () => {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (btn) btn.textContent = currentLang === 'th' ? 'EN' : 'TH';
+  updateTopbarUser();
+  refreshCurrentPage();
+});
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

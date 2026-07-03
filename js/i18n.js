@@ -20,6 +20,7 @@ const TRANSLATIONS = {
     password:         'รหัสผ่าน',
     btn_login:        'เข้าสู่ระบบ',
     btn_logout:       'ออกจากระบบ',
+    profile_settings: 'ตั้งค่าโปรไฟล์',
     login_error:      'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
 
     // Dashboard
@@ -289,6 +290,7 @@ const TRANSLATIONS = {
     password:         'Password',
     btn_login:        'Sign In',
     btn_logout:       'Sign Out',
+    profile_settings: 'Profile Settings',
     login_error:      'Invalid email or password',
 
     total_expense:    'Total Expense',
