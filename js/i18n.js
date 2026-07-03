@@ -21,6 +21,7 @@ const TRANSLATIONS = {
     btn_login:        'เข้าสู่ระบบ',
     btn_logout:       'ออกจากระบบ',
     profile_settings: 'ตั้งค่าโปรไฟล์',
+    receipt_image:    'รูปใบเสร็จ',
     login_error:      'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
 
     // Dashboard
@@ -291,6 +292,7 @@ const TRANSLATIONS = {
     btn_login:        'Sign In',
     btn_logout:       'Sign Out',
     profile_settings: 'Profile Settings',
+    receipt_image:    'Receipt Image',
     login_error:      'Invalid email or password',
 
     total_expense:    'Total Expense',

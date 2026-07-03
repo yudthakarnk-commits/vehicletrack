@@ -156,6 +156,12 @@ tr:hover td{background:#fafafa}
 .tab-btn:hover{background:rgba(37,99,235,.08);color:var(--primary)}
 .tab-btn.active{background:var(--primary);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.35)}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+/* RECEIPT THUMBNAIL */
+.receipt-thumb{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.receipt-thumb:hover{transform:scale(1.1)}
+/* RECEIPT VIEWER MODAL */
+#receiptViewerModal .modal{max-width:480px;background:var(--card)}
+#receiptViewerModal img{width:100%;border-radius:8px;display:block}
 /* FORMS */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .form-group{display:flex;flex-direction:column;gap:5px}
@@ -885,6 +891,23 @@ tr:hover td{background:#fafafa}
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeProfileSettings()" data-i18n="btn_cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveProfileSettings()">💾 <span data-i18n="btn_save">บันทึก</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT IMAGE VIEWER MODAL -->
+<div class="modal-overlay" id="receiptViewerModal" onclick="closeModal('receiptViewerModal')">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🧾 <span data-i18n="receipt_image">รูปใบเสร็จ</span></h3>
+      <button class="close-btn" onclick="closeModal('receiptViewerModal')">✕</button>
+    </div>
+    <div style="padding:16px">
+      <img id="receipt-viewer-img" src="" alt="receipt" style="width:100%;border-radius:8px;display:block">
+    </div>
+    <div class="modal-footer">
+      <a id="receipt-viewer-dl" href="" download target="_blank" class="btn btn-outline btn-sm">⬇️ Download</a>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('receiptViewerModal')">ปิด</button>
     </div>
   </div>
 </div>
@@ -1802,6 +1825,27 @@ async function getOfflineExpenses(from, to, dept, vtype) {
   });
 }
 
+// ─── PHOTO RECEIPT ────────────────────────────────────────
+let currentReceiptFile = null;
+
+async function uploadReceiptImage(file) {
+  if (!file) return null;
+  try {
+    const ext  = file.name.split('.').pop() || 'jpg';
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const { error } = await sbClient.storage.from('receipts').upload(path, file, { upsert: false });
+    if (error) { console.warn('Upload receipt failed:', error.message); return null; }
+    const { data } = sbClient.storage.from('receipts').getPublicUrl(path);
+    return data.publicUrl;
+  } catch(e) { console.warn('uploadReceiptImage error:', e); return null; }
+}
+
+function openReceiptViewer(url) {
+  document.getElementById('receipt-viewer-img').src = url;
+  document.getElementById('receipt-viewer-dl').href = url;
+  openModal('receiptViewerModal');
+}
+
 // ─── EXPENSE FORM ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ef-date').value = today();
@@ -1857,6 +1901,8 @@ async function submitExpense(e) {
 
   // ── Normal single record ──
   const clientId = crypto.randomUUID();
+  // Upload receipt image if attached
+  const receiptImageUrl = navigator.onLine ? await uploadReceiptImage(currentReceiptFile) : null;
   const payload = {
     client_id:           clientId,
     vehicle_id:          Number(document.getElementById('ef-vehicle').value),
@@ -1869,6 +1915,7 @@ async function submitExpense(e) {
     odometer:            document.getElementById('ef-odometer').value||null,
     description:         document.getElementById('ef-desc').value||null,
     receipt_no:          document.getElementById('ef-receipt').value||null,
+    receipt_image_url:   receiptImageUrl,
     created_by:          currentUser?.id,
     is_deleted:          false,
   };
@@ -1901,6 +1948,12 @@ function resetExpenseForm() {
   document.getElementById('ef-amount-group').style.display  = '';
   document.getElementById('ef-odometer-group').style.display= '';
   document.getElementById('ef-amount').required             = true;
+  // Clear receipt scan
+  currentReceiptFile = null;
+  document.getElementById('receipt-input').value            = '';
+  document.getElementById('scan-preview-wrap').style.display= 'none';
+  document.getElementById('scan-status').textContent        = '';
+  document.getElementById('scan-amounts').innerHTML         = '';
 }
 
 // ─── EXPENSES LIST ────────────────────────────────────────
@@ -1942,8 +1995,11 @@ async function loadExpenses() {
         <td>${e.distance_km?fmt(e.distance_km)+' '+t('km_abbr'):'-'}</td>
         <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
-        <td><button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
-            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button></td>
+        <td style="white-space:nowrap">
+          ${e.receipt_image_url ? `<img class="receipt-thumb" src="${e.receipt_image_url}" onclick="openReceiptViewer('${e.receipt_image_url}')" title="ดูใบเสร็จ">` : ''}
+          <button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button>
+        </td>
       </tr>`).join('');
 }
 
@@ -3430,6 +3486,7 @@ function detectReceiptNo(text) {
 async function handleReceiptScan(event) {
   const file = event.target.files[0];
   if (!file) return;
+  currentReceiptFile = file; // save for upload on submit
   const statusEl    = document.getElementById('scan-status');
   const previewWrap = document.getElementById('scan-preview-wrap');
   const previewImg  = document.getElementById('receipt-preview');
