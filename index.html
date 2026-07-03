@@ -383,6 +383,8 @@ tr:hover td{background:#fafafa}
             </div>
           </div>
           <div class="kpi-grid" id="kpiGrid"></div>
+          <!-- Service alerts widget -->
+          <div id="service-alerts-widget"></div>
           <div class="grid-2 mt-16">
             <div class="card"><div class="card-header"><span class="card-title" data-i18n="monthly_expense">ค่าใช้จ่ายรายเดือน</span></div>
               <div style="height:200px"><canvas id="chartMonthly"></canvas></div></div>
@@ -525,6 +527,7 @@ tr:hover td{background:#fafafa}
             <button class="tab-btn active" id="tab-vehicle-list" onclick="switchVehicleTab('list')">🚗 <span data-i18n="tab_vehicle_list">รายการรถ</span></button>
             <button class="tab-btn" id="tab-usage-log" onclick="switchVehicleTab('log')">📋 <span data-i18n="tab_usage_log">บันทึกการใช้งาน</span></button>
             <button class="tab-btn" id="tab-vehicle-import" onclick="switchVehicleTab('import')">📥 <span data-i18n="tab_import">นำเข้าข้อมูล</span></button>
+            <button class="tab-btn" id="tab-vehicle-service" onclick="switchVehicleTab('service')">🔧 <span data-i18n="tab_service">ตารางซ่อมบำรุง</span></button>
           </div>
 
           <!-- Tab 1: Vehicle List -->
@@ -585,6 +588,65 @@ tr:hover td{background:#fafafa}
                   </div>
                 </div>
                 <div id="import-vehicles-result" style="display:none;margin-top:12px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Service Schedule -->
+          <div id="vtab-service" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🔧 <span data-i18n="tab_service">ตารางซ่อมบำรุง</span></span>
+                <button class="btn btn-primary btn-sm" onclick="openServiceModal()">+ <span data-i18n="btn_add_service">เพิ่มรายการ</span></button>
+              </div>
+              <!-- Filters -->
+              <div class="filter-bar" style="padding:12px 16px 0">
+                <div class="filter-group">
+                  <label data-i18n="vehicle">รถ</label>
+                  <select id="svc-filter-vehicle" onchange="loadServiceSchedule()">
+                    <option value="" data-i18n="all">ทั้งหมด</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label data-i18n="svc_type">ประเภทงาน</label>
+                  <select id="svc-filter-type" onchange="loadServiceSchedule()">
+                    <option value="">— <span data-i18n="all">ทั้งหมด</span> —</option>
+                    <option value="oil_change">🔧 เปลี่ยนน้ำมันเครื่อง</option>
+                    <option value="tax">📋 ต่อภาษี</option>
+                    <option value="insurance">🛡️ ประกัน</option>
+                    <option value="inspection">🔍 ตรวจสภาพ (พรบ.)</option>
+                    <option value="tire">🔄 เปลี่ยนยาง</option>
+                    <option value="ac">❄️ ล้างแอร์</option>
+                    <option value="other">⚙️ อื่นๆ</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label data-i18n="svc_status">สถานะ</label>
+                  <select id="svc-filter-status" onchange="loadServiceSchedule()">
+                    <option value="" data-i18n="all">ทั้งหมด</option>
+                    <option value="overdue">🔴 เกินกำหนด</option>
+                    <option value="soon">🟡 ใกล้ถึงกำหนด</option>
+                    <option value="ok">🟢 ปกติ</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Summary badges -->
+              <div id="svc-summary" style="display:flex;gap:10px;padding:10px 16px;flex-wrap:wrap"></div>
+              <!-- Table -->
+              <div class="table-wrap">
+                <table>
+                  <thead><tr>
+                    <th data-i18n="svc_status">สถานะ</th>
+                    <th data-i18n="vehicle">รถ</th>
+                    <th data-i18n="svc_type">ประเภท</th>
+                    <th data-i18n="svc_last_date">ซ่อมล่าสุด</th>
+                    <th data-i18n="svc_next_date">กำหนดครั้งถัดไป</th>
+                    <th data-i18n="svc_days_left">เหลือ (วัน)</th>
+                    <th data-i18n="notes">หมายเหตุ</th>
+                    <th></th>
+                  </tr></thead>
+                  <tbody id="serviceTable"></tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -897,6 +959,61 @@ tr:hover td{background:#fafafa}
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeProfileSettings()" data-i18n="btn_cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveProfileSettings()">💾 <span data-i18n="btn_save">บันทึก</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE SCHEDULE MODAL -->
+<div class="modal-overlay" id="serviceModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 id="serviceModalTitle" data-i18n="btn_add_service">เพิ่มรายการซ่อมบำรุง</h3>
+      <button class="close-btn" onclick="closeModal('serviceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="svc-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label data-i18n="vehicle">รถ</label>
+          <select id="svc-vehicle"></select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="svc_type">ประเภทงาน</label>
+          <select id="svc-type">
+            <option value="oil_change">🔧 เปลี่ยนน้ำมันเครื่อง</option>
+            <option value="tax">📋 ต่อภาษี</option>
+            <option value="insurance">🛡️ ประกัน</option>
+            <option value="inspection">🔍 ตรวจสภาพ (พรบ.)</option>
+            <option value="tire">🔄 เปลี่ยนยาง</option>
+            <option value="ac">❄️ ล้างแอร์</option>
+            <option value="other">⚙️ อื่นๆ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="svc_last_date">ซ่อมล่าสุด</label>
+          <input type="date" id="svc-last-date">
+        </div>
+        <div class="form-group">
+          <label data-i18n="svc_next_date">กำหนดครั้งถัดไป <span style="color:var(--danger)">*</span></label>
+          <input type="date" id="svc-next-date" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="svc_next_km">เลขไมล์ครั้งถัดไป (กม.)</label>
+          <input type="number" id="svc-next-km" min="0" placeholder="เช่น 50000">
+        </div>
+        <div class="form-group">
+          <label data-i18n="svc_reminder">แจ้งเตือนล่วงหน้า (วัน)</label>
+          <input type="number" id="svc-reminder" value="30" min="1" max="365">
+        </div>
+        <div class="form-group full">
+          <label data-i18n="notes">หมายเหตุ</label>
+          <textarea id="svc-notes" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('serviceModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveService()" data-i18n="btn_save">บันทึก</button>
     </div>
   </div>
 </div>
@@ -1714,6 +1831,8 @@ async function loadDashboard() {
       <div class="kpi-value">RM ${fmt(fuelTotal)}</div>
       <div class="kpi-sub">${totalKm>0?'RM '+fmt(fuelTotal/totalKm)+'/km':'-'}</div></div>`;
 
+  loadServiceAlerts();
+
   // Group by month
   const byMonth = {};
   rows.forEach(r => { const m=String(r.expense_date).slice(0,7); byMonth[m]=(byMonth[m]||0)+Number(r.amount||0); });
@@ -2133,16 +2252,212 @@ async function deleteVehicle(id) {
   toast(t('delete_success'),'success'); await loadMasterData(); loadVehicles();
 }
 
+// ─── SERVICE ALERTS (Dashboard widget) ────────────────────
+async function loadServiceAlerts() {
+  const el = document.getElementById('service-alerts-widget');
+  if (!el || !navigator.onLine) return;
+  try {
+    const { data } = await sbClient.from('vehicle_services')
+      .select('*, vehicles(name, license_plate)')
+      .order('next_date', { ascending: true });
+    const alerts = (data||[]).filter(r => {
+      const st = svcStatus(r.next_date, r.reminder_days);
+      return st.key === 'overdue' || st.key === 'soon';
+    });
+    if (!alerts.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <div class="card mt-16" style="border-left:4px solid #d69e2e">
+        <div class="card-header">
+          <span class="card-title">🔧 แจ้งเตือนการซ่อมบำรุง</span>
+          <button class="btn btn-outline btn-sm" onclick="showPage('vehicles'); setTimeout(()=>switchVehicleTab('service'),100)">ดูทั้งหมด →</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0">
+          ${alerts.slice(0,5).map(r => {
+            const st = svcStatus(r.next_date, r.reminder_days);
+            const vn = r.vehicles ? `${r.vehicles.name} (${r.vehicles.license_plate})` : '-';
+            return `<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:${st.color}11;border-radius:8px">
+              <span style="font-size:1.3rem">${SVC_TYPES[r.service_type]?.icon||'⚙️'}</span>
+              <div style="flex:1">
+                <div style="font-weight:600">${svcTypeLabel(r.service_type)}</div>
+                <div style="font-size:.85rem;color:var(--text-light)">${vn}</div>
+              </div>
+              <div style="text-align:right">
+                <span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span>
+                <div style="font-size:.8rem;color:var(--text-light)">${fmtDate(r.next_date)}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  } catch(e) { /* silent fail */ }
+}
+
+// ─── VEHICLE SERVICE SCHEDULE ─────────────────────────────
+const SVC_TYPES = {
+  oil_change: { label: t => t('svc_oil'),        icon: '🔧' },
+  tax:        { label: t => t('svc_tax'),         icon: '📋' },
+  insurance:  { label: t => t('svc_insurance'),   icon: '🛡️' },
+  inspection: { label: t => t('svc_inspection'),  icon: '🔍' },
+  tire:       { label: t => t('svc_tire'),        icon: '🔄' },
+  ac:         { label: t => t('svc_ac'),          icon: '❄️' },
+  other:      { label: t => t('svc_other'),       icon: '⚙️' },
+};
+
+function svcTypeLabel(type) {
+  const s = SVC_TYPES[type];
+  return s ? `${s.icon} ${s.label(t)}` : type;
+}
+
+function svcStatus(nextDate, reminderDays = 30) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due   = new Date(nextDate); due.setHours(0,0,0,0);
+  const diff  = Math.round((due - today) / 86400000);
+  if (diff < 0)            return { key:'overdue', label:`🔴 ${t('svc_overdue')}`,     color:'#e53e3e', days: diff };
+  if (diff <= reminderDays) return { key:'soon',    label:`🟡 ${t('svc_due_soon')}`,   color:'#d69e2e', days: diff };
+  return                           { key:'ok',      label:`🟢 ${t('svc_ok')}`,         color:'#38a169', days: diff };
+}
+
+function populateSvcVehicleFilter() {
+  const sel = document.getElementById('svc-filter-vehicle');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${t('all')}</option>` +
+    (allVehicles||[]).map(v => `<option value="${v.id}">${v.name} (${v.license_plate})</option>`).join('');
+  sel.value = cur;
+}
+
+async function loadServiceSchedule() {
+  const tbody = document.getElementById('serviceTable');
+  const sumEl = document.getElementById('svc-summary');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px">⏳ Loading...</td></tr>`;
+
+  const vFilter    = document.getElementById('svc-filter-vehicle')?.value || '';
+  const typeFilter = document.getElementById('svc-filter-type')?.value    || '';
+  const stFilter   = document.getElementById('svc-filter-status')?.value  || '';
+
+  let q = sbClient.from('vehicle_services')
+    .select('*, vehicles(name, license_plate)')
+    .order('next_date', { ascending: true });
+  if (vFilter)    q = q.eq('vehicle_id', vFilter);
+  if (typeFilter) q = q.eq('service_type', typeFilter);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`; return; }
+
+  let rows = data || [];
+
+  // Apply status filter client-side
+  if (stFilter) rows = rows.filter(r => svcStatus(r.next_date, r.reminder_days).key === stFilter);
+
+  // Summary badges
+  const all = data || [];
+  const overdue = all.filter(r => svcStatus(r.next_date, r.reminder_days).key === 'overdue').length;
+  const soon    = all.filter(r => svcStatus(r.next_date, r.reminder_days).key === 'soon').length;
+  const ok      = all.filter(r => svcStatus(r.next_date, r.reminder_days).key === 'ok').length;
+  if (sumEl) sumEl.innerHTML = `
+    <span class="badge" style="background:#e53e3e22;color:#e53e3e">🔴 ${t('svc_overdue')}: ${overdue}</span>
+    <span class="badge" style="background:#d69e2e22;color:#d69e2e">🟡 ${t('svc_due_soon')}: ${soon}</span>
+    <span class="badge" style="background:#38a16922;color:#38a169">🟢 ${t('svc_ok')}: ${ok}</span>
+  `;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const st   = svcStatus(r.next_date, r.reminder_days);
+    const vName = r.vehicles ? `${r.vehicles.name}<br><small style="color:var(--text-light)">${r.vehicles.license_plate}</small>` : '-';
+    const daysText = st.days >= 0 ? `+${st.days} วัน` : `${Math.abs(st.days)} วัน`;
+    return `<tr>
+      <td><span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span></td>
+      <td>${vName}</td>
+      <td>${svcTypeLabel(r.service_type)}</td>
+      <td>${r.last_date ? fmtDate(r.last_date) : '-'}</td>
+      <td style="font-weight:600">${fmtDate(r.next_date)}</td>
+      <td style="color:${st.color};font-weight:600">${daysText}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-sm btn-icon" onclick='editService(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteService(${r.id})">🗑️</button>
+        <button class="btn btn-outline btn-sm" onclick="markServiceDone(${r.id},'${r.service_type}')" title="${t('svc_mark_done')}">✅</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openServiceModal(row = null) {
+  document.getElementById('svc-id').value          = row?.id || '';
+  document.getElementById('svc-vehicle').innerHTML = (allVehicles||[])
+    .map(v => `<option value="${v.id}" ${row?.vehicle_id==v.id?'selected':''}>${v.name} (${v.license_plate})</option>`).join('');
+  document.getElementById('svc-type').value        = row?.service_type    || 'oil_change';
+  document.getElementById('svc-last-date').value   = row?.last_date       || '';
+  document.getElementById('svc-next-date').value   = row?.next_date       || '';
+  document.getElementById('svc-next-km').value     = row?.next_km         || '';
+  document.getElementById('svc-reminder').value    = row?.reminder_days   || 30;
+  document.getElementById('svc-notes').value       = row?.notes           || '';
+  document.getElementById('serviceModalTitle').textContent = row ? t('edit_service') : t('btn_add_service');
+  openModal('serviceModal');
+}
+
+function editService(row) { openServiceModal(row); }
+
+async function saveService() {
+  const id      = document.getElementById('svc-id').value;
+  const nextDate = document.getElementById('svc-next-date').value;
+  if (!nextDate) { toast(t('svc_next_date') + ' ' + t('required'), 'error'); return; }
+  const payload = {
+    vehicle_id:    Number(document.getElementById('svc-vehicle').value),
+    service_type:  document.getElementById('svc-type').value,
+    last_date:     document.getElementById('svc-last-date').value  || null,
+    next_date:     nextDate,
+    next_km:       document.getElementById('svc-next-km').value    || null,
+    reminder_days: Number(document.getElementById('svc-reminder').value) || 30,
+    notes:         document.getElementById('svc-notes').value      || null,
+    created_by:    currentUser?.id,
+  };
+  const { error } = id
+    ? await sbClient.from('vehicle_services').update(payload).eq('id', id)
+    : await sbClient.from('vehicle_services').insert(payload);
+  if (error) { toast(t('save_error') + ': ' + error.message, 'error'); return; }
+  toast(t('save_success'), 'success');
+  closeModal('serviceModal');
+  loadServiceSchedule();
+}
+
+async function deleteService(id) {
+  if (!confirm(t('confirm_delete'))) return;
+  const { error } = await sbClient.from('vehicle_services').delete().eq('id', id);
+  if (error) { toast(t('save_error'), 'error'); return; }
+  toast(t('delete_success'), 'success');
+  loadServiceSchedule();
+}
+
+async function markServiceDone(id, serviceType) {
+  // Mark done: set last_date = today, prompt for new next_date
+  const today = new Date().toISOString().slice(0, 10);
+  const newNext = prompt(t('svc_enter_next_date'), '');
+  if (!newNext) return;
+  const { error } = await sbClient.from('vehicle_services')
+    .update({ last_date: today, next_date: newNext, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { toast(t('save_error'), 'error'); return; }
+  toast('✅ ' + t('svc_marked_done'), 'success');
+  loadServiceSchedule();
+}
+
 // ─── VEHICLE USAGE LOGS ───────────────────────────────────
 let assignedVehicleIds = []; // vehicles this user can log usage for
 
 function switchVehicleTab(tab) {
-  const tabIdMap = { list:'tab-vehicle-list', log:'tab-usage-log', import:'tab-vehicle-import' };
-  ['list','log','import'].forEach(t => {
+  const tabIdMap = { list:'tab-vehicle-list', log:'tab-usage-log', import:'tab-vehicle-import', service:'tab-vehicle-service' };
+  ['list','log','import','service'].forEach(t => {
     document.getElementById(`vtab-${t}`).style.display = tab === t ? '' : 'none';
     document.getElementById(tabIdMap[t]).classList.toggle('active', tab === t);
   });
-  if (tab === 'log') { loadAssignedVehicles().then(() => { populateULVehicleSelects(); loadUsageLogs(); }); }
+  if (tab === 'log')     { loadAssignedVehicles().then(() => { populateULVehicleSelects(); loadUsageLogs(); }); }
+  if (tab === 'service') { populateSvcVehicleFilter(); loadServiceSchedule(); }
 }
 
 async function loadAssignedVehicles() {
