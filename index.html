@@ -715,6 +715,23 @@ tr:hover td{background:#fafafa}
 
         <!-- ══ TRAVELLING CLAIMS FORM ══ -->
         <div class="page" id="page-travel-claim">
+
+          <!-- Tab bar -->
+          <div class="tabs" style="margin-bottom:12px">
+            <button class="tab-btn active" id="tctab-generate" onclick="switchTCTab('generate')">
+              📊 <span data-i18n="tc_tab_generate">สร้างใบเบิก</span>
+            </button>
+            <button class="tab-btn" id="tctab-mine" onclick="switchTCTab('mine')">
+              📂 <span data-i18n="tc_tab_mine">ประวัติที่ส่ง</span>
+            </button>
+            <button class="tab-btn" id="tctab-approve" onclick="switchTCTab('approve')" style="display:none">
+              ✅ <span data-i18n="tc_tab_approve">รออนุมัติ</span>
+              <span id="approve-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:50%;padding:1px 6px;font-size:11px;margin-left:4px"></span>
+            </button>
+          </div>
+
+          <!-- ── Tab: Generate Claim ── -->
+          <div id="tctab-content-generate">
           <!-- Section A: Requester Details -->
           <div class="card" style="margin-bottom:10px">
             <div class="card-header" style="padding:10px 16px">
@@ -811,9 +828,80 @@ tr:hover td{background:#fafafa}
           <!-- Claim Summary (populated by loadTravelClaim) -->
           <div id="tc-claim-summary" style="display:none;margin-bottom:10px"></div>
 
+          <!-- Submit button (shown after report generated) -->
+          <div id="tc-submit-bar" style="display:none;margin-bottom:10px">
+            <div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="flex:1;font-size:14px;color:var(--text-light)" data-i18n="tc_submit_hint">ตรวจสอบรายการแล้ว ส่งขออนุมัติได้เลย</span>
+              <div id="tc-submit-status"></div>
+              <button class="btn btn-primary" id="tc-submit-btn" onclick="submitTravelClaim()">
+                📤 <span data-i18n="tc_btn_submit">ส่งขออนุมัติ</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Section B: Table Preview -->
           <div id="tc-report-content"></div>
-        </div>
+          </div><!-- end tctab-content-generate -->
+
+          <!-- ── Tab: My Submissions ── -->
+          <div id="tctab-content-mine" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title" data-i18n="tc_tab_mine">ประวัติที่ส่ง</span>
+                <button class="btn btn-outline btn-sm" onclick="loadMyClaims()">🔄 Refresh</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr>
+                    <th data-i18n="tc_month">เดือน/ปี</th>
+                    <th data-i18n="vehicle">รถ</th>
+                    <th class="text-right" data-i18n="total_km">รวม กม.</th>
+                    <th class="text-right" data-i18n="total_expense">รวมเงิน</th>
+                    <th data-i18n="status">สถานะ</th>
+                    <th data-i18n="submitted_at">วันที่ส่ง</th>
+                    <th></th>
+                  </tr></thead>
+                  <tbody id="my-claims-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Tab: Pending Approvals (manager/admin) ── -->
+          <div id="tctab-content-approve" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title" data-i18n="tc_tab_approve">รออนุมัติ</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <select id="approve-filter-status" onchange="loadPendingApprovals()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="submitted" data-i18n="ap_status_pending">รอดำเนินการ</option>
+                    <option value="approved" data-i18n="ap_status_approved">อนุมัติแล้ว</option>
+                    <option value="rejected" data-i18n="ap_status_rejected">ปฏิเสธ</option>
+                    <option value="" data-i18n="all">ทั้งหมด</option>
+                  </select>
+                  <button class="btn btn-outline btn-sm" onclick="loadPendingApprovals()">🔄</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr>
+                    <th data-i18n="tc_name">ชื่อ</th>
+                    <th data-i18n="tc_department">หน่วยงาน</th>
+                    <th data-i18n="tc_month">เดือน/ปี</th>
+                    <th data-i18n="vehicle">รถ</th>
+                    <th class="text-right" data-i18n="total_km">กม.</th>
+                    <th class="text-right" data-i18n="total_expense">รวม (RM)</th>
+                    <th data-i18n="status">สถานะ</th>
+                    <th data-i18n="submitted_at">วันที่ส่ง</th>
+                    <th></th>
+                  </tr></thead>
+                  <tbody id="pending-claims-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end page-travel-claim -->
 
         <!-- ══ USERS (admin only) ══ -->
         <div class="page" id="page-users">
@@ -997,6 +1085,40 @@ tr:hover td{background:#fafafa}
 </div>
 
 <!-- RECEIPT IMAGE VIEWER MODAL -->
+<!-- Reject Reason Modal -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>❌ <span data-i18n="ap_reject_title">ปฏิเสธใบเบิก</span></h3>
+      <button class="close-btn" onclick="closeModal('rejectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reject-claim-id">
+      <div class="form-group">
+        <label data-i18n="ap_reject_reason">เหตุผลที่ปฏิเสธ</label>
+        <textarea id="reject-reason-text" rows="4" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;resize:vertical"
+          data-i18n-ph="ap_reject_reason_ph"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('rejectModal')" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-danger" onclick="confirmRejectClaim()" data-i18n="ap_btn_reject">ปฏิเสธ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Claim Detail Modal (preview before approve) -->
+<div class="modal-overlay" id="claimDetailModal">
+  <div class="modal" style="max-width:680px;max-height:80vh;overflow-y:auto">
+    <div class="modal-header">
+      <h3>📋 <span data-i18n="ap_claim_detail">รายละเอียดใบเบิก</span></h3>
+      <button class="close-btn" onclick="closeModal('claimDetailModal')">✕</button>
+    </div>
+    <div id="claim-detail-body" style="padding:16px"></div>
+    <div class="modal-footer" id="claim-detail-footer"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="receiptViewerModal" onclick="closeModal('receiptViewerModal')">
   <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -1267,6 +1389,7 @@ async function onSignIn(user) {
   setLang(localStorage.getItem('lang') || profile?.language || 'th');
   setDefaultDates();
   loadDashboard();
+  loadApprovalBadge();
 }
 
 async function doLogout() {
@@ -2746,6 +2869,258 @@ async function loadReport() {
 // ─── TRAVELLING CLAIMS FORM ───────────────────────────────
 let tcReportData = null; // cache for export
 
+// ─── APPROVAL WORKFLOW ────────────────────────────────────
+
+const MONTH_NAMES_EN = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+const CLAIM_STATUS = {
+  submitted: { label: () => `🕐 ${t('ap_status_pending')}`,  color: '#d69e2e' },
+  approved:  { label: () => `✅ ${t('ap_status_approved')}`, color: '#38a169' },
+  rejected:  { label: () => `❌ ${t('ap_status_rejected')}`, color: '#e53e3e' },
+};
+
+function claimStatusBadge(status) {
+  const s = CLAIM_STATUS[status] || CLAIM_STATUS.submitted;
+  return `<span class="badge" style="background:${s.color}22;color:${s.color}">${s.label()}</span>`;
+}
+
+function switchTCTab(tab) {
+  ['generate','mine','approve'].forEach(t => {
+    document.getElementById(`tctab-content-${t}`).style.display = t === tab ? '' : 'none';
+    document.getElementById(`tctab-${t}`)?.classList.toggle('active', t === tab);
+  });
+  if (tab === 'mine')    loadMyClaims();
+  if (tab === 'approve') loadPendingApprovals();
+}
+
+async function submitTravelClaim() {
+  if (!tcReportData) return;
+  const d = tcReportData;
+
+  const btn = document.getElementById('tc-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังส่ง...';
+
+  const payload = {
+    user_id:      currentUser.id,
+    vehicle_id:   d.veh?.id || null,
+    month:        d.month,
+    year:         d.year,
+    name:         d.name,
+    emp_id:       d.empId,
+    position:     d.position,
+    department:   d.department,
+    company:      d.company,
+    branch:       d.branch,
+    jg:           d.jg,
+    pca:          d.pca,
+    car_type:     d.carType,
+    claim_rate:   d.claimRate,
+    total_km:     d.totKm,
+    total_amount: d.grandTotal,
+    claim_rows:   d.rows,
+    status:       'submitted',
+    submitted_at: new Date().toISOString(),
+  };
+
+  const { error } = await sbClient.from('travel_claims').insert(payload);
+
+  btn.disabled = false;
+  btn.innerHTML = `📤 <span data-i18n="tc_btn_submit">${t('tc_btn_submit')}</span>`;
+
+  if (error) {
+    toast(`${t('save_error')}: ${error.message}`, 'error');
+    return;
+  }
+
+  toast('📤 ' + t('tc_submit_success'), 'success');
+  document.getElementById('tc-submit-status').innerHTML =
+    claimStatusBadge('submitted') + ` <small style="color:var(--text-light)">${new Date().toLocaleString()}</small>`;
+  btn.style.display = 'none';
+
+  // Update pending badge count
+  loadApprovalBadge();
+}
+
+async function loadMyClaims() {
+  const tbody = document.getElementById('my-claims-table');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px">⏳</td></tr>`;
+
+  const { data, error } = await sbClient.from('travel_claims')
+    .select('*, vehicles(name,license_plate)')
+    .eq('user_id', currentUser.id)
+    .order('submitted_at', { ascending: false });
+
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(c => {
+    const vn = c.vehicles ? `${c.vehicles.name} (${c.vehicles.license_plate})` : '-';
+    return `<tr>
+      <td>${MONTH_NAMES_EN[c.month]} ${c.year}</td>
+      <td>${vn}</td>
+      <td class="text-right">${fmt(c.total_km)} km</td>
+      <td class="text-right">RM ${fmt(c.total_amount)}</td>
+      <td>${claimStatusBadge(c.status)}
+        ${c.status === 'rejected' && c.reject_reason ? `<br><small style="color:#e53e3e">${c.reject_reason}</small>` : ''}
+      </td>
+      <td>${fmtDate(c.submitted_at)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, false)" title="ดูรายละเอียด">👁️</button>
+        ${c.status === 'submitted' ? `<button class="btn btn-danger btn-sm btn-icon" onclick="withdrawClaim(${c.id})" title="${t('ap_btn_withdraw')}">🗑️</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadPendingApprovals() {
+  const tbody = document.getElementById('pending-claims-table');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px">⏳</td></tr>`;
+
+  const statusFilter = document.getElementById('approve-filter-status')?.value || 'submitted';
+  let q = sbClient.from('travel_claims')
+    .select('*, vehicles(name,license_plate)')
+    .order('submitted_at', { ascending: true });
+  if (statusFilter) q = q.eq('status', statusFilter);
+
+  const { data, error } = await q;
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-light)">${t('no_data')}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(c => {
+    const vn = c.vehicles ? `${c.vehicles.license_plate}` : '-';
+    return `<tr>
+      <td style="font-weight:600">${c.name || '-'}</td>
+      <td>${c.department || '-'}</td>
+      <td>${MONTH_NAMES_EN[c.month]} ${c.year}</td>
+      <td>${vn}</td>
+      <td class="text-right">${fmt(c.total_km)}</td>
+      <td class="text-right" style="font-weight:600">RM ${fmt(c.total_amount)}</td>
+      <td>${claimStatusBadge(c.status)}</td>
+      <td style="color:var(--text-light)">${fmtDate(c.submitted_at)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, true)" title="ดูรายละเอียด">👁️</button>
+        ${c.status === 'submitted' ? `
+          <button class="btn btn-primary btn-sm" onclick="approveClaim(${c.id})">✅ ${t('ap_btn_approve')}</button>
+          <button class="btn btn-danger  btn-sm" onclick="openRejectModal(${c.id})">❌ ${t('ap_btn_reject')}</button>
+        ` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadApprovalBadge() {
+  // Only for manager/admin
+  const role = currentProfile?.role;
+  const btn = document.getElementById('tctab-approve');
+  const badge = document.getElementById('approve-badge');
+  if (!btn || !['manager','admin'].includes(role)) return;
+  btn.style.display = '';
+  const { count } = await sbClient.from('travel_claims')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'submitted');
+  if (badge) {
+    if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+    else badge.style.display = 'none';
+  }
+}
+
+async function approveClaim(id) {
+  if (!confirm(t('ap_confirm_approve'))) return;
+  const { error } = await sbClient.from('travel_claims').update({
+    status:      'approved',
+    reviewed_by: currentUser.id,
+    reviewed_at: new Date().toISOString(),
+    updated_at:  new Date().toISOString(),
+  }).eq('id', id);
+  if (error) { toast(t('save_error'), 'error'); return; }
+  toast('✅ ' + t('ap_approved_ok'), 'success');
+  loadPendingApprovals();
+  loadApprovalBadge();
+}
+
+function openRejectModal(id) {
+  document.getElementById('reject-claim-id').value = id;
+  document.getElementById('reject-reason-text').value = '';
+  openModal('rejectModal');
+}
+
+async function confirmRejectClaim() {
+  const id     = document.getElementById('reject-claim-id').value;
+  const reason = document.getElementById('reject-reason-text').value.trim();
+  if (!reason) { toast(t('ap_reject_reason') + ' ' + t('required'), 'error'); return; }
+  const { error } = await sbClient.from('travel_claims').update({
+    status:        'rejected',
+    reviewed_by:   currentUser.id,
+    reviewed_at:   new Date().toISOString(),
+    reject_reason: reason,
+    updated_at:    new Date().toISOString(),
+  }).eq('id', id);
+  if (error) { toast(t('save_error'), 'error'); return; }
+  toast('❌ ' + t('ap_rejected_ok'), 'success');
+  closeModal('rejectModal');
+  loadPendingApprovals();
+  loadApprovalBadge();
+}
+
+async function withdrawClaim(id) {
+  if (!confirm(t('ap_confirm_withdraw'))) return;
+  const { error } = await sbClient.from('travel_claims').delete().eq('id', id);
+  if (error) { toast(t('save_error'), 'error'); return; }
+  toast(t('delete_success'), 'success');
+  loadMyClaims();
+}
+
+async function previewClaim(id, canAction) {
+  const { data: c, error } = await sbClient.from('travel_claims')
+    .select('*, vehicles(name,license_plate)')
+    .eq('id', id).single();
+  if (error || !c) { toast(t('save_error'), 'error'); return; }
+
+  const rows = c.claim_rows || [];
+  const vn = c.vehicles ? `${c.vehicles.name} (${c.vehicles.license_plate})` : '-';
+
+  document.getElementById('claim-detail-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:13px">
+      <div><b>${t('tc_name')}:</b> ${c.name||'-'}</div>
+      <div><b>${t('tc_department')}:</b> ${c.department||'-'}</div>
+      <div><b>${t('tc_emp_id')}:</b> ${c.emp_id||'-'}</div>
+      <div><b>${t('tc_position')}:</b> ${c.position||'-'}</div>
+      <div><b>${t('vehicle')}:</b> ${vn}</div>
+      <div><b>${t('tc_month')}:</b> ${MONTH_NAMES_EN[c.month]} ${c.year}</div>
+      <div><b>${t('total_km')}:</b> ${fmt(c.total_km)} km</div>
+      <div><b>${t('total_expense')}:</b> <span style="font-weight:700;color:var(--primary)">RM ${fmt(c.total_amount)}</span></div>
+      <div><b>${t('status')}:</b> ${claimStatusBadge(c.status)}</div>
+      ${c.reject_reason ? `<div style="grid-column:1/-1;color:#e53e3e"><b>${t('ap_reject_reason')}:</b> ${c.reject_reason}</div>` : ''}
+    </div>
+    <div class="table-wrap" style="max-height:300px;overflow-y:auto">
+      <table style="font-size:12px">
+        <thead><tr><th>Date</th><th>Origin</th><th>Destination</th><th>Purpose</th><th class="text-right">KM</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td>${fmtDate(r.date)}</td>
+          <td>${r.origin||'-'}</td>
+          <td>${r.destination||'-'}</td>
+          <td>${r.purpose||'-'}</td>
+          <td class="text-right">${fmt(r.km)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('claim-detail-footer').innerHTML = canAction && c.status === 'submitted' ? `
+    <button class="btn btn-outline" onclick="closeModal('claimDetailModal')">ปิด</button>
+    <button class="btn btn-danger"  onclick="closeModal('claimDetailModal');openRejectModal(${c.id})">❌ ${t('ap_btn_reject')}</button>
+    <button class="btn btn-primary" onclick="closeModal('claimDetailModal');approveClaim(${c.id})">✅ ${t('ap_btn_approve')}</button>
+  ` : `<button class="btn btn-outline" onclick="closeModal('claimDetailModal')">${t('btn_cancel')}</button>`;
+
+  openModal('claimDetailModal');
+}
+
+// ─── TRAVELLING CLAIMS FORM ────────────────────────────────
 function initTravelClaim() {
   // Populate year dropdown
   const yearSel = document.getElementById('tc-year');
@@ -3038,6 +3413,14 @@ async function loadTravelClaim() {
 
   document.getElementById('tc-export-btn').style.display = '';
   document.getElementById('tc-pdf-btn').style.display = '';
+
+  // Show submit bar (reset state)
+  const submitBar = document.getElementById('tc-submit-bar');
+  const submitBtn = document.getElementById('tc-submit-btn');
+  const submitSt  = document.getElementById('tc-submit-status');
+  if (submitBar) submitBar.style.display = '';
+  if (submitBtn) submitBtn.style.display = '';
+  if (submitSt)  submitSt.innerHTML = '';
 }
 
 async function exportTravelClaimExcel() {
