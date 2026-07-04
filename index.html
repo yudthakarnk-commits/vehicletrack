@@ -257,12 +257,13 @@ tr:hover td{background:#fafafa}
 }
 
 /* ── KPI ANIMATED COUNTER ── */
-@keyframes kpi-pop{0%{transform:translateY(10px);opacity:0}100%{transform:translateY(0);opacity:1}}
-.kpi-card{animation:kpi-pop .5s cubic-bezier(.22,.68,0,1.2) both}
-.kpi-card:nth-child(1){animation-delay:.05s}
-.kpi-card:nth-child(2){animation-delay:.1s}
-.kpi-card:nth-child(3){animation-delay:.15s}
-.kpi-card:nth-child(4){animation-delay:.2s}
+@keyframes kpi-pop{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
+/* Animation is applied via JS (.kpi-enter) — NOT baked into .kpi-card to avoid double-play */
+.kpi-enter{animation:kpi-pop .55s cubic-bezier(.22,.68,0,1.2) both}
+.kpi-enter:nth-child(1){animation-delay:0s}
+.kpi-enter:nth-child(2){animation-delay:.08s}
+.kpi-enter:nth-child(3){animation-delay:.16s}
+.kpi-enter:nth-child(4){animation-delay:.24s}
 .kpi-value{transition:color .3s}
 
 /* ── DARK MODE TOGGLE in profile ── */
@@ -2103,17 +2104,18 @@ async function loadDashboard() {
     totalKm = rows.reduce((s,r)=>s+Number(r.distance_km||0),0);
   }
 
+  // kpi-enter triggers the slide-up animation — applied here (not in .kpi-card CSS) to prevent double-play
   document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card"><div class="kpi-label">💰 ${t('total_expense')}</div>
+    <div class="kpi-card kpi-enter"><div class="kpi-label">💰 ${t('total_expense')}</div>
       <div class="kpi-value" id="kv-expense">RM 0</div><div class="kpi-sub">${rows.length} ${t('transactions')}</div></div>
-    <div class="kpi-card accent"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
+    <div class="kpi-card accent kpi-enter"><div class="kpi-label">🚗 ${t('total_vehicles')}</div>
       <div class="kpi-value" id="kv-vehicles">0</div><div class="kpi-sub">${t('cars_unit')}</div></div>
-    <div class="kpi-card success"><div class="kpi-label">📍 ${t('total_km')}</div>
+    <div class="kpi-card success kpi-enter"><div class="kpi-label">📍 ${t('total_km')}</div>
       <div class="kpi-value" id="kv-km">0</div><div class="kpi-sub">${t('km_unit')}</div></div>
-    <div class="kpi-card danger"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
+    <div class="kpi-card danger kpi-enter"><div class="kpi-label">⛽ ${t('fuel_cost')}</div>
       <div class="kpi-value" id="kv-fuel">RM 0</div>
       <div class="kpi-sub">${totalKm>0?'RM '+fmt(fuelTotal/totalKm)+'/km':'-'}</div></div>`;
-  // Animated counters
+  // Start counter after card animation completes (longest delay: .24s + .55s ≈ 400ms)
   animateCounter(document.getElementById('kv-expense'), total, 'RM ', '', 2);
   animateCounter(document.getElementById('kv-vehicles'), vehicles, '', '', 0);
   animateCounter(document.getElementById('kv-km'), totalKm, '', '', 1);
@@ -2645,7 +2647,7 @@ function animateCounter(el, target, prefix = '', suffix = '', decimals = 0, dura
       else el.textContent = prefix + (decimals > 0 ? target.toFixed(decimals) : Number(target).toLocaleString()) + suffix;
     }
     requestAnimationFrame(update);
-  }, 150); // wait for card pop animation
+  }, 420); // wait for last card (delay .24s + duration .55s ≈ 420ms)
 }
 
 // ─── MOBILE BOTTOM NAV ─────────────────────────────────────
