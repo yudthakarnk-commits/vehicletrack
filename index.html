@@ -252,7 +252,6 @@ tr:hover td{background:#fafafa}
 @media(max-width:768px){
   #mobile-bottom-nav{display:block}
   .sidebar{display:none !important}
-  .content{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
   .menu-btn{display:none}
 }
 
@@ -330,7 +329,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   .sidebar.collapsed{width:var(--sidebar-w) !important}
   .grid-2,.grid-3{grid-template-columns:1fr}
   .kpi-grid{grid-template-columns:1fr 1fr}
-  .content{padding:12px}
+  /* padding shorthand must preserve bottom clearance for mobile bottom nav */
+  .content{padding:12px 12px calc(80px + env(safe-area-inset-bottom))}
   .form-grid{grid-template-columns:1fr}
   #sync-status{display:none}
   .brand-name{display:none}
