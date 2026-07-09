@@ -4430,7 +4430,7 @@ function resetImport(type) {
 // ─── USERS ────────────────────────────────────────────────
 async function loadUsers() {
   const { data } = await sbClient.from('user_profiles')
-    .select('*, departments(name), auth_users:id(email)')
+    .select('*, departments(name)')
     .order('full_name');
   // Get all auth users via admin API (not available from client — use profiles only)
   const { data: uvData } = await sbClient.from('user_vehicles').select('user_id, vehicles(name, license_plate)');
