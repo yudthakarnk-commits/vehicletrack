@@ -546,7 +546,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
               <select id="db-vtype"><option value="" data-i18n="all">ทั้งหมด</option></select>
             </div>
             <div class="filter-group"><label>&nbsp;</label>
-              <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔍 <span data-i18n="show_data">แสดงข้อมูล</span></button>
+              <button class="btn btn-primary btn-sm" onclick="loadDashboard(true)">🔍 <span data-i18n="show_data">แสดงข้อมูล</span></button>
             </div>
           </div>
           <div class="kpi-grid" id="kpiGrid"></div>
@@ -2053,11 +2053,12 @@ async function calcExpenseDistance() {
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────
-let _dashLoading = false;
-async function loadDashboard() {
-  // Guard: prevent concurrent calls (e.g. setLang event + direct call on init both fire)
-  if (_dashLoading) return;
-  _dashLoading = true;
+let _dashLastRun = 0;
+async function loadDashboard(force = false) {
+  // Cooldown: collapse rapid sequential calls (init + langChanged + online events firing together)
+  const now = Date.now();
+  if (!force && now - _dashLastRun < 1500) return;
+  _dashLastRun = now;
   // Show skeleton while loading
   const kpiEl = document.getElementById('kpiGrid');
   if (kpiEl) kpiEl.innerHTML = skeletonKPI(4);
@@ -2201,7 +2202,6 @@ async function loadDashboard() {
         <td><span class="badge" style="background:${e.category_color||'#ccc'}22;color:${e.category_color||'#333'}">${e.category_icon||''} ${e.category_name||'-'}</span></td>
         <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
       </tr>`).join('');
-  _dashLoading = false;
 }
 
 function flattenExpense(e) {
