@@ -336,6 +336,10 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   .brand-name{display:none}
 }
 @media(max-width:480px){.kpi-grid{grid-template-columns:1fr}.topbar-right .btn span{display:none}}
+/* Force-hide mob-more panel on desktop (stays hidden even if .open class is stuck) */
+@media(min-width:769px){.mob-nav-more-panel,.mob-more-overlay{display:none!important}}
+/* Prevent horizontal overflow on mobile content area */
+@media(max-width:768px){.content{overflow-x:hidden}}
 </style>
 </head>
 <body>
@@ -587,7 +591,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
                 <div class="form-group" id="ef-amount-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
                   <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
                 <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
-                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal();calcFuelPricePerLiter()"></div>
+                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
                 <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (RM)</label>
                   <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
                 <div class="form-group" id="ef-fueltype-group" style="display:none">
@@ -1344,7 +1348,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <div class="modal-body">
       <input type="hidden" id="vm-id">
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="col_plate">ทะเบียน</label><input type="text" id="vm-plate"></div>
+        <div class="form-group"><label data-i18n="col_plate">ทะเบียน <small style="color:var(--text-light);font-weight:400">(ถ้ามี)</small></label><input type="text" id="vm-plate"></div>
         <div class="form-group"><label data-i18n="col_name">ชื่อรถ</label><input type="text" id="vm-name"></div>
         <div class="form-group"><label data-i18n="department">หน่วยงาน</label><select id="vm-dept"></select></div>
         <div class="form-group"><label data-i18n="vehicle_type">ชนิดรถ</label><select id="vm-vtype"></select></div>
@@ -2532,7 +2536,8 @@ async function saveVehicle() {
     brand:document.getElementById('vm-brand').value||null, model:document.getElementById('vm-model').value||null,
     year:document.getElementById('vm-year').value||null, fuel_type:document.getElementById('vm-fuel').value, is_active:true,
   };
-  if (!body.license_plate||!body.name||!body.department_id||!body.vehicle_type_id) return toast(t('save_error'),'error');
+  if (!body.name||!body.department_id||!body.vehicle_type_id) return toast(t('save_error'),'error');
+  if (!body.license_plate) body.license_plate = null; // ทะเบียนไม่บังคับ (รถฟาร์มไม่มีทะเบียน)
   if (id) await sbClient.from('vehicles').update(body).eq('id',id);
   else { const { error } = await sbClient.from('vehicles').insert(body); if (error) return toast(error.message,'error'); }
   closeModal('vehicleModal'); toast(t('save_success'),'success');
