@@ -283,6 +283,55 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 .form-group{display:flex;flex-direction:column;gap:5px;min-width:0}
 .form-group.full{grid-column:1/-1}
 .form-group label{font-size:12px;font-weight:600;color:var(--text-light)}
+/* ── VEHICLE PICKER (B) ── */
+.veh-search-wrap{position:relative}
+.veh-search-wrap input{padding-left:36px!important}
+.veh-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;z-index:1}
+.veh-list{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px;background:var(--card);box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.veh-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.veh-item:last-child{border-bottom:none}
+.veh-item:hover,.veh-item:focus{background:var(--hover)}
+.veh-item.selected-veh{background:rgba(37,99,235,.08);border-left:3px solid var(--primary)}
+.veh-item-icon{font-size:20px;flex-shrink:0}
+.veh-item-info{flex:1;min-width:0}
+.veh-item-name{font-weight:600;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.veh-item-sub{font-size:11px;color:var(--text-light)}
+.veh-selected-card{display:flex;align-items:center;gap:12px;padding:11px 14px;border:2px solid var(--primary);border-radius:10px;background:rgba(37,99,235,.05)}
+.veh-sel-icon{font-size:26px;flex-shrink:0}
+.veh-sel-info{flex:1;min-width:0}
+.veh-sel-name{font-weight:700;font-size:14px;color:var(--text)}
+.veh-sel-sub{font-size:12px;color:var(--text-light);margin-top:2px}
+.veh-change-btn{background:rgba(37,99,235,.1);border:none;color:var(--primary);font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-family:inherit;transition:background .15s}
+.veh-change-btn:hover{background:rgba(37,99,235,.2)}
+/* ── CATEGORY BUTTONS (A) ── */
+.cat-btn-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.cat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;font-size:11px;font-weight:600;color:var(--text-light);transition:all .15s;min-width:64px;flex:1;max-width:90px;font-family:inherit}
+.cat-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(37,99,235,.06)}
+.cat-btn.active{border-color:var(--primary);background:var(--primary);color:#fff}
+.cat-btn .cat-icon{font-size:22px;line-height:1}
+.cat-btn .cat-name{font-size:10px;text-align:center;line-height:1.2;word-break:keep-all}
+/* ── PRESET AMOUNTS (A) ── */
+.preset-amounts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.preset-btn{padding:5px 13px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:700;cursor:pointer;color:var(--text-light);transition:all .15s;font-family:inherit}
+.preset-btn:hover{border-color:var(--primary);color:var(--primary)}
+.preset-btn.active-preset{border-color:var(--primary);background:rgba(37,99,235,.1);color:var(--primary)}
+/* ── DETAILS TOGGLE (A) ── */
+.details-toggle{display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);padding:6px 0;font-family:inherit}
+.details-arrow{display:inline-block;transition:transform .2s;font-size:11px}
+.details-toggle.open .details-arrow{transform:rotate(90deg)}
+.ef-extra-section{margin-top:14px}
+/* ── ODOMETER HINT (C) ── */
+.odo-hint{font-size:11px;color:var(--text-light);margin-top:3px;min-height:15px}
+/* ── EXPENSE FORM SECTIONS ── */
+.ef-section{margin-bottom:18px}
+.ef-section-label{font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+/* dark mode adjustments */
+[data-theme="dark"] .veh-list{background:#1E293B;border-color:#334155}
+[data-theme="dark"] .veh-selected-card{background:rgba(37,99,235,.12)}
+[data-theme="dark"] .cat-btn{background:#1E293B;border-color:#334155}
+[data-theme="dark"] .cat-btn.active{background:var(--primary);border-color:var(--primary)}
+[data-theme="dark"] .preset-btn{border-color:#334155}
+[data-theme="dark"] .veh-change-btn{background:rgba(37,99,235,.2)}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;transition:border-color .15s;box-sizing:border-box}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary-light)}
 .form-group textarea{resize:vertical;min-height:70px}
@@ -578,78 +627,147 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
           <div class="card">
             <div class="card-header"><span class="card-title" data-i18n="add_expense">บันทึกค่าใช้จ่าย</span></div>
             <form id="expenseForm" onsubmit="submitExpense(event)">
-              <div class="form-grid">
-                <div class="form-group"><label data-i18n="date">วันที่</label><input type="date" id="ef-date" required></div>
-                <div class="form-group"><label data-i18n="department">หน่วยงาน</label>
-                  <select id="ef-dept" onchange="filterVehiclesByDept()" required>
-                    <option value="" data-i18n="select_dept">-- เลือกหน่วยงาน --</option></select></div>
-                <div class="form-group"><label data-i18n="vehicle">รถ</label>
-                  <select id="ef-vehicle" required><option value="" data-i18n="select_vehicle">-- เลือกรถ --</option></select></div>
-                <div class="form-group"><label data-i18n="expense_type">ประเภทค่าใช้จ่าย</label>
-                  <select id="ef-category" onchange="categoryChanged()" required>
-                    <option value="" data-i18n="select_type">-- เลือกประเภท --</option></select></div>
-                <div class="form-group" id="ef-amount-group"><label data-i18n="amount">จำนวนเงิน (บาท)</label>
-                  <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
-                <div class="form-group" id="ef-fuel-group" style="display:none"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
-                  <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
-                <div class="form-group" id="ef-price-group" style="display:none"><label data-i18n="price_per_liter">ราคาต่อลิตร (RM)</label>
-                  <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
-                <div class="form-group" id="ef-fueltype-group" style="display:none">
-                  <label data-i18n="fuel_grade">ชนิดน้ำมัน</label>
-                  <select id="ef-fuel-type" style="width:100%">
-                    <option value="" data-i18n="select_grade">-- เลือกชนิด --</option>
-                    <optgroup label="Petrol">
-                      <option value="RON 95">⛽ RON 95</option>
-                      <option value="RON 97">⛽ RON 97</option>
-                      <option value="RON 100">⛽ RON 100</option>
-                    </optgroup>
-                    <optgroup label="Diesel">
-                      <option value="Diesel B10">🛢 Diesel B10</option>
-                      <option value="Diesel B20">🛢 Diesel B20</option>
-                      <option value="Euro 5 Diesel">🛢 Euro 5 Diesel</option>
-                    </optgroup>
-                    <optgroup label="Others">
-                      <option value="E5 Petrol">⛽ E5 Petrol</option>
-                      <option value="E10 Petrol">⛽ E10 Petrol</option>
-                    </optgroup>
-                  </select>
+
+              <!-- DATE -->
+              <div class="ef-section">
+                <div class="form-group">
+                  <label>📅 <span data-i18n="date">วันที่</span></label>
+                  <input type="date" id="ef-date" required>
                 </div>
-                <div class="form-group" id="ef-distance-group" style="display:none"><label data-i18n="distance">ระยะทาง (กม.)</label>
-                  <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0" readonly style="background:#f0f4fa;color:var(--text-light)"></div>
-                <div class="form-group" id="ef-odometer-group"><label data-i18n="odometer">เลขไมล์ (กม.)</label>
-                  <input type="number" id="ef-odometer" min="0" placeholder="0" oninput="calcExpenseDistance()"></div>
-                <!-- Toll sub-items -->
-                <div class="form-group full" id="ef-toll-group" style="display:none">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                    <label>🚧 <span data-i18n="toll_items">รายการด่านทาง</span></label>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="addTollItem()">+ <span data-i18n="add_toll_item">เพิ่มด่าน</span></button>
-                  </div>
-                  <div id="ef-toll-rows"></div>
-                  <div style="text-align:right;margin-top:10px;font-weight:700;font-size:14px;color:var(--primary)">
-                    <span data-i18n="total_label">รวม</span>: RM <span id="ef-toll-total">0.00</span>
-                  </div>
-                </div>
-                <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
-                  <input type="text" id="ef-receipt"></div>
-                <!-- Camera / Receipt Scan -->
-                <div class="form-group full" id="scan-section">
-                  <label data-i18n="scan_receipt">สแกนใบเสร็จ</label>
-                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('receipt-input').click()">
-                      📷 <span data-i18n="scan_receipt">สแกนใบเสร็จ</span>
-                    </button>
-                    <input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptScan(event)">
-                    <span id="scan-status" style="font-size:13px;color:var(--text-light)"></span>
-                  </div>
-                  <div id="scan-preview-wrap" style="display:none;margin-top:10px">
-                    <img id="receipt-preview" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border)">
-                    <div id="scan-amounts" style="margin-top:10px"></div>
-                  </div>
-                </div>
-                <div class="form-group full"><label data-i18n="notes">หมายเหตุ</label>
-                  <textarea id="ef-desc"></textarea></div>
               </div>
-              <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+
+              <!-- VEHICLE PICKER (B) -->
+              <div class="ef-section" id="ef-vehicle-picker-group">
+                <div class="ef-section-label">🚗 <span data-i18n="vehicle">รถ</span> <span style="color:var(--danger)">*</span></div>
+                <!-- Search + list (shown when no vehicle selected) -->
+                <div id="ef-veh-picker-open">
+                  <div class="veh-search-wrap">
+                    <span class="veh-search-icon">🔍</span>
+                    <input type="text" id="ef-vehicle-search" placeholder="ค้นหารถ..." autocomplete="off"
+                           oninput="filterVehiclePicker()" onfocus="openVehiclePicker()" style="width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:8px;font-size:14px;box-sizing:border-box">
+                  </div>
+                  <div id="ef-vehicle-list" class="veh-list" style="display:none"></div>
+                </div>
+                <!-- Selected card (shown after picking) -->
+                <div id="ef-vehicle-selected" style="display:none" class="veh-selected-card">
+                  <span class="veh-sel-icon">🚗</span>
+                  <div class="veh-sel-info">
+                    <div class="veh-sel-name" id="ef-veh-sel-name"></div>
+                    <div class="veh-sel-sub" id="ef-veh-sel-sub"></div>
+                  </div>
+                  <button type="button" class="veh-change-btn" onclick="resetVehiclePicker()">🔄 เปลี่ยน</button>
+                </div>
+                <!-- Hidden inputs (used by submitExpense) -->
+                <input type="hidden" id="ef-vehicle">
+                <input type="hidden" id="ef-dept">
+              </div>
+
+              <!-- CATEGORY BUTTONS (A) -->
+              <div class="ef-section">
+                <div class="ef-section-label">🏷️ <span data-i18n="expense_type">ประเภทค่าใช้จ่าย</span> <span style="color:var(--danger)">*</span></div>
+                <div id="ef-cat-buttons" class="cat-btn-grid"></div>
+                <!-- Hidden input (used by submitExpense + categoryChanged) -->
+                <input type="hidden" id="ef-category">
+              </div>
+
+              <!-- AMOUNT + PRESETS (A) -->
+              <div class="ef-section" id="ef-amount-section">
+                <div class="ef-section-label" id="ef-amount-group">
+                  <div class="form-group" style="width:100%">
+                    <label>💰 <span data-i18n="amount">จำนวนเงิน (บาท)</span> <span style="color:var(--danger)">*</span></label>
+                    <input type="number" id="ef-amount" step="0.01" min="0" required placeholder="0.00" oninput="calcFuelPricePerLiter()">
+                  </div>
+                </div>
+                <div class="preset-amounts" id="ef-preset-amounts">
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(50)">50</button>
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(100)">100</button>
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(200)">200</button>
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(500)">500</button>
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(1000)">1,000</button>
+                  <button type="button" class="preset-btn" onclick="setPresetAmount(2000)">2,000</button>
+                </div>
+              </div>
+
+              <!-- FUEL-SPECIFIC FIELDS (hidden until fuel category selected) -->
+              <div id="ef-fuel-section" style="display:none">
+                <div class="form-grid" style="margin-bottom:12px">
+                  <div class="form-group" id="ef-fuel-group"><label data-i18n="fuel_liters">ปริมาณน้ำมัน (ลิตร)</label>
+                    <input type="number" id="ef-fuel-liters" step="0.01" min="0" placeholder="0.00" oninput="calcFuelPricePerLiter()"></div>
+                  <div class="form-group" id="ef-price-group"><label data-i18n="price_per_liter">ราคาต่อลิตร (บาท)</label>
+                    <input type="number" id="ef-fuel-price" step="0.01" min="0" placeholder="0.00" oninput="calcFuelTotal()"></div>
+                  <div class="form-group" id="ef-fueltype-group">
+                    <label data-i18n="fuel_grade">ชนิดน้ำมัน</label>
+                    <select id="ef-fuel-type" style="width:100%">
+                      <option value="" data-i18n="select_grade">-- เลือกชนิด --</option>
+                      <optgroup label="Petrol">
+                        <option value="RON 95">⛽ RON 95</option>
+                        <option value="RON 97">⛽ RON 97</option>
+                        <option value="RON 100">⛽ RON 100</option>
+                      </optgroup>
+                      <optgroup label="Diesel">
+                        <option value="Diesel B10">🛢 Diesel B10</option>
+                        <option value="Diesel B20">🛢 Diesel B20</option>
+                        <option value="Euro 5 Diesel">🛢 Euro 5 Diesel</option>
+                      </optgroup>
+                      <optgroup label="Others">
+                        <option value="E5 Petrol">⛽ E5 Petrol</option>
+                        <option value="E10 Petrol">⛽ E10 Petrol</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div class="form-group" id="ef-distance-group"><label data-i18n="distance">ระยะทาง (กม.)</label>
+                    <input type="number" id="ef-distance" step="0.1" min="0" placeholder="0" readonly style="background:#f0f4fa;color:var(--text-light)"></div>
+                </div>
+              </div>
+
+              <!-- TOLL SUB-ITEMS -->
+              <div class="ef-section" id="ef-toll-group" style="display:none">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <div class="ef-section-label">🚧 <span data-i18n="toll_items">รายการด่านทาง</span></div>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addTollItem()">+ <span data-i18n="add_toll_item">เพิ่มด่าน</span></button>
+                </div>
+                <div id="ef-toll-rows"></div>
+                <div style="text-align:right;margin-top:10px;font-weight:700;font-size:14px;color:var(--primary)">
+                  <span data-i18n="total_label">รวม</span>: RM <span id="ef-toll-total">0.00</span>
+                </div>
+              </div>
+
+              <!-- DETAILS TOGGLE (A) — odometer, receipt, notes, scan -->
+              <div class="ef-section">
+                <button type="button" class="details-toggle" id="ef-details-toggle" onclick="toggleExpenseDetails()">
+                  <span class="details-arrow">▶</span>&nbsp;<span data-i18n="more_details">รายละเอียดเพิ่มเติม</span>
+                </button>
+                <div id="ef-extra-details" style="display:none" class="ef-extra-section">
+                  <div class="form-grid">
+                    <div class="form-group" id="ef-odometer-group">
+                      <label data-i18n="odometer">เลขไมล์ (กม.)</label>
+                      <input type="number" id="ef-odometer" min="0" placeholder="0" oninput="calcExpenseDistance()">
+                      <div class="odo-hint" id="ef-odo-hint"></div>
+                    </div>
+                    <div class="form-group"><label data-i18n="receipt_no">เลขที่ใบเสร็จ</label>
+                      <input type="text" id="ef-receipt"></div>
+                    <!-- Camera / Receipt Scan -->
+                    <div class="form-group full" id="scan-section">
+                      <label data-i18n="scan_receipt">สแกนใบเสร็จ</label>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('receipt-input').click()">
+                          📷 <span data-i18n="scan_receipt">สแกนใบเสร็จ</span>
+                        </button>
+                        <input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptScan(event)">
+                        <span id="scan-status" style="font-size:13px;color:var(--text-light)"></span>
+                      </div>
+                      <div id="scan-preview-wrap" style="display:none;margin-top:10px">
+                        <img id="receipt-preview" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border)">
+                        <div id="scan-amounts" style="margin-top:10px"></div>
+                      </div>
+                    </div>
+                    <div class="form-group full"><label data-i18n="notes">หมายเหตุ</label>
+                      <textarea id="ef-desc"></textarea></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
                 <button type="button" class="btn btn-outline" onclick="resetExpenseForm()" data-i18n="btn_reset">รีเซ็ต</button>
                 <button type="submit" class="btn btn-primary">💾 <span data-i18n="btn_save">บันทึกข้อมูล</span></button>
               </div>
@@ -1840,6 +1958,7 @@ function showPage(name) {
   if (name==='users')        loadUsers();
   if (name==='access-logs')  loadAccessLogs();
   if (name==='settings')     { loadDeptTable(); loadVTypeTable(); }
+  if (name==='add-expense')  initAddExpensePage();
   logAction('view_page', { page: name });
 }
 
@@ -1949,6 +2068,8 @@ function populateSelects() {
   if(eeVeh) eeVeh.innerHTML=`<option value="">-</option>`+allVehOpts;
   const umDept=document.getElementById('um-dept');
   if(umDept) umDept.innerHTML=`<option value="">-</option>`+deptOpts;
+  // Build new UX components
+  buildCatButtons();   // A - category icon buttons
 }
 
 async function updatePendingBadge() {
@@ -1982,15 +2103,17 @@ function isTollCategory() {
 function categoryChanged() {
   const isFuel = isFuelCategory();
   const isToll = isTollCategory();
-  document.getElementById('ef-fuel-group').style.display     = isFuel?'block':'none';
-  document.getElementById('ef-price-group').style.display    = isFuel?'block':'none';
-  document.getElementById('ef-fueltype-group').style.display = isFuel?'block':'none';
-  document.getElementById('ef-distance-group').style.display = isFuel?'block':'none';
-  document.getElementById('ef-amount-group').style.display   = isToll?'none':'';
-  document.getElementById('ef-odometer-group').style.display = isToll?'none':'';
-  document.getElementById('ef-toll-group').style.display     = isToll?'block':'none';
+  // Fuel-specific fields section
+  const fuelSec = document.getElementById('ef-fuel-section');
+  if (fuelSec) fuelSec.style.display = isFuel ? 'block' : 'none';
+  // Amount section hidden for toll (toll has its own items)
+  const amtSec = document.getElementById('ef-amount-section');
+  if (amtSec) amtSec.style.display = isToll ? 'none' : 'block';
+  // Toll group
+  document.getElementById('ef-toll-group').style.display = isToll ? 'block' : 'none';
   document.getElementById('ef-amount').required = !isToll;
-  if (isFuel) calcExpenseDistance();
+  // For fuel: open details to reveal odometer
+  if (isFuel) { toggleExpenseDetails(true); calcExpenseDistance(); }
   if (isToll && document.getElementById('ef-toll-rows').children.length === 0) addTollItem();
 }
 function addTollItem() {
@@ -2277,9 +2400,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function submitExpense(e) {
   e.preventDefault();
-  const catId = document.getElementById('ef-category').value;
+  const vehicleId = document.getElementById('ef-vehicle').value;
+  const catId     = document.getElementById('ef-category').value;
+  // Manual validation for hidden inputs (required attr doesn't work on hidden)
+  if (!vehicleId) { toast('กรุณาเลือกรถ', 'error'); return; }
+  if (!catId)     { toast('กรุณาเลือกประเภทค่าใช้จ่าย', 'error'); return; }
   const isFuel = isFuelCategory();
   const isToll = isTollCategory();
+  // Save smart memory (C)
+  saveSmartMemory(vehicleId, catId);
 
   // ── Toll: insert one record per toll row ──
   if (isToll) {
@@ -2361,24 +2490,255 @@ async function submitExpense(e) {
 function resetExpenseForm() {
   document.getElementById('expenseForm').reset();
   document.getElementById('ef-date').value = today();
-  document.getElementById('ef-fuel-group').style.display    = 'none';
-  document.getElementById('ef-price-group').style.display   = 'none';
-  document.getElementById('ef-fueltype-group').style.display= 'none';
-  document.getElementById('ef-fuel-type').value             = '';
-  document.getElementById('ef-distance-group').style.display= 'none';
-  document.getElementById('ef-toll-group').style.display    = 'none';
-  document.getElementById('ef-toll-rows').innerHTML         = '';
-  document.getElementById('ef-toll-total').textContent      = '0.00';
-  document.getElementById('ef-amount-group').style.display  = '';
-  document.getElementById('ef-odometer-group').style.display= '';
-  document.getElementById('ef-amount').required             = true;
+  // Reset fuel section
+  const fuelSec = document.getElementById('ef-fuel-section');
+  if (fuelSec) fuelSec.style.display = 'none';
+  document.getElementById('ef-fuel-type').value = '';
+  // Reset amount section
+  const amtSec = document.getElementById('ef-amount-section');
+  if (amtSec) amtSec.style.display = 'block';
+  document.getElementById('ef-amount').required = true;
+  // Reset toll
+  document.getElementById('ef-toll-group').style.display = 'none';
+  document.getElementById('ef-toll-rows').innerHTML      = '';
+  document.getElementById('ef-toll-total').textContent   = '0.00';
+  // Reset vehicle picker (B)
+  resetVehiclePicker();
+  // Reset category buttons (A)
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  // Reset preset buttons (A)
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
+  // Collapse details (A)
+  toggleExpenseDetails(false);
   // Clear receipt scan
   currentReceiptFile = null;
-  document.getElementById('receipt-input').value            = '';
-  document.getElementById('scan-preview-wrap').style.display= 'none';
-  document.getElementById('scan-status').textContent        = '';
-  document.getElementById('scan-amounts').innerHTML         = '';
+  document.getElementById('receipt-input').value             = '';
+  document.getElementById('scan-preview-wrap').style.display = 'none';
+  document.getElementById('scan-status').textContent         = '';
+  document.getElementById('scan-amounts').innerHTML          = '';
 }
+
+// ─── UX IMPROVEMENTS: A+B+C ───────────────────────────────
+
+// ── C: Smart Memory ──
+const SMART_MEM_KEY = 'ef_smart_mem';
+function saveSmartMemory(vehicleId, catId) {
+  try { localStorage.setItem(SMART_MEM_KEY, JSON.stringify({ vehicleId: String(vehicleId), catId: String(catId) })); } catch(e){}
+}
+function loadSmartMemory() {
+  try { return JSON.parse(localStorage.getItem(SMART_MEM_KEY)||'null'); } catch(e){ return null; }
+}
+
+// ── B: Vehicle Picker ──
+function getDeptName(deptId) {
+  const dept = (allDepts||[]).find(d=>d.id==deptId);
+  return dept ? (currentLang==='en'?(dept.name_en||dept.name):dept.name) : '';
+}
+
+function buildVehiclePicker(searchText='') {
+  const list = document.getElementById('ef-vehicle-list');
+  if (!list) return;
+  const search = (searchText||'').trim().toLowerCase();
+  let vehicles = allVehicles||[];
+  if (search) {
+    vehicles = vehicles.filter(v =>
+      (v.name||'').toLowerCase().includes(search) ||
+      (v.license_plate||'').toLowerCase().includes(search) ||
+      getDeptName(v.department_id).toLowerCase().includes(search)
+    );
+  }
+  if (vehicles.length === 0) {
+    list.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-light);font-size:13px">ไม่พบรถที่ค้นหา</div>`;
+  } else {
+    const currentVeh = document.getElementById('ef-vehicle').value;
+    list.innerHTML = vehicles.map(v => {
+      const deptName = getDeptName(v.department_id);
+      const plate    = v.license_plate ? `🔢 ${v.license_plate}` : '(ไม่มีทะเบียน)';
+      const isSel    = currentVeh && currentVeh == v.id;
+      return `<div class="veh-item${isSel?' selected-veh':''}" onclick="selectVehicle(${v.id})" tabindex="0">
+        <span class="veh-item-icon">🚗</span>
+        <div class="veh-item-info">
+          <div class="veh-item-name">${v.name}</div>
+          <div class="veh-item-sub">${plate}${deptName ? ` · ${deptName}` : ''}</div>
+        </div>
+        ${isSel ? '<span style="color:var(--success);font-size:16px;flex-shrink:0">✓</span>' : ''}
+      </div>`;
+    }).join('');
+  }
+  list.style.display = 'block';
+}
+
+function openVehiclePicker() {
+  buildVehiclePicker(document.getElementById('ef-vehicle-search')?.value||'');
+}
+
+function filterVehiclePicker() {
+  buildVehiclePicker(document.getElementById('ef-vehicle-search')?.value||'');
+}
+
+function selectVehicle(vehicleId) {
+  const v = (allVehicles||[]).find(veh=>veh.id==vehicleId);
+  if (!v) return;
+  document.getElementById('ef-vehicle').value = vehicleId;
+  document.getElementById('ef-dept').value    = v.department_id||'';
+  // Show selected card
+  const deptName = getDeptName(v.department_id);
+  const plate    = v.license_plate ? `🔢 ${v.license_plate}` : '(ไม่มีทะเบียน)';
+  document.getElementById('ef-veh-sel-name').textContent = v.name;
+  document.getElementById('ef-veh-sel-sub').textContent  = `${plate}${deptName ? ` · ${deptName}` : ''}`;
+  document.getElementById('ef-veh-picker-open').style.display   = 'none';
+  document.getElementById('ef-vehicle-selected').style.display  = 'flex';
+  // Load last odometer hint (C)
+  loadLastOdometer(vehicleId);
+  // Save smart memory if category already selected
+  const catId = document.getElementById('ef-category').value;
+  if (catId) saveSmartMemory(vehicleId, catId);
+  // Close list
+  const listEl = document.getElementById('ef-vehicle-list');
+  if (listEl) listEl.style.display = 'none';
+}
+
+function resetVehiclePicker() {
+  document.getElementById('ef-vehicle').value           = '';
+  document.getElementById('ef-dept').value              = '';
+  const searchEl = document.getElementById('ef-vehicle-search');
+  if (searchEl) searchEl.value = '';
+  document.getElementById('ef-veh-picker-open').style.display  = 'block';
+  document.getElementById('ef-vehicle-selected').style.display = 'none';
+  const listEl = document.getElementById('ef-vehicle-list');
+  if (listEl) listEl.style.display = 'none';
+  const hintEl = document.getElementById('ef-odo-hint');
+  if (hintEl) hintEl.textContent = '';
+}
+
+// ── C: last odometer hint ──
+async function loadLastOdometer(vehicleId) {
+  const hintEl = document.getElementById('ef-odo-hint');
+  if (!hintEl || !vehicleId) return;
+  hintEl.textContent = '⏳ กำลังโหลดเลขไมล์...';
+  if (!navigator.onLine) { hintEl.textContent = ''; return; }
+  try {
+    const { data } = await sbClient.from('expenses')
+      .select('odometer,expense_date')
+      .eq('vehicle_id', vehicleId).eq('is_deleted',false)
+      .not('odometer','is',null)
+      .order('expense_date',{ascending:false}).limit(1);
+    if (data&&data[0]?.odometer) {
+      hintEl.textContent = `📍 เลขไมล์ล่าสุด: ${fmt(data[0].odometer)} กม. (${fmtDate(data[0].expense_date)})`;
+    } else {
+      hintEl.textContent = '';
+    }
+  } catch(err){ hintEl.textContent = ''; }
+}
+
+// ── A: Category icon buttons ──
+function buildCatButtons() {
+  const container = document.getElementById('ef-cat-buttons');
+  if (!container) return;
+  const cats = allCats||[];
+  const currentCat = document.getElementById('ef-category')?.value||'';
+  container.innerHTML = cats.map(c => {
+    const name = currentLang==='en' ? (c.name_en||c.name) : c.name;
+    return `<button type="button" class="cat-btn${currentCat==c.id?' active':''}"
+              onclick="selectCategory(${c.id})" data-cat-id="${c.id}">
+      <span class="cat-icon">${c.icon||'💰'}</span>
+      <span class="cat-name">${name}</span>
+    </button>`;
+  }).join('');
+}
+
+function selectCategory(catId) {
+  document.getElementById('ef-category').value = catId;
+  // Update button styles
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.catId == catId);
+  });
+  categoryChanged();
+  // Save smart memory if vehicle already selected
+  const vehicleId = document.getElementById('ef-vehicle').value;
+  if (vehicleId) saveSmartMemory(vehicleId, catId);
+  // Auto-expand details for fuel (to show odometer field)
+  if (isFuelCategory()) toggleExpenseDetails(true);
+}
+
+// ── A: Preset amounts ──
+function setPresetAmount(amount) {
+  document.getElementById('ef-amount').value = amount;
+  calcFuelPricePerLiter();
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    const v = parseFloat(btn.textContent.replace(',',''));
+    btn.classList.toggle('active-preset', v === amount);
+  });
+}
+
+// ── A: Expandable details toggle ──
+function toggleExpenseDetails(forceOpen) {
+  const details = document.getElementById('ef-extra-details');
+  const toggle  = document.getElementById('ef-details-toggle');
+  if (!details) return;
+  const isOpen   = details.style.display !== 'none';
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+  details.style.display = shouldOpen ? 'block' : 'none';
+  toggle?.classList.toggle('open', shouldOpen);
+}
+
+// ── C: Smart memory restore + page init ──
+function initAddExpensePage() {
+  // Set today's date if blank
+  const dateEl = document.getElementById('ef-date');
+  if (dateEl && !dateEl.value) dateEl.value = today();
+  // Rebuild cat buttons in case data loaded after DOMContentLoaded
+  buildCatButtons();
+  // Restore last used vehicle + category
+  const mem = loadSmartMemory();
+  if (!mem) return;
+  const vehicleOk = mem.vehicleId && (allVehicles||[]).find(v=>v.id==mem.vehicleId);
+  const catOk     = mem.catId && (allCats||[]).find(c=>c.id==mem.catId);
+  if (vehicleOk) selectVehicle(mem.vehicleId);
+  if (catOk)     selectCategory(mem.catId);
+}
+
+// ── C: Copy expense to form ──
+function copyExpense(e) {
+  showPage('add-expense');
+  setTimeout(() => {
+    // Pick vehicle
+    if (e.vehicle_id && (allVehicles||[]).find(v=>v.id==e.vehicle_id)) {
+      selectVehicle(e.vehicle_id);
+    }
+    // Pick category
+    if (e.category_id && (allCats||[]).find(c=>c.id==e.category_id)) {
+      selectCategory(e.category_id);
+    }
+    // Amount
+    if (e.amount) {
+      document.getElementById('ef-amount').value = e.amount;
+      calcFuelPricePerLiter();
+    }
+    // Open details if odometer or notes
+    if (e.odometer || e.description) {
+      toggleExpenseDetails(true);
+      if (e.odometer)    document.getElementById('ef-odometer').value = e.odometer;
+      if (e.description) document.getElementById('ef-desc').value     = e.description;
+    }
+    // Fuel fields
+    if (e.fuel_liters) {
+      document.getElementById('ef-fuel-liters').value = e.fuel_liters;
+      calcFuelPricePerLiter();
+    }
+    toast('📋 คัดลอกรายการแล้ว — ตรวจสอบข้อมูลก่อนบันทึก', 'info');
+  }, 150);
+}
+
+// Close vehicle picker when clicking outside
+document.addEventListener('click', function(ev) {
+  const picker = document.getElementById('ef-veh-picker-open');
+  const list   = document.getElementById('ef-vehicle-list');
+  if (!picker || !list) return;
+  if (!picker.contains(ev.target)) {
+    list.style.display = 'none';
+  }
+});
 
 // ─── EXPENSES LIST ────────────────────────────────────────
 async function loadExpenses() {
@@ -2424,6 +2784,7 @@ async function loadExpenses() {
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
         <td style="white-space:nowrap">
           ${e.receipt_image_url ? `<img class="receipt-thumb" src="${e.receipt_image_url}" onclick="openReceiptViewer('${e.receipt_image_url}')" title="ดูใบเสร็จ">` : ''}
+          <button class="btn btn-outline btn-sm btn-icon btn-copy" title="คัดลอกรายการนี้" onclick='copyExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>📋</button>
           <button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button>
         </td>
