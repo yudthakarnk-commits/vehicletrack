@@ -4120,16 +4120,16 @@ function downloadImportTemplate(type) {
     const fuelList  = ['gasoline','diesel','electric','hybrid'];
 
     const headers = [
-      'license_plate*','name*','department_name*','vehicle_type_name*',
+      'license_plate','name*','department_name*','vehicle_type_name*',
       'brand','model','year','fuel_type'
     ];
     const notes = [
-      'ทะเบียนรถ (required)','ชื่อ/รุ่นรถ (required)',
+      'ทะเบียนรถ (ถ้ามี — รถฟาร์มเว้นว่างได้)','ชื่อ/รุ่นรถ (required)',
       'ชื่อหน่วยงาน (ดูชีท Valid Values)','ชนิดรถ (ดูชีท Valid Values)',
       'ยี่ห้อ','รุ่น','ปี ค.ศ. เช่น 2022','gasoline/diesel/electric/hybrid'
     ];
     const sample1 = ['VQG8991','Toyota Hilux', deptList[0]||'Chengkau', vtypeList[0]||'Pickup','Toyota','Hilux',2022,'diesel'];
-    const sample2 = ['ABC1234','Honda City',   deptList[0]||'Chengkau', vtypeList[1]||'Sedan', 'Honda','City', 2023,'gasoline'];
+    const sample2 = ['','Farm Tractor',   deptList[0]||'Chengkau', vtypeList[0]||'Pickup', '','',2020,'diesel'];
 
     const ws = XLSX.utils.aoa_to_sheet([
       ['VEHICLE IMPORT TEMPLATE — กรอกข้อมูลรถจากแถวที่ 4 เป็นต้นไป'],
@@ -4224,21 +4224,33 @@ function handleImportFile(type, input) {
   reader.readAsArrayBuffer(file);
 }
 
+// Normalize plate: N/A, n/a, -, empty → null
+function normalizePlate(val) {
+  if (!val) return null;
+  const v = String(val).trim();
+  if (!v || /^(n\/a|na|-)$/i.test(v)) return null;
+  return v;
+}
+
 // ── Validate & enrich vehicle rows ──
 function parseVehicleRows(rows) {
   const result = rows.map(r => {
     const errors = [];
-    if (!r.license_plate) errors.push('ไม่มีทะเบียน');
-    if (!r.name)          errors.push('ไม่มีชื่อรถ');
+    const plate = normalizePlate(r.license_plate); // ทะเบียนไม่บังคับ
+    if (!r.name) errors.push('ไม่มีชื่อรถ');
 
     const dept  = (allDepts  || []).find(d => useName(d).toLowerCase() === (r.department_name||'').toLowerCase());
     const vtype = (allVTypes || []).find(v => useName(v).toLowerCase() === (r.vehicle_type_name||'').toLowerCase());
     if (!dept)  errors.push(`ไม่พบ Department: "${r.department_name}"`);
     if (!vtype) errors.push(`ไม่พบ Vehicle Type: "${r.vehicle_type_name}"`);
 
-    const existing = (allVehicles || []).find(v => v.license_plate?.toLowerCase() === r.license_plate?.toLowerCase());
+    // Match existing only if plate is non-null
+    const existing = plate
+      ? (allVehicles || []).find(v => v.license_plate?.toLowerCase() === plate.toLowerCase())
+      : null;
     return {
       ...r,
+      license_plate: plate, // normalized
       _dept_id:    dept?.id,
       _vtype_id:   vtype?.id,
       _errors:     errors,
@@ -4361,7 +4373,7 @@ async function confirmImport(type) {
   if (type === 'vehicles') {
     for (const r of rows) {
       const body = {
-        license_plate:   r.license_plate,
+        license_plate:   normalizePlate(r.license_plate), // null for farm vehicles
         name:            r.name,
         department_id:   r._dept_id,
         vehicle_type_id: r._vtype_id,
