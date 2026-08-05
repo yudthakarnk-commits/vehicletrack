@@ -191,6 +191,13 @@ tr:hover td{background:#fafafa}
 /* Settings sticky-scroll tables */
 #page-settings .table-wrap{overflow-y:auto;max-height:420px;border-radius:8px}
 #page-settings th{position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8}
+/* Category-specific extra sections */
+.cat-extra-section{margin-top:2px;padding:12px 14px;background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:10px}
+[data-theme="dark"] .cat-extra-section{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.25)}
+.cat-extra-section .ef-section-label{margin-bottom:10px;font-size:13px}
+.expiry-ok{color:#059669;font-weight:600}
+.expiry-soon{color:#d97706;font-weight:600}
+.expiry-urgent{color:#dc2626;font-weight:600}
 /* Quick Filter Chips */
 .qf-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,.88);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .qf-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -749,6 +756,124 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
                 <div id="ef-toll-rows"></div>
                 <div style="text-align:right;margin-top:10px;font-weight:700;font-size:14px;color:var(--primary)">
                   <span data-i18n="total_label">รวม</span>: RM <span id="ef-toll-total">0.00</span>
+                </div>
+              </div>
+
+              <!-- ══ CATEGORY-SPECIFIC SECTIONS ══ -->
+
+              <!-- INSURANCE -->
+              <div id="ef-insurance-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">🛡️ ข้อมูลประกันภัย</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>บริษัทประกัน</label>
+                    <input type="text" id="ef-ins-company" placeholder="เช่น Allianz, AXA..."></div>
+                  <div class="form-group"><label>เลขกรมธรรม์</label>
+                    <input type="text" id="ef-ins-policy" placeholder="เลขกรมธรรม์"></div>
+                  <div class="form-group"><label>ประเภทความคุ้มครอง</label>
+                    <select id="ef-ins-type">
+                      <option value="">เลือกประเภท</option>
+                      <option value="comprehensive">ประกันชั้น 1</option>
+                      <option value="third_party_fire">ประกันชั้น 2</option>
+                      <option value="third_party">ประกันชั้น 3</option>
+                      <option value="act_only">พ.ร.บ. เท่านั้น</option>
+                    </select></div>
+                  <div class="form-group">
+                    <label>📅 วันหมดอายุ <span style="color:var(--danger)">*</span></label>
+                    <input type="date" id="ef-ins-expiry" oninput="updateExpiryHint('ef-ins-expiry','ef-ins-expiry-hint')">
+                    <div id="ef-ins-expiry-hint" style="font-size:11px;margin-top:4px"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ROAD TAX / TaxVC -->
+              <div id="ef-roadtax-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">📋 ข้อมูลภาษี / TaxVC</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>ประเภท</label>
+                    <select id="ef-roadtax-type">
+                      <option value="road_tax">ภาษีรถประจำปี</option>
+                      <option value="taxvc">TaxVC / ตรวจสภาพ</option>
+                      <option value="both">ทั้งคู่</option>
+                    </select></div>
+                  <div class="form-group">
+                    <label>📅 วันหมดอายุ <span style="color:var(--danger)">*</span></label>
+                    <input type="date" id="ef-roadtax-expiry" oninput="updateExpiryHint('ef-roadtax-expiry','ef-roadtax-expiry-hint')">
+                    <div id="ef-roadtax-expiry-hint" style="font-size:11px;margin-top:4px"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TIRE REPLACEMENT -->
+              <div id="ef-tire-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">🔵 ข้อมูลการเปลี่ยนยาง</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>ยี่ห้อยาง</label>
+                    <input type="text" id="ef-tire-brand" placeholder="เช่น Michelin, Bridgestone..."></div>
+                  <div class="form-group"><label>ขนาดยาง</label>
+                    <input type="text" id="ef-tire-size" placeholder="เช่น 205/55R16"></div>
+                  <div class="form-group"><label>จำนวนเส้น</label>
+                    <select id="ef-tire-qty">
+                      <option value="1">1 เส้น</option>
+                      <option value="2">2 เส้น</option>
+                      <option value="4" selected>4 เส้น</option>
+                      <option value="6">6 เส้น</option>
+                    </select></div>
+                  <div class="form-group"><label>เปลี่ยนครั้งต่อไปที่ (กม.)</label>
+                    <input type="number" id="ef-tire-next-km" min="0" placeholder="เช่น 80000">
+                    <small style="color:var(--text-light);font-size:11px">ระยะอายุการใช้งานยางเฉลี่ย ~40,000 กม.</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PERIODIC SERVICE -->
+              <div id="ef-service-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">🔧 ข้อมูลการบำรุงรักษา</div>
+                <div class="form-grid">
+                  <div class="form-group"><label>ประเภทงานบริการ</label>
+                    <select id="ef-svc-type">
+                      <option value="">เลือกประเภท</option>
+                      <option value="oil_change">เปลี่ยนน้ำมันเครื่อง</option>
+                      <option value="oil_filter">เปลี่ยนไส้กรองน้ำมัน</option>
+                      <option value="air_filter">เปลี่ยนไส้กรองอากาศ</option>
+                      <option value="brake_pad">เปลี่ยนผ้าเบรก</option>
+                      <option value="transmission">น้ำมันเกียร์</option>
+                      <option value="full_service">เซอร์วิสทั้งหมด</option>
+                      <option value="other">อื่นๆ</option>
+                    </select></div>
+                  <div class="form-group"><label>อู่/ศูนย์บริการ</label>
+                    <input type="text" id="ef-svc-workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
+                  <div class="form-group"><label>เซอร์วิสครั้งต่อไปที่ (กม.)</label>
+                    <input type="number" id="ef-svc-next-km" min="0" placeholder="เช่น 55000"></div>
+                  <div class="form-group"><label>วันนัดเซอร์วิสครั้งต่อไป</label>
+                    <input type="date" id="ef-svc-next-date"></div>
+                </div>
+              </div>
+
+              <!-- REPAIR -->
+              <div id="ef-repair-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">🔨 ข้อมูลการซ่อม</div>
+                <div class="form-grid">
+                  <div class="form-group full"><label>รายละเอียดงานซ่อม</label>
+                    <textarea id="ef-repair-detail" rows="2" placeholder="อธิบายงานซ่อมที่ทำ..."></textarea></div>
+                  <div class="form-group"><label>อู่ซ่อม</label>
+                    <input type="text" id="ef-repair-workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
+                  <div class="form-group"><label>การรับประกัน</label>
+                    <select id="ef-repair-warranty">
+                      <option value="">ไม่มีประกัน</option>
+                      <option value="1m">1 เดือน</option>
+                      <option value="3m">3 เดือน</option>
+                      <option value="6m">6 เดือน</option>
+                      <option value="1y">1 ปี</option>
+                    </select></div>
+                </div>
+              </div>
+
+              <!-- PARKING -->
+              <div id="ef-parking-section" style="display:none" class="ef-section cat-extra-section">
+                <div class="ef-section-label">🅿️ ข้อมูลที่จอดรถ</div>
+                <div class="form-grid">
+                  <div class="form-group full"><label>สถานที่</label>
+                    <input type="text" id="ef-parking-location" placeholder="เช่น ห้างสรรพสินค้า, สนามบิน..."></div>
                 </div>
               </div>
 
@@ -1783,6 +1908,7 @@ async function onSignIn(user) {
   loadApprovalBadge();
   refreshNotifBadge();
   initNotifRealtime();
+  checkExpiryAlerts(); // แจ้งเตือนวันหมดอายุ
 }
 
 async function doLogout() {
@@ -2188,19 +2314,44 @@ function filterVehiclesByDept() {
     filtered.map(v=>`<option value="${v.id}">${v.license_plate} - ${v.name}</option>`).join('');
 }
 
-function isFuelCategory() {
+function getCatType() {
   const catId = document.getElementById('ef-category').value;
-  const cat = allCats.find(c=>c.id==catId);
-  return cat?.name_en === 'Fuel' || cat?.name?.includes('น้ำมัน');
+  const cat = allCats.find(c => c.id == catId);
+  if (!cat) return 'other';
+  const en = (cat.name_en || '').toLowerCase();
+  const th = (cat.name || '');
+  if (en === 'fuel' || th.includes('น้ำมัน') || th.includes('เชื้อเพลิง')) return 'fuel';
+  if (en.includes('toll') || th.includes('ทางด่วน') || th.includes('ด่าน') || th.includes('ผ่านทาง')) return 'toll';
+  if (en.includes('insurance') || th.includes('ประกัน')) return 'insurance';
+  if (en.includes('road tax') || en.includes('taxvc') || en.includes('road_tax') || th.includes('ภาษี') || th.includes('taxvc') || th.includes('TaxVC')) return 'roadtax';
+  if (en.includes('tire') || en.includes('tyre') || th.includes('ยาง')) return 'tire';
+  if (en.includes('periodic') || en.includes('service') || th.includes('บำรุงรักษา') || th.includes('เซอร์วิส')) return 'service';
+  if (en.includes('repair') || th.includes('ซ่อม')) return 'repair';
+  if (en.includes('parking') || th.includes('จอด')) return 'parking';
+  return 'other';
 }
-function isTollCategory() {
-  const catId = document.getElementById('ef-category').value;
-  const cat = allCats.find(c=>c.id==catId);
-  return cat?.name_en === 'Toll' || cat?.name?.includes('ทางด่วน') || cat?.name?.includes('ด่าน') || cat?.name?.includes('ผ่านทาง');
-}
+function isFuelCategory() { return getCatType() === 'fuel'; }
+function isTollCategory() { return getCatType() === 'toll'; }
+
 function categoryChanged() {
-  const isFuel = isFuelCategory();
-  const isToll = isTollCategory();
+  const type = getCatType();
+  const isFuel = type === 'fuel';
+  const isToll = type === 'toll';
+
+  // Hide all cat-extra sections first
+  document.querySelectorAll('.cat-extra-section').forEach(el => el.style.display = 'none');
+
+  // Show section matching current type
+  const secMap = {
+    insurance: 'ef-insurance-section',
+    roadtax:   'ef-roadtax-section',
+    tire:      'ef-tire-section',
+    service:   'ef-service-section',
+    repair:    'ef-repair-section',
+    parking:   'ef-parking-section',
+  };
+  if (secMap[type]) document.getElementById(secMap[type]).style.display = 'block';
+
   // Fuel-specific fields section
   const fuelSec = document.getElementById('ef-fuel-section');
   if (fuelSec) fuelSec.style.display = isFuel ? 'block' : 'none';
@@ -2213,6 +2364,18 @@ function categoryChanged() {
   // For fuel: open details to reveal odometer
   if (isFuel) { toggleExpenseDetails(true); calcExpenseDistance(); }
   if (isToll && document.getElementById('ef-toll-rows').children.length === 0) addTollItem();
+}
+
+function updateExpiryHint(inputId, hintId) {
+  const val = document.getElementById(inputId)?.value;
+  const hint = document.getElementById(hintId);
+  if (!hint) return;
+  if (!val) { hint.textContent = ''; return; }
+  const days = Math.ceil((new Date(val) - new Date()) / 86400000);
+  if (days < 0)       hint.innerHTML = `<span class="expiry-urgent">⚠️ หมดอายุแล้ว ${Math.abs(days)} วัน</span>`;
+  else if (days <= 7) hint.innerHTML = `<span class="expiry-urgent">🔴 เหลืออีก ${days} วัน — เร่งด่วน!</span>`;
+  else if (days <= 30) hint.innerHTML = `<span class="expiry-soon">🟠 เหลืออีก ${days} วัน</span>`;
+  else                hint.innerHTML = `<span class="expiry-ok">✅ เหลืออีก ${days} วัน</span>`;
 }
 function addTollItem() {
   const row = document.createElement('div');
@@ -2636,9 +2799,49 @@ async function submitExpense(e) {
   }
 
   // ── Normal single record ──
+  const catType = getCatType();
   const clientId = crypto.randomUUID();
   // Upload receipt image if attached
   const receiptImageUrl = navigator.onLine ? await uploadReceiptImage(currentReceiptFile) : null;
+
+  // Build extra_data per category type
+  const extra = {};
+  if (catType === 'insurance') {
+    extra.ins_company = document.getElementById('ef-ins-company')?.value||null;
+    extra.ins_policy  = document.getElementById('ef-ins-policy')?.value||null;
+    extra.ins_type    = document.getElementById('ef-ins-type')?.value||null;
+  } else if (catType === 'roadtax') {
+    extra.roadtax_type = document.getElementById('ef-roadtax-type')?.value||null;
+  } else if (catType === 'tire') {
+    extra.tire_brand = document.getElementById('ef-tire-brand')?.value||null;
+    extra.tire_size  = document.getElementById('ef-tire-size')?.value||null;
+    extra.tire_qty   = document.getElementById('ef-tire-qty')?.value||null;
+  } else if (catType === 'service') {
+    extra.svc_type     = document.getElementById('ef-svc-type')?.value||null;
+    extra.svc_workshop = document.getElementById('ef-svc-workshop')?.value||null;
+    extra.svc_next_date= document.getElementById('ef-svc-next-date')?.value||null;
+  } else if (catType === 'repair') {
+    extra.repair_detail   = document.getElementById('ef-repair-detail')?.value||null;
+    extra.repair_workshop = document.getElementById('ef-repair-workshop')?.value||null;
+    extra.repair_warranty = document.getElementById('ef-repair-warranty')?.value||null;
+  } else if (catType === 'parking') {
+    extra.parking_location = document.getElementById('ef-parking-location')?.value||null;
+  }
+
+  // expiry_date — Insurance uses ef-ins-expiry, Road Tax uses ef-roadtax-expiry
+  const expiryDate = catType === 'insurance'
+    ? document.getElementById('ef-ins-expiry')?.value||null
+    : catType === 'roadtax'
+    ? document.getElementById('ef-roadtax-expiry')?.value||null
+    : null;
+
+  // next_service_km — Tire uses ef-tire-next-km, Service uses ef-svc-next-km
+  const nextServiceKm = catType === 'tire'
+    ? Number(document.getElementById('ef-tire-next-km')?.value)||null
+    : catType === 'service'
+    ? Number(document.getElementById('ef-svc-next-km')?.value)||null
+    : null;
+
   const payload = {
     client_id:           clientId,
     vehicle_id:          Number(document.getElementById('ef-vehicle').value),
@@ -2652,6 +2855,9 @@ async function submitExpense(e) {
     description:         document.getElementById('ef-desc').value||null,
     receipt_no:          document.getElementById('ef-receipt').value||null,
     receipt_image_url:   receiptImageUrl,
+    expiry_date:         expiryDate,
+    next_service_km:     nextServiceKm,
+    extra_data:          Object.keys(extra).length ? extra : null,
     created_by:          currentUser?.id,
     is_deleted:          false,
   };
@@ -2693,6 +2899,9 @@ function resetExpenseForm() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
   // Collapse details (A)
   toggleExpenseDetails(false);
+  // Reset category-specific sections
+  document.querySelectorAll('.cat-extra-section').forEach(el => el.style.display = 'none');
+  ['ef-ins-expiry-hint','ef-roadtax-expiry-hint'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=''; });
   // Clear receipt scan
   currentReceiptFile = null;
   document.getElementById('receipt-input').value             = '';
@@ -3485,6 +3694,18 @@ async function loadNotifications() {
   if (!list) return;
   list.innerHTML = `<div class="notif-empty">⏳</div>`;
 
+  // ── Expiry alerts (from DB) ──────────────────────────────
+  const expiryHtml = (_expiryAlerts||[]).map(a => `
+    <div class="notif-item unread" onclick="showPage('expenses')" style="cursor:pointer">
+      <div class="notif-icon">${a.icon}</div>
+      <div class="notif-body">
+        <div class="notif-ttl" style="color:${a.color}">${a.catName} — ${a.label}</div>
+        <div class="notif-msg">หมดอายุ ${a.expiry_date} · ${a.status}</div>
+        <div class="notif-time">Expiry Reminder</div>
+      </div>
+      <div style="width:8px;height:8px;border-radius:50%;background:${a.color};flex-shrink:0;margin-top:6px"></div>
+    </div>`).join('');
+
   // ── Service alerts (local) ───────────────────────────────
   const svcHtml = _svcAlerts.map(a => `
     <div class="notif-item unread" onclick="showPage('vehicles')" style="cursor:pointer">
@@ -3516,11 +3737,11 @@ async function loadNotifications() {
         </div>`).join('')
     : '';
 
-  if (!svcHtml && !dbHtml) {
+  if (!expiryHtml && !svcHtml && !dbHtml) {
     list.innerHTML = `<div class="notif-empty">🔕 ${t('notif_empty')}</div>`;
     return;
   }
-  list.innerHTML = svcHtml + dbHtml;
+  list.innerHTML = expiryHtml + svcHtml + dbHtml;
 }
 
 async function clickNotif(id, page, tab) {
@@ -3551,13 +3772,52 @@ async function refreshNotifBadge() {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', currentUser.id)
     .eq('is_read', false);
-  const total = (count||0) + (_svcAlerts?.length||0);
+  const total = (count||0) + (_svcAlerts?.length||0) + (_expiryAlerts?.length||0);
   if (total > 0) {
     badge.textContent = total > 99 ? '99+' : total;
     badge.style.display = 'flex';
   } else {
     badge.style.display = 'none';
   }
+}
+
+// ─── EXPIRY ALERT CHECKER ─────────────────────────────────
+let _expiryAlerts = [];
+async function checkExpiryAlerts() {
+  if (!navigator.onLine || !sbClient || !currentUser) return;
+  const today30 = new Date();
+  today30.setDate(today30.getDate() + 30);
+  const todayStr = new Date().toISOString().slice(0,10);
+  const futureStr = today30.toISOString().slice(0,10);
+
+  // Query expenses with expiry_date within 30 days (or already expired)
+  const { data } = await sbClient
+    .from('expenses')
+    .select(`id, expiry_date, category_id, vehicle_id, extra_data,
+             vehicles!inner(name, license_plate),
+             expense_categories(name, name_en, icon)`)
+    .eq('is_deleted', false)
+    .not('expiry_date', 'is', null)
+    .lte('expiry_date', futureStr)
+    .order('expiry_date', { ascending: true });
+
+  if (!data?.length) { _expiryAlerts = []; refreshNotifBadge(); return; }
+
+  _expiryAlerts = data.map(r => {
+    const veh  = r.vehicles || {};
+    const cat  = r.expense_categories || {};
+    const days = Math.ceil((new Date(r.expiry_date) - new Date()) / 86400000);
+    const label = `${veh.license_plate||''} ${veh.name||''}`.trim();
+    const catName = cat.name || cat.name_en || 'ค่าใช้จ่าย';
+    let status, color, icon;
+    if (days < 0)       { status = `เกินกำหนด ${Math.abs(days)} วัน`;   color = '#B91C1C'; icon = '🔴'; }
+    else if (days <= 7) { status = `เหลืออีก ${days} วัน`;             color = '#DC2626'; icon = '🟠'; }
+    else                { status = `เหลืออีก ${days} วัน`;             color = '#92400E'; icon = '🟡'; }
+    return { id: r.id, label, catName, expiry_date: r.expiry_date, days, status, color, icon };
+  });
+
+  refreshNotifBadge();
+  if (document.getElementById('notif-panel')?.classList.contains('open')) loadNotifications();
 }
 
 function initNotifRealtime() {
