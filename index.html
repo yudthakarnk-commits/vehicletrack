@@ -943,7 +943,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
             <div class="filter-group"><label data-i18n="department">หน่วยงาน</label>
               <select id="exp-dept"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
             <div class="filter-group"><label data-i18n="vehicle_type">ชนิดรถ</label>
-              <select id="exp-vtype"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
+              <select id="exp-vtype" onchange="onExpVtypeChange(this.value)"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
             <div class="filter-group"><label data-i18n="expense_type">ประเภท</label>
               <select id="exp-cat"><option value="" data-i18n="all">ทั้งหมด</option></select></div>
             <div class="filter-group"><label>&nbsp;</label>
@@ -3139,6 +3139,24 @@ document.addEventListener('click', function(ev) {
 
 // ─── EXPENSES LIST ────────────────────────────────────────
 let _expVehicleFilter = '';
+let _userVehFreq = {}; // vehicle_id → usage count for current user
+
+// Fetch how many expenses current user has per vehicle (lightweight: just vehicle_id)
+async function fetchUserVehFreq() {
+  if (!currentUser) return;
+  try {
+    const { data } = await sbClient
+      .from('expenses')
+      .select('vehicle_id')
+      .eq('created_by', currentUser.id)
+      .eq('is_deleted', false);
+    _userVehFreq = {};
+    (data||[]).forEach(e => {
+      if (e.vehicle_id) _userVehFreq[e.vehicle_id] = (_userVehFreq[e.vehicle_id]||0) + 1;
+    });
+  } catch(e) { /* offline — keep empty, chips still show */ }
+}
+
 function initExpensePage() {
   // Default to this month if dates are blank
   if (!document.getElementById('exp-from').value) {
@@ -3148,30 +3166,48 @@ function initExpensePage() {
   }
   // Reset vehicle filter
   _expVehicleFilter = '';
-  // Re-activate "เดือนนี้" chip
+  // Re-activate "เดือนนี้" chip and vehicle "All" chip
   document.querySelectorAll('[data-group="month"]').forEach((c,i) => c.classList.toggle('active', i===0));
-  document.querySelectorAll('[data-group="vehicle"]').forEach((c,i) => c.classList.toggle('active', i===0));
+  // Fetch user's frequency then rebuild chips sorted by usage
+  fetchUserVehFreq().then(() => buildExpVehicleChips());
 }
 
-function buildExpVehicleChips() {
+// Build vehicle quick-filter chips.
+// vtypeId: filter to only vehicles of this type (empty = show all types)
+// Sorted by current user's usage frequency (most-used first), top 8
+function buildExpVehicleChips(vtypeId = '') {
   const container = document.getElementById('exp-vehicle-chips');
   if (!container) return;
   container.innerHTML = '';
+
+  // "All" chip
   const allBtn = document.createElement('button');
   allBtn.className = 'qf-chip active';
   allBtn.dataset.group = 'vehicle';
   allBtn.textContent = t('all');
   allBtn.onclick = () => setVehicleChip('', allBtn);
   container.appendChild(allBtn);
-  (allVehicles||[]).slice(0,8).forEach(v => {
+
+  // Filter by vehicle type, then sort by user's usage frequency desc
+  let vehicles = allVehicles || [];
+  if (vtypeId) vehicles = vehicles.filter(v => String(v.vehicle_type_id) === String(vtypeId));
+  vehicles = [...vehicles].sort((a, b) => (_userVehFreq[b.id]||0) - (_userVehFreq[a.id]||0));
+
+  vehicles.slice(0, 8).forEach(v => {
     const btn = document.createElement('button');
     btn.className = 'qf-chip';
     btn.dataset.group = 'vehicle';
     btn.textContent = v.license_plate || v.name;
-    btn.title = v.name;
+    btn.title = `${v.name}${_userVehFreq[v.id] ? ` (${_userVehFreq[v.id]}×)` : ''}`;
     btn.onclick = () => setVehicleChip(v.id, btn);
     container.appendChild(btn);
   });
+}
+
+// Called when Vehicle Type dropdown changes — rebuild chips for that type
+function onExpVtypeChange(vtypeId) {
+  _expVehicleFilter = '';
+  buildExpVehicleChips(vtypeId);
 }
 function setMonthChip(period, btn) {
   document.querySelectorAll('[data-group="month"]').forEach(c => c.classList.remove('active'));
