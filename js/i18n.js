@@ -404,6 +404,101 @@ const TRANSLATIONS = {
     ph_repair_detail:     'อธิบายงานซ่อมที่ทำ...',
     ph_repair_workshop:   'ชื่ออู่หรือศูนย์บริการ',
     ph_parking_location:  'เช่น ห้างสรรพสินค้า, สนามบิน...',
+
+    // Misc UI
+    offline_sync_msg:     'ข้อมูลจะซิงค์เมื่อกลับมาออนไลน์',
+    btn_change:           'เปลี่ยน',
+    btn_close:            'ปิด',
+    btn_edit_expense:     'แก้ไขค่าใช้จ่าย',
+    chip_3months:         '3 เดือนล่าสุด',
+    no_vehicle_found:     'ไม่พบรถที่ค้นหา',
+
+    // Vehicle status filter chips
+    vstatus_all:          'ทั้งหมด',
+    vstatus_active:       '✅ ใช้งาน',
+    vstatus_maintenance:  '🔧 ซ่อมบำรุง',
+    vstatus_inactive:     '⏸️ ระงับ',
+
+    // Duplicate modal
+    dup_title:            'พบรายการที่อาจซ้ำกัน',
+    dup_confirm:          'ต้องการบันทึกรายการนี้อีกครั้งหรือไม่?',
+    dup_save_anyway:      'บันทึกอีกครั้ง',
+    dup_found_msg:        'พบรายการ {cat} รถ {veh} วันที่ {date} จำนวน RM {amount} ในระบบแล้ว',
+
+    // Vehicle modal
+    veh_status_label:     'สถานะรถ',
+    svc_interval_km:      'ระยะเปลี่ยนถ่าย (กม.)',
+    svc_last_odo:         'เลขไมล์ตอนเซอร์วิสล่าสุด',
+    svc_last_date_lbl:    'วันที่เซอร์วิสล่าสุด',
+
+    // Notification panel
+    notif_svc_title:      'แจ้งเตือนการซ่อมบำรุง',
+    view_all_svc:         'ดูทั้งหมด →',
+    notif_expiry_label:   'หมดอายุ',
+
+    // Service badges
+    svc_badge_overdue:    'เกินกำหนด',
+    svc_badge_soon:       'ใกล้ถึงกำหนด',
+
+    // Expiry hints (JS)
+    expiry_expired:       'หมดอายุแล้ว {n} วัน',
+    expiry_urgent:        'เหลืออีก {n} วัน — เร่งด่วน!',
+    expiry_days_left:     'เหลืออีก {n} วัน',
+
+    // Import - JS-generated labels
+    import_ready_n:          'พร้อม import: {n} รายการ',
+    import_new_n:            'เพิ่มใหม่ {n}',
+    import_update_n:         'อัพเดท {n}',
+    import_error_n:          'ข้อผิดพลาด: {n} รายการ',
+    import_col_status:       'สถานะ',
+    import_col_plate:        'ทะเบียน',
+    import_col_vname:        'ชื่อรถ',
+    import_col_dept:         'หน่วยงาน',
+    import_col_type:         'ชนิดรถ',
+    import_col_brand:        'ยี่ห้อ/รุ่น',
+    import_col_year:         'ปี',
+    import_col_fuel:         'เชื้อเพลิง',
+    import_col_uname:        'ชื่อ',
+    import_col_email:        'Email',
+    import_col_role:         'สิทธิ์',
+    import_action_update:    '🔄 อัพเดท',
+    import_action_new:       '➕ เพิ่มใหม่',
+    import_action_upd_prof:  '🔄 อัพเดทโปรไฟล์',
+    import_action_new_user:  '👤 ผู้ใช้ใหม่ (ต้องสมัครเอง)',
+    import_processing:       '⏳ กำลัง import...',
+    import_done_btn:         '✅ Import เสร็จแล้ว',
+    import_new_users_msg:    '👤 ผู้ใช้ใหม่ {n} คน — ต้องสมัครบัญชีก่อนจึงจะอัพเดทโปรไฟล์ได้',
+    import_new_users_emails: 'Email ที่รอ',
+    import_success_n:        '✅ สำเร็จ {n} รายการ',
+    import_failed_n:         '❌ ล้มเหลว {n} รายการ',
+    import_toast_ok:         'Import สำเร็จ {n} รายการ',
+    import_toast_fail:       ', ล้มเหลว {n} รายการ',
+
+    // JS inline labels (vehicle picker, odometer, service, expiry, travel claim)
+    no_plate:           '(ไม่มีทะเบียน)',
+    odo_loading:        '⏳ กำลังโหลดเลขไมล์...',
+    odo_last:           '📍 เลขไมล์ล่าสุด: {n} กม. ({date})',
+    svc_next_hint:      '➡️ เซอร์วิสครั้งต่อไป: {n} กม.',
+    svc_alert_due:      'เกินกำหนดเซอร์วิส {n} กม. (ควรทำที่ {at} กม.)',
+    svc_alert_soon:     'ใกล้ถึงกำหนดเซอร์วิส — อีก {n} กม. (ที่ {at} กม.)',
+    exp_default_cat:    'ค่าใช้จ่าย',
+    exp_status_overdue: 'เกินกำหนด {n} วัน',
+    exp_status_left:    'เหลืออีก {n} วัน',
+    tc_submitting:      '⏳ กำลังส่ง...',
+    days_unit:          'วัน',
+    um_email_notice:    '📧 ระบบจะส่ง email ยืนยันให้ผู้ใหม่ (ถ้า Supabase เปิด email confirmation) หรือเข้าใช้งานได้ทันที',
+    ph_password_min:    'อย่างน้อย 6 ตัวอักษร',
+    ph_eg_50000:        'เช่น 50000',
+    ph_eg_5000:         'เช่น 5000',
+    pw_toggle_title:    'แสดง/ซ่อนรหัสผ่าน',
+    title_view_receipt: 'ดูใบเสร็จ',
+    title_copy_expense: 'คัดลอกรายการนี้',
+    title_view_detail:  'ดูรายละเอียด',
+    err_no_vehicle_name: 'ไม่มีชื่อรถ',
+    err_no_dept:         'ไม่พบ Department: "{name}"',
+    err_no_vtype:        'ไม่พบ Vehicle Type: "{name}"',
+    err_no_name:         'ไม่มีชื่อ',
+    err_bad_email:       'Email ไม่ถูกต้อง',
   },
   en: {
     nav_dashboard:    'Dashboard',
@@ -792,6 +887,101 @@ const TRANSLATIONS = {
     ph_repair_detail:     'Describe the repair work done...',
     ph_repair_workshop:   'Workshop or service center name',
     ph_parking_location:  'e.g. Shopping mall, Airport...',
+
+    // Misc UI
+    offline_sync_msg:     'Data will sync when back online',
+    btn_change:           'Change',
+    btn_close:            'Close',
+    btn_edit_expense:     'Edit Expense',
+    chip_3months:         'Last 3 Months',
+    no_vehicle_found:     'No vehicle found',
+
+    // Vehicle status filter chips
+    vstatus_all:          'All',
+    vstatus_active:       '✅ Active',
+    vstatus_maintenance:  '🔧 Maintenance',
+    vstatus_inactive:     '⏸️ Inactive',
+
+    // Duplicate modal
+    dup_title:            'Possible Duplicate Entry',
+    dup_confirm:          'Do you want to save this entry again?',
+    dup_save_anyway:      'Save Anyway',
+    dup_found_msg:        'Found {cat} for {veh} on {date} amounting to RM {amount} already in the system',
+
+    // Vehicle modal
+    veh_status_label:     'Vehicle Status',
+    svc_interval_km:      'Service Interval (km)',
+    svc_last_odo:         'Odometer at Last Service',
+    svc_last_date_lbl:    'Last Service Date',
+
+    // Notification panel
+    notif_svc_title:      'Service Reminders',
+    view_all_svc:         'View All →',
+    notif_expiry_label:   'Expiry',
+
+    // Service badges
+    svc_badge_overdue:    'Overdue',
+    svc_badge_soon:       'Due Soon',
+
+    // Expiry hints (JS)
+    expiry_expired:       'Expired {n} days ago',
+    expiry_urgent:        '{n} days left — urgent!',
+    expiry_days_left:     '{n} days left',
+
+    // Import - JS-generated labels
+    import_ready_n:          'Ready to import: {n} record(s)',
+    import_new_n:            'New: {n}',
+    import_update_n:         'Update: {n}',
+    import_error_n:          'Errors: {n} record(s)',
+    import_col_status:       'Status',
+    import_col_plate:        'Plate',
+    import_col_vname:        'Vehicle Name',
+    import_col_dept:         'Department',
+    import_col_type:         'Type',
+    import_col_brand:        'Brand/Model',
+    import_col_year:         'Year',
+    import_col_fuel:         'Fuel',
+    import_col_uname:        'Name',
+    import_col_email:        'Email',
+    import_col_role:         'Role',
+    import_action_update:    '🔄 Update',
+    import_action_new:       '➕ New',
+    import_action_upd_prof:  '🔄 Update Profile',
+    import_action_new_user:  '👤 New User (must register)',
+    import_processing:       '⏳ Importing...',
+    import_done_btn:         '✅ Import Complete',
+    import_new_users_msg:    '👤 {n} new user(s) — must create an account before their profile can be updated',
+    import_new_users_emails: 'Pending emails',
+    import_success_n:        '✅ Success: {n} record(s)',
+    import_failed_n:         '❌ Failed: {n} record(s)',
+    import_toast_ok:         'Import success: {n} record(s)',
+    import_toast_fail:       ', failed: {n}',
+
+    // JS inline labels (vehicle picker, odometer, service, expiry, travel claim)
+    no_plate:           '(No plate)',
+    odo_loading:        '⏳ Loading odometer...',
+    odo_last:           '📍 Last odometer: {n} km ({date})',
+    svc_next_hint:      '➡️ Next service at: {n} km',
+    svc_alert_due:      'Service overdue by {n} km (was due at {at} km)',
+    svc_alert_soon:     'Service due soon — {n} km left (at {at} km)',
+    exp_default_cat:    'Expense',
+    exp_status_overdue: 'Overdue by {n} days',
+    exp_status_left:    '{n} days left',
+    tc_submitting:      '⏳ Submitting...',
+    days_unit:          'days',
+    um_email_notice:    '📧 An email invitation will be sent to new users (if Supabase email confirmation is enabled), or they can sign in immediately.',
+    ph_password_min:    'At least 6 characters',
+    ph_eg_50000:        'e.g. 50000',
+    ph_eg_5000:         'e.g. 5000',
+    pw_toggle_title:    'Show/Hide password',
+    title_view_receipt: 'View Receipt',
+    title_copy_expense: 'Copy this entry',
+    title_view_detail:  'View Detail',
+    err_no_vehicle_name: 'Vehicle name required',
+    err_no_dept:         'Department not found: "{name}"',
+    err_no_vtype:        'Vehicle Type not found: "{name}"',
+    err_no_name:         'Name required',
+    err_bad_email:       'Invalid email',
   }
 };
 

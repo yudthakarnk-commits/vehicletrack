@@ -420,7 +420,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 </head>
 <body>
 <!-- Offline bar -->
-<div class="offline-bar" id="offlineBar">📴 <span data-i18n="offline">ออฟไลน์</span> — ข้อมูลจะซิงค์เมื่อกลับมาออนไลน์</div>
+<div class="offline-bar" id="offlineBar">📴 <span data-i18n="offline">ออฟไลน์</span> — <span data-i18n="offline_sync_msg">ข้อมูลจะซิงค์เมื่อกลับมาออนไลน์</span></div>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
@@ -467,7 +467,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
       <label data-i18n="password">รหัสผ่าน</label>
       <div class="pw-wrap">
         <input type="password" id="login-password" data-i18n-ph="password" placeholder="รหัสผ่าน" autocomplete="current-password">
-        <button type="button" class="pw-toggle" id="pw-toggle-btn" onclick="togglePassword()" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
+        <button type="button" class="pw-toggle" id="pw-toggle-btn" onclick="togglePassword()" data-i18n-title="pw_toggle_title" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
       </div>
     </div>
     <div id="login-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
@@ -682,7 +682,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
                     <div class="veh-sel-name" id="ef-veh-sel-name"></div>
                     <div class="veh-sel-sub" id="ef-veh-sel-sub"></div>
                   </div>
-                  <button type="button" class="veh-change-btn" onclick="resetVehiclePicker()">🔄 เปลี่ยน</button>
+                  <button type="button" class="veh-change-btn" onclick="resetVehiclePicker()">🔄 <span data-i18n="btn_change">เปลี่ยน</span></button>
                 </div>
                 <!-- Hidden inputs (used by submitExpense) -->
                 <input type="hidden" id="ef-vehicle">
@@ -926,10 +926,10 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
           <div class="qf-bar" id="exp-quick-filters">
             <div class="qf-group">
               <span class="qf-label">📅</span>
-              <button class="qf-chip active" data-group="month" onclick="setMonthChip('this_month',this)">เดือนนี้</button>
-              <button class="qf-chip" data-group="month" onclick="setMonthChip('last_month',this)">เดือนที่แล้ว</button>
-              <button class="qf-chip" data-group="month" onclick="setMonthChip('3months',this)">3 เดือนล่าสุด</button>
-              <button class="qf-chip" data-group="month" onclick="setMonthChip('all',this)">ทั้งหมด</button>
+              <button class="qf-chip active" data-group="month" onclick="setMonthChip('this_month',this)" data-i18n="this_month">เดือนนี้</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('last_month',this)" data-i18n="last_month">เดือนที่แล้ว</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('3months',this)" data-i18n="chip_3months">3 เดือนล่าสุด</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('all',this)" data-i18n="all">ทั้งหมด</button>
             </div>
             <div class="qf-divider"></div>
             <div class="qf-group">
@@ -979,10 +979,10 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
           <div id="vtab-list">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="qf-chip active" data-vstat="all" onclick="setVehicleStatusFilter('all',this)">ทั้งหมด</button>
-                <button class="qf-chip" data-vstat="active" onclick="setVehicleStatusFilter('active',this)">✅ ใช้งาน</button>
-                <button class="qf-chip" data-vstat="maintenance" onclick="setVehicleStatusFilter('maintenance',this)">🔧 ซ่อมบำรุง</button>
-                <button class="qf-chip" data-vstat="inactive" onclick="setVehicleStatusFilter('inactive',this)">⏸️ ระงับ</button>
+                <button class="qf-chip active" data-vstat="all" onclick="setVehicleStatusFilter('all',this)" data-i18n="vstatus_all">ทั้งหมด</button>
+                <button class="qf-chip" data-vstat="active" onclick="setVehicleStatusFilter('active',this)" data-i18n="vstatus_active">✅ ใช้งาน</button>
+                <button class="qf-chip" data-vstat="maintenance" onclick="setVehicleStatusFilter('maintenance',this)" data-i18n="vstatus_maintenance">🔧 ซ่อมบำรุง</button>
+                <button class="qf-chip" data-vstat="inactive" onclick="setVehicleStatusFilter('inactive',this)" data-i18n="vstatus_inactive">⏸️ ระงับ</button>
               </div>
               <button class="btn btn-accent" onclick="openVehicleModal()" id="add-vehicle-btn" style="font-weight:700">
                 + <span data-i18n="add_vehicle">เพิ่มรถ</span>
@@ -1457,15 +1457,15 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div class="modal-overlay" id="dupConfirmModal" style="display:none">
   <div class="modal" style="max-width:400px">
     <div class="modal-header" style="background:#FEF9C3;border-bottom-color:#FCD34D">
-      <h3 style="color:#92400E">⚠️ พบรายการที่อาจซ้ำกัน</h3>
+      <h3 style="color:#92400E">⚠️ <span data-i18n="dup_title">พบรายการที่อาจซ้ำกัน</span></h3>
     </div>
     <div class="modal-body" style="padding:18px">
       <p id="dup-confirm-msg" style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px"></p>
-      <p style="font-size:12px;color:var(--text-light)">ต้องการบันทึกรายการนี้อีกครั้งหรือไม่?</p>
+      <p style="font-size:12px;color:var(--text-light)" data-i18n="dup_confirm">ต้องการบันทึกรายการนี้อีกครั้งหรือไม่?</p>
     </div>
     <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn btn-outline" onclick="resolveDupConfirm(false)">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="resolveDupConfirm(true)">บันทึกอีกครั้ง</button>
+      <button class="btn btn-outline" onclick="resolveDupConfirm(false)" data-i18n="btn_cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="resolveDupConfirm(true)" data-i18n="dup_save_anyway">บันทึกอีกครั้ง</button>
     </div>
   </div>
 </div>
@@ -1542,7 +1542,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
         </div>
         <div class="form-group">
           <label data-i18n="svc_next_km">เลขไมล์ครั้งถัดไป (กม.)</label>
-          <input type="number" id="svc-next-km" min="0" placeholder="เช่น 50000">
+          <input type="number" id="svc-next-km" min="0" data-i18n-ph="ph_eg_50000" placeholder="เช่น 50000">
         </div>
         <div class="form-group">
           <label data-i18n="svc_reminder">แจ้งเตือนล่วงหน้า (วัน)</label>
@@ -1607,7 +1607,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     </div>
     <div class="modal-footer">
       <a id="receipt-viewer-dl" href="" download target="_blank" class="btn btn-outline btn-sm">⬇️ Download</a>
-      <button class="btn btn-primary btn-sm" onclick="closeModal('receiptViewerModal')">ปิด</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('receiptViewerModal')" data-i18n="btn_close">ปิด</button>
     </div>
   </div>
 </div>
@@ -1669,19 +1669,19 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
       </div>
       <!-- VEHICLE STATUS -->
       <div style="margin-top:14px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--text)">🏷️ สถานะรถ</div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--text)">🏷️ <span data-i18n="veh_status_label">สถานะรถ</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
             <input type="radio" name="vm-status" value="active" id="vm-status-active">
-            <span class="badge" style="background:#D1FAE5;color:#065F46">✅ ใช้งาน</span>
+            <span class="badge" style="background:#D1FAE5;color:#065F46" data-i18n="vstatus_active">✅ ใช้งาน</span>
           </label>
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
             <input type="radio" name="vm-status" value="maintenance" id="vm-status-maintenance">
-            <span class="badge" style="background:#FEF3C7;color:#92400E">🔧 ซ่อมบำรุง</span>
+            <span class="badge" style="background:#FEF3C7;color:#92400E" data-i18n="vstatus_maintenance">🔧 ซ่อมบำรุง</span>
           </label>
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
             <input type="radio" name="vm-status" value="inactive" id="vm-status-inactive">
-            <span class="badge" style="background:#F1F5F9;color:#64748B">⏸️ ระงับ</span>
+            <span class="badge" style="background:#F1F5F9;color:#64748B" data-i18n="vstatus_inactive">⏸️ ระงับ</span>
           </label>
         </div>
       </div>
@@ -1690,15 +1690,15 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
         <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--text)">🔧 Service Reminder</div>
         <div class="form-grid">
           <div class="form-group">
-            <label style="font-size:12px">ระยะเปลี่ยนถ่าย (กม.)</label>
-            <input type="number" id="vm-svc-interval" min="0" step="500" placeholder="เช่น 5000">
+            <label style="font-size:12px" data-i18n="svc_interval_km">ระยะเปลี่ยนถ่าย (กม.)</label>
+            <input type="number" id="vm-svc-interval" min="0" step="500" data-i18n-ph="ph_eg_5000" placeholder="เช่น 5000">
           </div>
           <div class="form-group">
-            <label style="font-size:12px">เลขไมล์ตอนเซอร์วิสล่าสุด</label>
-            <input type="number" id="vm-svc-last-km" min="0" placeholder="เช่น 50000">
+            <label style="font-size:12px" data-i18n="svc_last_odo">เลขไมล์ตอนเซอร์วิสล่าสุด</label>
+            <input type="number" id="vm-svc-last-km" min="0" data-i18n-ph="ph_eg_50000" placeholder="เช่น 50000">
           </div>
           <div class="form-group">
-            <label style="font-size:12px">วันที่เซอร์วิสล่าสุด</label>
+            <label style="font-size:12px" data-i18n="svc_last_date_lbl">วันที่เซอร์วิสล่าสุด</label>
             <input type="date" id="vm-svc-last-date">
           </div>
           <div class="form-group" style="display:flex;align-items:flex-end">
@@ -1775,7 +1775,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <div class="modal-overlay" id="editExpModal">
   <div class="modal">
-    <div class="modal-header"><h3 data-i18n="col_actions">แก้ไขค่าใช้จ่าย</h3><button class="close-btn" onclick="closeModal('editExpModal')">✕</button></div>
+    <div class="modal-header"><h3 data-i18n="btn_edit_expense">แก้ไขค่าใช้จ่าย</h3><button class="close-btn" onclick="closeModal('editExpModal')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="ee-id"><input type="hidden" id="ee-client-id">
       <div class="form-grid">
@@ -1803,12 +1803,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <div class="modal-body">
       <input type="hidden" id="um-id">
       <div class="form-grid">
-        <div id="um-new-user-info" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:7px;padding:10px;margin-bottom:8px;font-size:13px;grid-column:1/-1">
-          📧 ระบบจะส่ง email ยืนยันให้ผู้ใช้ใหม่ (ถ้า Supabase เปิด email confirmation) หรือเข้าใช้งานได้ทันที
+        <div id="um-new-user-info" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:7px;padding:10px;margin-bottom:8px;font-size:13px;grid-column:1/-1" data-i18n="um_email_notice">
+          📧 ระบบจะส่ง email ยืนยันให้ผู้ใหม่ (ถ้า Supabase เปิด email confirmation) หรือเข้าใช้งานได้ทันที
         </div>
         <div class="form-group"><label data-i18n="col_email">อีเมล</label><input type="email" id="um-email"></div>
         <div class="form-group" id="um-password-group"><label data-i18n="password">รหัสผ่าน</label>
-          <input type="password" id="um-password" placeholder="อย่างน้อย 6 ตัวอักษร" minlength="6"></div>
+          <input type="password" id="um-password" data-i18n-ph="ph_password_min" placeholder="อย่างน้อย 6 ตัวอักษร" minlength="6"></div>
         <div class="form-group"><label data-i18n="col_fullname">ชื่อ-นามสกุล</label><input type="text" id="um-name"></div>
         <div class="form-group"><label data-i18n="col_role">สิทธิ์</label>
           <select id="um-role">
@@ -2372,10 +2372,10 @@ function updateExpiryHint(inputId, hintId) {
   if (!hint) return;
   if (!val) { hint.textContent = ''; return; }
   const days = Math.ceil((new Date(val) - new Date()) / 86400000);
-  if (days < 0)       hint.innerHTML = `<span class="expiry-urgent">⚠️ หมดอายุแล้ว ${Math.abs(days)} วัน</span>`;
-  else if (days <= 7) hint.innerHTML = `<span class="expiry-urgent">🔴 เหลืออีก ${days} วัน — เร่งด่วน!</span>`;
-  else if (days <= 30) hint.innerHTML = `<span class="expiry-soon">🟠 เหลืออีก ${days} วัน</span>`;
-  else                hint.innerHTML = `<span class="expiry-ok">✅ เหลืออีก ${days} วัน</span>`;
+  if (days < 0)       hint.innerHTML = `<span class="expiry-urgent">⚠️ ${t('expiry_expired').replace('{n}', Math.abs(days))}</span>`;
+  else if (days <= 7) hint.innerHTML = `<span class="expiry-urgent">🔴 ${t('expiry_urgent').replace('{n}', days)}</span>`;
+  else if (days <= 30) hint.innerHTML = `<span class="expiry-soon">🟠 ${t('expiry_days_left').replace('{n}', days)}</span>`;
+  else                hint.innerHTML = `<span class="expiry-ok">✅ ${t('expiry_days_left').replace('{n}', days)}</span>`;
 }
 function addTollItem() {
   const row = document.createElement('div');
@@ -2731,7 +2731,7 @@ async function checkAndConfirmDuplicate(vehicleId, catId, date, amount) {
   const vName = veh ? (veh.license_plate||veh.name) : vehicleId;
   const cName = cat ? (cat.name) : catId;
   document.getElementById('dup-confirm-msg').innerHTML =
-    `พบรายการ <b>${cName}</b> รถ <b>${vName}</b> วันที่ <b>${fmtDate(date)}</b> จำนวน <b>RM ${fmt(amount)}</b> ในระบบแล้ว`;
+    t('dup_found_msg').replace('{cat}',`<b>${cName}</b>`).replace('{veh}',`<b>${vName}</b>`).replace('{date}',`<b>${fmtDate(date)}</b>`).replace('{amount}',`<b>${fmt(amount)}</b>`);
   document.getElementById('dupConfirmModal').style.display = 'flex';
   return new Promise(resolve => { _dupResolve = resolve; });
 }
@@ -2940,12 +2940,12 @@ function buildVehiclePicker(searchText='') {
     );
   }
   if (vehicles.length === 0) {
-    list.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-light);font-size:13px">ไม่พบรถที่ค้นหา</div>`;
+    list.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-light);font-size:13px">${t('no_vehicle_found')}</div>`;
   } else {
     const currentVeh = document.getElementById('ef-vehicle').value;
     list.innerHTML = vehicles.map(v => {
       const deptName = getDeptName(v.department_id);
-      const plate    = v.license_plate ? `🔢 ${v.license_plate}` : '(ไม่มีทะเบียน)';
+      const plate    = v.license_plate ? `🔢 ${v.license_plate}` : t('no_plate');
       const isSel    = currentVeh && currentVeh == v.id;
       const vs = getVStatus(v.id);
       const vsLabel = vs === 'maintenance' ? ' 🔧' : vs === 'inactive' ? ' ⏸️' : '';
@@ -2978,7 +2978,7 @@ function selectVehicle(vehicleId) {
   document.getElementById('ef-dept').value    = v.department_id||'';
   // Show selected card
   const deptName = getDeptName(v.department_id);
-  const plate    = v.license_plate ? `🔢 ${v.license_plate}` : '(ไม่มีทะเบียน)';
+  const plate    = v.license_plate ? `🔢 ${v.license_plate}` : t('no_plate');
   document.getElementById('ef-veh-sel-name').textContent = v.name;
   document.getElementById('ef-veh-sel-sub').textContent  = `${plate}${deptName ? ` · ${deptName}` : ''}`;
   document.getElementById('ef-veh-picker-open').style.display   = 'none';
@@ -3010,7 +3010,7 @@ function resetVehiclePicker() {
 async function loadLastOdometer(vehicleId) {
   const hintEl = document.getElementById('ef-odo-hint');
   if (!hintEl || !vehicleId) return;
-  hintEl.textContent = '⏳ กำลังโหลดเลขไมล์...';
+  hintEl.textContent = t('odo_loading');
   if (!navigator.onLine) { hintEl.textContent = ''; return; }
   try {
     const { data } = await sbClient.from('expenses')
@@ -3019,7 +3019,7 @@ async function loadLastOdometer(vehicleId) {
       .not('odometer','is',null)
       .order('expense_date',{ascending:false}).limit(1);
     if (data&&data[0]?.odometer) {
-      hintEl.textContent = `📍 เลขไมล์ล่าสุด: ${fmt(data[0].odometer)} กม. (${fmtDate(data[0].expense_date)})`;
+      hintEl.textContent = t('odo_last').replace('{n}', fmt(data[0].odometer)).replace('{date}', fmtDate(data[0].expense_date));
     } else {
       hintEl.textContent = '';
     }
@@ -3160,7 +3160,7 @@ function buildExpVehicleChips() {
   const allBtn = document.createElement('button');
   allBtn.className = 'qf-chip active';
   allBtn.dataset.group = 'vehicle';
-  allBtn.textContent = 'ทั้งหมด';
+  allBtn.textContent = t('all');
   allBtn.onclick = () => setVehicleChip('', allBtn);
   container.appendChild(allBtn);
   (allVehicles||[]).slice(0,8).forEach(v => {
@@ -3245,8 +3245,8 @@ async function loadExpenses() {
         <td class="text-right fw-bold">RM ${fmt(e.amount)}</td>
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||'-'}</td>
         <td style="white-space:nowrap">
-          ${e.receipt_image_url ? `<img class="receipt-thumb" src="${e.receipt_image_url}" onclick="openReceiptViewer('${e.receipt_image_url}')" title="ดูใบเสร็จ">` : ''}
-          <button class="btn btn-outline btn-sm btn-icon btn-copy" title="คัดลอกรายการนี้" onclick='copyExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>📋</button>
+          ${e.receipt_image_url ? `<img class="receipt-thumb" src="${e.receipt_image_url}" onclick="openReceiptViewer('${e.receipt_image_url}')" title="${t('title_view_receipt')}">` : ''}
+          <button class="btn btn-outline btn-sm btn-icon btn-copy" title="${t('title_copy_expense')}" onclick='copyExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>📋</button>
           <button class="btn btn-outline btn-sm btn-icon" onclick='editExpense(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${e.id}','${e.client_id||e.id}')">🗑️</button>
         </td>
@@ -3329,11 +3329,13 @@ function setVehicleStatusFilter(status, btn) {
 }
 
 // ─── VEHICLE STATUS HELPERS ───────────────────────────────
-const V_STATUS = {
-  active:      { label:'✅ ใช้งาน',    bg:'#D1FAE5', color:'#065F46' },
-  maintenance: { label:'🔧 ซ่อมบำรุง', bg:'#FEF3C7', color:'#92400E' },
-  inactive:    { label:'⏸️ ระงับ',    bg:'#F1F5F9', color:'#64748B' },
-};
+function V_STATUS() {
+  return {
+    active:      { label: t('vstatus_active'),      bg:'#D1FAE5', color:'#065F46' },
+    maintenance: { label: t('vstatus_maintenance'), bg:'#FEF3C7', color:'#92400E' },
+    inactive:    { label: t('vstatus_inactive'),    bg:'#F1F5F9', color:'#64748B' },
+  };
+}
 function getVStatus(vid) {
   return localStorage.getItem(`vstatus_${vid}`) || 'active';
 }
@@ -3341,7 +3343,7 @@ function setVStatus(vid, status) {
   localStorage.setItem(`vstatus_${vid}`, status);
 }
 function vStatusBadge(vid) {
-  const s = V_STATUS[getVStatus(vid)] || V_STATUS.active;
+  const _vs = V_STATUS(); const s = _vs[getVStatus(vid)] || _vs.active;
   return `<span class="badge" style="background:${s.bg};color:${s.color};margin-left:6px">${s.label}</span>`;
 }
 
@@ -3396,9 +3398,9 @@ async function loadVehicles() {
         const svcInfo = checkSvcDue(v.id, odoMap[v.id]||0);
         const svcBadge = svcInfo
           ? svcInfo.status === 'due'
-            ? `<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px">🔧 เกินกำหนด</span>`
+            ? `<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px">🔧 ${t('svc_badge_overdue')}</span>`
             : svcInfo.status === 'soon'
-            ? `<span class="badge" style="background:#FEF3C7;color:#92400E;margin-left:6px">🔧 ใกล้ถึงกำหนด</span>`
+            ? `<span class="badge" style="background:#FEF3C7;color:#92400E;margin-left:6px">🔧 ${t('svc_badge_soon')}</span>`
             : ''
           : '';
         return `<tr>
@@ -3444,7 +3446,7 @@ function openVehicleModal(v=null) {
       document.getElementById('vm-svc-last-date').value= svc.last_date||'';
       if (svc.interval_km && svc.last_km) {
         const next = Number(svc.last_km) + Number(svc.interval_km);
-        document.getElementById('vm-svc-next-hint').textContent = `➡️ เซอร์วิสครั้งต่อไป: ${next.toLocaleString()} กม.`;
+        document.getElementById('vm-svc-next-hint').textContent = t('svc_next_hint').replace('{n}', next.toLocaleString());
       }
     }
   }
@@ -3461,9 +3463,9 @@ function refreshServiceNotifs(vehicles, odoMap) {
     if (!info || info.status === 'ok') return;
     const label = `${v.license_plate||''} ${v.name}`;
     if (info.status === 'due') {
-      _svcAlerts.push({ vid: v.id, label, msg: `เกินกำหนดเซอร์วิส ${Math.abs(info.remaining).toLocaleString()} กม. (ควรทำที่ ${info.nextKm.toLocaleString()} กม.)`, color: '#B91C1C' });
+      _svcAlerts.push({ vid: v.id, label, msg: t('svc_alert_due').replace('{n}', Math.abs(info.remaining).toLocaleString()).replace('{at}', info.nextKm.toLocaleString()), color: '#B91C1C' });
     } else {
-      _svcAlerts.push({ vid: v.id, label, msg: `ใกล้ถึงกำหนดเซอร์วิส — อีก ${info.remaining.toLocaleString()} กม. (ที่ ${info.nextKm.toLocaleString()} กม.)`, color: '#92400E' });
+      _svcAlerts.push({ vid: v.id, label, msg: t('svc_alert_soon').replace('{n}', info.remaining.toLocaleString()).replace('{at}', info.nextKm.toLocaleString()), color: '#92400E' });
     }
   });
   // Bump badge count
@@ -3579,8 +3581,7 @@ const EMPTY_SVGS = {
     <rect x="20" y="15" width="70" height="60" rx="8" fill="#E2E8F0"/>
     <rect x="32" y="30" width="46" height="5" rx="2.5" fill="#CBD5E1"/>
     <rect x="32" y="43" width="35" height="4" rx="2" fill="#E2E8F0"/>
-    <rect x="32" y="54" width="40" height="4" rx="2" fill="#E2E8F0"/>
-    <text x="55" y="85" text-anchor="middle" font-size="11" fill="#94A3B8">ไม่พบข้อมูล</text></svg>`,
+    <rect x="32" y="54" width="40" height="4" rx="2" fill="#E2E8F0"/></svg>`,
 };
 
 function emptyState(type = 'default', message = null, subMessage = null) {
@@ -3700,7 +3701,7 @@ async function loadNotifications() {
       <div class="notif-icon">${a.icon}</div>
       <div class="notif-body">
         <div class="notif-ttl" style="color:${a.color}">${a.catName} — ${a.label}</div>
-        <div class="notif-msg">หมดอายุ ${a.expiry_date} · ${a.status}</div>
+        <div class="notif-msg">${t('notif_expiry_label')} ${a.expiry_date} · ${a.status}</div>
         <div class="notif-time">Expiry Reminder</div>
       </div>
       <div style="width:8px;height:8px;border-radius:50%;background:${a.color};flex-shrink:0;margin-top:6px"></div>
@@ -3808,11 +3809,11 @@ async function checkExpiryAlerts() {
     const cat  = r.expense_categories || {};
     const days = Math.ceil((new Date(r.expiry_date) - new Date()) / 86400000);
     const label = `${veh.license_plate||''} ${veh.name||''}`.trim();
-    const catName = cat.name || cat.name_en || 'ค่าใช้จ่าย';
+    const catName = cat.name || cat.name_en || t('exp_default_cat');
     let status, color, icon;
-    if (days < 0)       { status = `เกินกำหนด ${Math.abs(days)} วัน`;   color = '#B91C1C'; icon = '🔴'; }
-    else if (days <= 7) { status = `เหลืออีก ${days} วัน`;             color = '#DC2626'; icon = '🟠'; }
-    else                { status = `เหลืออีก ${days} วัน`;             color = '#92400E'; icon = '🟡'; }
+    if (days < 0)       { status = t('exp_status_overdue').replace('{n}', Math.abs(days)); color = '#B91C1C'; icon = '🔴'; }
+    else if (days <= 7) { status = t('exp_status_left').replace('{n}', days);              color = '#DC2626'; icon = '🟠'; }
+    else                { status = t('exp_status_left').replace('{n}', days);              color = '#92400E'; icon = '🟡'; }
     return { id: r.id, label, catName, expiry_date: r.expiry_date, days, status, color, icon };
   });
 
@@ -3894,8 +3895,8 @@ async function loadServiceAlerts() {
     el.innerHTML = `
       <div class="card mt-16" style="border-left:4px solid #d69e2e">
         <div class="card-header">
-          <span class="card-title">🔧 แจ้งเตือนการซ่อมบำรุง</span>
-          <button class="btn btn-outline btn-sm" onclick="showPage('vehicles'); setTimeout(()=>switchVehicleTab('service'),100)">ดูทั้งหมด →</button>
+          <span class="card-title">🔧 ${t('notif_svc_title')}</span>
+          <button class="btn btn-outline btn-sm" onclick="showPage('vehicles'); setTimeout(()=>switchVehicleTab('service'),100)">${t('view_all_svc')}</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0">
           ${alerts.slice(0,5).map(r => {
@@ -4029,7 +4030,7 @@ async function loadServiceSchedule() {
   tbody.innerHTML = rows.map(r => {
     const st   = svcStatus(r.next_date, r.reminder_days);
     const vName = r.vehicles ? `${r.vehicles.name}<br><small style="color:var(--text-light)">${r.vehicles.license_plate}</small>` : '-';
-    const daysText = st.days >= 0 ? `+${st.days} วัน` : `${Math.abs(st.days)} วัน`;
+    const daysText = st.days >= 0 ? `+${st.days} ${t('days_unit')}` : `${Math.abs(st.days)} ${t('days_unit')}`;
     return `<tr>
       <td><span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span></td>
       <td>${vName}</td>
@@ -4532,7 +4533,7 @@ async function submitTravelClaim() {
 
   const btn = document.getElementById('tc-submit-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ กำลังส่ง...';
+  btn.textContent = t('tc_submitting');
 
   const payload = {
     user_id:      currentUser.id,
@@ -4612,7 +4613,7 @@ async function loadMyClaims() {
       </td>
       <td>${fmtDate(c.submitted_at)}</td>
       <td>
-        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, false)" title="ดูรายละเอียด">👁️</button>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, false)" title="${t('title_view_detail')}">👁️</button>
         ${c.status === 'submitted' ? `<button class="btn btn-danger btn-sm btn-icon" onclick="withdrawClaim(${c.id})" title="${t('ap_btn_withdraw')}">🗑️</button>` : ''}
       </td>
     </tr>`;
@@ -4648,7 +4649,7 @@ async function loadPendingApprovals() {
       <td>${claimStatusBadge(c.status)}</td>
       <td style="color:var(--text-light)">${fmtDate(c.submitted_at)}</td>
       <td style="white-space:nowrap">
-        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, true)" title="ดูรายละเอียด">👁️</button>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="previewClaim(${c.id}, true)" title="${t('title_view_detail')}">👁️</button>
         ${c.status === 'submitted' ? `
           <button class="btn btn-primary btn-sm" onclick="approveClaim(${c.id})">✅ ${t('ap_btn_approve')}</button>
           <button class="btn btn-danger  btn-sm" onclick="openRejectModal(${c.id})">❌ ${t('ap_btn_reject')}</button>
@@ -4784,7 +4785,7 @@ async function previewClaim(id, canAction) {
     </div>`;
 
   document.getElementById('claim-detail-footer').innerHTML = canAction && c.status === 'submitted' ? `
-    <button class="btn btn-outline" onclick="closeModal('claimDetailModal')">ปิด</button>
+    <button class="btn btn-outline" onclick="closeModal('claimDetailModal')">${t('btn_close')}</button>
     <button class="btn btn-danger"  onclick="closeModal('claimDetailModal');openRejectModal(${c.id})">❌ ${t('ap_btn_reject')}</button>
     <button class="btn btn-primary" onclick="closeModal('claimDetailModal');approveClaim(${c.id})">✅ ${t('ap_btn_approve')}</button>
   ` : `<button class="btn btn-outline" onclick="closeModal('claimDetailModal')">${t('btn_cancel')}</button>`;
@@ -5370,12 +5371,12 @@ function parseVehicleRows(rows) {
   const result = rows.map(r => {
     const errors = [];
     const plate = normalizePlate(r.license_plate); // ทะเบียนไม่บังคับ
-    if (!r.name) errors.push('ไม่มีชื่อรถ');
+    if (!r.name) errors.push(t('err_no_vehicle_name'));
 
     const dept  = (allDepts  || []).find(d => useName(d).toLowerCase() === (r.department_name||'').toLowerCase());
     const vtype = (allVTypes || []).find(v => useName(v).toLowerCase() === (r.vehicle_type_name||'').toLowerCase());
-    if (!dept)  errors.push(`ไม่พบ Department: "${r.department_name}"`);
-    if (!vtype) errors.push(`ไม่พบ Vehicle Type: "${r.vehicle_type_name}"`);
+    if (!dept)  errors.push(t('err_no_dept').replace('{name}', r.department_name));
+    if (!vtype) errors.push(t('err_no_vtype').replace('{name}', r.vehicle_type_name));
 
     // Match existing only if plate is non-null
     const existing = plate
@@ -5406,14 +5407,14 @@ async function parseUserRows(rows) {
   const validRoles = ['admin','manager','user'];
   const result = rows.map(r => {
     const errors = [];
-    if (!r.full_name) errors.push('ไม่มีชื่อ');
-    if (!r.email || !r.email.includes('@')) errors.push('Email ไม่ถูกต้อง');
+    if (!r.full_name) errors.push(t('err_no_name'));
+    if (!r.email || !r.email.includes('@')) errors.push(t('err_bad_email'));
 
     const dept = (allDepts || []).find(d => useName(d).toLowerCase() === (r.department_name||'').toLowerCase());
     const role = validRoles.includes((r.role||'').toLowerCase()) ? r.role.toLowerCase() : 'user';
     const existingId = emailMap[(r.email||'').toLowerCase()];
 
-    if (r.department_name && !dept) errors.push(`ไม่พบ Department: "${r.department_name}"`);
+    if (r.department_name && !dept) errors.push(t('err_no_dept').replace('{name}', r.department_name));
 
     return {
       ...r,
@@ -5439,21 +5440,21 @@ function showImportPreview(type, rows) {
   let html = `
     <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
       <div style="padding:8px 14px;background:#e8f5e9;border-radius:6px;font-size:13px">
-        ✅ พร้อม import: <strong>${validRows.length} รายการ</strong>
-        (เพิ่มใหม่ ${insertRows.length}, อัพเดท ${updateRows.length})
+        ✅ ${t('import_ready_n').replace('{n}', validRows.length)}
+        (${t('import_new_n').replace('{n}', insertRows.length)}, ${t('import_update_n').replace('{n}', updateRows.length)})
       </div>
-      ${invalidRows.length ? `<div style="padding:8px 14px;background:#ffebee;border-radius:6px;font-size:13px">❌ ข้อผิดพลาด: <strong>${invalidRows.length} รายการ</strong></div>` : ''}
+      ${invalidRows.length ? `<div style="padding:8px 14px;background:#ffebee;border-radius:6px;font-size:13px">${t('import_error_n').replace('{n}', invalidRows.length)}</div>` : ''}
     </div>`;
 
   // Preview table
   if (type === 'vehicles') {
     html += `<div class="table-wrap"><table><thead><tr style="background:var(--primary);color:#fff">
-      <th>สถานะ</th><th>ทะเบียน</th><th>ชื่อรถ</th><th>หน่วยงาน</th><th>ชนิดรถ</th><th>ยี่ห้อ/รุ่น</th><th>ปี</th><th>เชื้อเพลิง</th>
+      <th>${t('import_col_status')}</th><th>${t('import_col_plate')}</th><th>${t('import_col_vname')}</th><th>${t('import_col_dept')}</th><th>${t('import_col_type')}</th><th>${t('import_col_brand')}</th><th>${t('import_col_year')}</th><th>${t('import_col_fuel')}</th>
     </tr></thead><tbody>`;
     rows.forEach(r => {
       const ok  = r._errors.length === 0;
       const bg  = ok ? '' : 'background:#fff8f8';
-      const act = r._action === 'update' ? '🔄 อัพเดท' : '➕ เพิ่มใหม่';
+      const act = r._action === 'update' ? t('import_action_update') : t('import_action_new');
       html += `<tr style="${bg}">
         <td style="font-size:12px">${ok ? `<span style="color:green">${act}</span>` : `<span style="color:red">❌ ${r._errors.join(', ')}</span>`}</td>
         <td><strong>${r.license_plate}</strong></td>
@@ -5468,12 +5469,12 @@ function showImportPreview(type, rows) {
     html += '</tbody></table></div>';
   } else {
     html += `<div class="table-wrap"><table><thead><tr style="background:var(--primary);color:#fff">
-      <th>สถานะ</th><th>ชื่อ</th><th>Email</th><th>สิทธิ์</th><th>หน่วยงาน</th>
+      <th>${t('import_col_status')}</th><th>${t('import_col_uname')}</th><th>${t('import_col_email')}</th><th>${t('import_col_role')}</th><th>${t('import_col_dept')}</th>
     </tr></thead><tbody>`;
     rows.forEach(r => {
       const ok  = r._errors.length === 0;
       const bg  = ok ? '' : 'background:#fff8f8';
-      const act = r._action === 'update' ? '🔄 อัพเดทโปรไฟล์' : '👤 ผู้ใช้ใหม่ (ต้องสมัครเอง)';
+      const act = r._action === 'update' ? t('import_action_upd_prof') : t('import_action_new_user');
       html += `<tr style="${bg}">
         <td style="font-size:12px">${ok ? `<span style="color:${r._action==='update'?'#388e3c':'#1565c0'}">${act}</span>` : `<span style="color:red">❌ ${r._errors.join(', ')}</span>`}</td>
         <td>${r.full_name}</td>
@@ -5499,7 +5500,7 @@ async function confirmImport(type) {
   const confirmBtn = document.getElementById(`import-${type}-confirm-btn`);
   if (!rows.length) return;
   confirmBtn.disabled = true;
-  confirmBtn.textContent = '⏳ กำลัง import...';
+  confirmBtn.textContent = t('import_processing');
 
   let success = 0, failed = 0, errors = [];
 
@@ -5550,8 +5551,8 @@ async function confirmImport(type) {
       resultEl.style.display = '';
       resultEl.innerHTML = `
         <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:7px;padding:12px;font-size:13px;margin-top:8px">
-          <strong>👤 ผู้ใช้ใหม่ ${newRows.length} คน</strong> — ต้องสมัครบัญชีก่อนจึงจะอัพเดทโปรไฟล์ได้<br>
-          <small>Email ที่รอ: ${newRows.map(r=>`<strong>${r.email}</strong>`).join(', ')}</small>
+          <strong>${t('import_new_users_msg').replace('{n}', newRows.length)}</strong><br>
+          <small>${t('import_new_users_emails')}: ${newRows.map(r=>`<strong>${r.email}</strong>`).join(', ')}</small>
         </div>`;
     }
     loadUsers();
@@ -5561,12 +5562,12 @@ async function confirmImport(type) {
   resultEl.style.display = '';
   resultEl.innerHTML = `
     <div style="padding:12px;border-radius:7px;font-size:13px;background:${failed?'#fff3e0':'#e8f5e9'};border:1px solid ${failed?'#ffb74d':'#a5d6a7'}">
-      ${success ? `✅ สำเร็จ <strong>${success} รายการ</strong>` : ''}
-      ${failed  ? ` &nbsp;❌ ล้มเหลว <strong>${failed} รายการ</strong><br><small style="color:red">${errors.join('<br>')}</small>` : ''}
+      ${success ? `<strong>${t('import_success_n').replace('{n}', success)}</strong>` : ''}
+      ${failed  ? ` &nbsp;<strong>${t('import_failed_n').replace('{n}', failed)}</strong><br><small style="color:red">${errors.join('<br>')}</small>` : ''}
     </div>`;
 
-  confirmBtn.textContent = '✅ Import เสร็จแล้ว';
-  toast(`Import สำเร็จ ${success} รายการ${failed?`, ล้มเหลว ${failed} รายการ`:''}`, failed?'error':'success');
+  confirmBtn.textContent = t('import_done_btn');
+  toast(`${t('import_toast_ok').replace('{n}', success)}${failed ? t('import_toast_fail').replace('{n}', failed) : ''}`, failed?'error':'success');
 }
 
 // ── Reset import state ──
@@ -5575,11 +5576,11 @@ function resetImport(type) {
   const fileInput = document.getElementById(`import-${type}-file`);
   if (fileInput) fileInput.value = '';
   const fname = document.getElementById(`import-${type}-filename`);
-  if (fname) fname.textContent = 'ยังไม่ได้เลือกไฟล์';
+  if (fname) fname.textContent = t('import_no_file');
   document.getElementById(`import-${type}-preview`).style.display = 'none';
   document.getElementById(`import-${type}-result`).style.display  = 'none';
   const btn = document.getElementById(`import-${type}-confirm-btn`);
-  if (btn) { btn.disabled = false; btn.innerHTML = '✅ <span>Import เข้าระบบ</span>'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = `✅ <span>${t('btn_import_confirm')}</span>`; }
 }
 
 // ─── USERS ────────────────────────────────────────────────
