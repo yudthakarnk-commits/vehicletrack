@@ -763,22 +763,22 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
               <!-- INSURANCE -->
               <div id="ef-insurance-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">🛡️ ข้อมูลประกันภัย</div>
+                <div class="ef-section-label">🛡️ <span data-i18n="cat_ins_title">ข้อมูลประกันภัย</span></div>
                 <div class="form-grid">
-                  <div class="form-group"><label>บริษัทประกัน</label>
-                    <input type="text" id="ef-ins-company" placeholder="เช่น Allianz, AXA..."></div>
-                  <div class="form-group"><label>เลขกรมธรรม์</label>
-                    <input type="text" id="ef-ins-policy" placeholder="เลขกรมธรรม์"></div>
-                  <div class="form-group"><label>ประเภทความคุ้มครอง</label>
+                  <div class="form-group"><label data-i18n="cat_ins_company">บริษัทประกัน</label>
+                    <input type="text" id="ef-ins-company" data-i18n-ph="ph_ins_company" placeholder="เช่น Allianz, AXA..."></div>
+                  <div class="form-group"><label data-i18n="cat_ins_policy">เลขกรมธรรม์</label>
+                    <input type="text" id="ef-ins-policy" data-i18n-ph="ph_ins_policy" placeholder="เลขกรมธรรม์"></div>
+                  <div class="form-group"><label data-i18n="cat_ins_coverage">ประเภทความคุ้มครอง</label>
                     <select id="ef-ins-type">
-                      <option value="">เลือกประเภท</option>
-                      <option value="comprehensive">ประกันชั้น 1</option>
-                      <option value="third_party_fire">ประกันชั้น 2</option>
-                      <option value="third_party">ประกันชั้น 3</option>
-                      <option value="act_only">พ.ร.บ. เท่านั้น</option>
+                      <option value="" data-i18n="select_type">-- เลือกประเภท --</option>
+                      <option value="comprehensive" data-i18n="cat_ins_comprehensive">ประกันชั้น 1</option>
+                      <option value="third_party_fire" data-i18n="cat_ins_tpft">ประกันชั้น 2</option>
+                      <option value="third_party" data-i18n="cat_ins_tp">ประกันชั้น 3</option>
+                      <option value="act_only" data-i18n="cat_ins_act_only">พ.ร.บ. เท่านั้น</option>
                     </select></div>
                   <div class="form-group">
-                    <label>📅 วันหมดอายุ <span style="color:var(--danger)">*</span></label>
+                    <label>📅 <span data-i18n="cat_expiry_date">วันหมดอายุ</span> <span style="color:var(--danger)">*</span></label>
                     <input type="date" id="ef-ins-expiry" oninput="updateExpiryHint('ef-ins-expiry','ef-ins-expiry-hint')">
                     <div id="ef-ins-expiry-hint" style="font-size:11px;margin-top:4px"></div>
                   </div>
@@ -787,16 +787,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
               <!-- ROAD TAX / TaxVC -->
               <div id="ef-roadtax-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">📋 ข้อมูลภาษี / TaxVC</div>
+                <div class="ef-section-label">📋 <span data-i18n="cat_tax_title">ข้อมูลภาษี / TaxVC</span></div>
                 <div class="form-grid">
-                  <div class="form-group"><label>ประเภท</label>
+                  <div class="form-group"><label data-i18n="cat_tax_type">ประเภท</label>
                     <select id="ef-roadtax-type">
-                      <option value="road_tax">ภาษีรถประจำปี</option>
-                      <option value="taxvc">TaxVC / ตรวจสภาพ</option>
-                      <option value="both">ทั้งคู่</option>
+                      <option value="road_tax" data-i18n="cat_tax_road_tax">ภาษีรถประจำปี</option>
+                      <option value="taxvc" data-i18n="cat_tax_taxvc">TaxVC / ตรวจสภาพ</option>
+                      <option value="both" data-i18n="cat_tax_both">ทั้งคู่</option>
                     </select></div>
                   <div class="form-group">
-                    <label>📅 วันหมดอายุ <span style="color:var(--danger)">*</span></label>
+                    <label>📅 <span data-i18n="cat_expiry_date">วันหมดอายุ</span> <span style="color:var(--danger)">*</span></label>
                     <input type="date" id="ef-roadtax-expiry" oninput="updateExpiryHint('ef-roadtax-expiry','ef-roadtax-expiry-hint')">
                     <div id="ef-roadtax-expiry-hint" style="font-size:11px;margin-top:4px"></div>
                   </div>
@@ -805,75 +805,75 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
               <!-- TIRE REPLACEMENT -->
               <div id="ef-tire-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">🔵 ข้อมูลการเปลี่ยนยาง</div>
+                <div class="ef-section-label">🔵 <span data-i18n="cat_tire_title">ข้อมูลการเปลี่ยนยาง</span></div>
                 <div class="form-grid">
-                  <div class="form-group"><label>ยี่ห้อยาง</label>
-                    <input type="text" id="ef-tire-brand" placeholder="เช่น Michelin, Bridgestone..."></div>
-                  <div class="form-group"><label>ขนาดยาง</label>
-                    <input type="text" id="ef-tire-size" placeholder="เช่น 205/55R16"></div>
-                  <div class="form-group"><label>จำนวนเส้น</label>
+                  <div class="form-group"><label data-i18n="cat_tire_brand">ยี่ห้อยาง</label>
+                    <input type="text" id="ef-tire-brand" data-i18n-ph="ph_tire_brand" placeholder="เช่น Michelin, Bridgestone..."></div>
+                  <div class="form-group"><label data-i18n="cat_tire_size">ขนาดยาง</label>
+                    <input type="text" id="ef-tire-size" data-i18n-ph="ph_tire_size" placeholder="เช่น 205/55R16"></div>
+                  <div class="form-group"><label data-i18n="cat_tire_qty">จำนวนเส้น</label>
                     <select id="ef-tire-qty">
-                      <option value="1">1 เส้น</option>
-                      <option value="2">2 เส้น</option>
-                      <option value="4" selected>4 เส้น</option>
-                      <option value="6">6 เส้น</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="4" selected>4</option>
+                      <option value="6">6</option>
                     </select></div>
-                  <div class="form-group"><label>เปลี่ยนครั้งต่อไปที่ (กม.)</label>
-                    <input type="number" id="ef-tire-next-km" min="0" placeholder="เช่น 80000">
-                    <small style="color:var(--text-light);font-size:11px">ระยะอายุการใช้งานยางเฉลี่ย ~40,000 กม.</small>
+                  <div class="form-group"><label data-i18n="cat_tire_next_km">เปลี่ยนครั้งต่อไปที่ (กม.)</label>
+                    <input type="number" id="ef-tire-next-km" min="0" data-i18n-ph="ph_tire_next_km" placeholder="เช่น 80000">
+                    <small style="color:var(--text-light);font-size:11px" data-i18n="cat_tire_avg_life">ระยะอายุการใช้งานยางเฉลี่ย ~40,000 กม.</small>
                   </div>
                 </div>
               </div>
 
               <!-- PERIODIC SERVICE -->
               <div id="ef-service-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">🔧 ข้อมูลการบำรุงรักษา</div>
+                <div class="ef-section-label">🔧 <span data-i18n="cat_svc_title">ข้อมูลการบำรุงรักษา</span></div>
                 <div class="form-grid">
-                  <div class="form-group"><label>ประเภทงานบริการ</label>
+                  <div class="form-group"><label data-i18n="cat_svc_type">ประเภทงานบริการ</label>
                     <select id="ef-svc-type">
-                      <option value="">เลือกประเภท</option>
-                      <option value="oil_change">เปลี่ยนน้ำมันเครื่อง</option>
-                      <option value="oil_filter">เปลี่ยนไส้กรองน้ำมัน</option>
-                      <option value="air_filter">เปลี่ยนไส้กรองอากาศ</option>
-                      <option value="brake_pad">เปลี่ยนผ้าเบรก</option>
-                      <option value="transmission">น้ำมันเกียร์</option>
-                      <option value="full_service">เซอร์วิสทั้งหมด</option>
-                      <option value="other">อื่นๆ</option>
+                      <option value="" data-i18n="select_type">-- เลือกประเภท --</option>
+                      <option value="oil_change" data-i18n="cat_svc_oil_change">เปลี่ยนน้ำมันเครื่อง</option>
+                      <option value="oil_filter" data-i18n="cat_svc_oil_filter">เปลี่ยนไส้กรองน้ำมัน</option>
+                      <option value="air_filter" data-i18n="cat_svc_air_filter">เปลี่ยนไส้กรองอากาศ</option>
+                      <option value="brake_pad" data-i18n="cat_svc_brake_pad">เปลี่ยนผ้าเบรก</option>
+                      <option value="transmission" data-i18n="cat_svc_transmission">น้ำมันเกียร์</option>
+                      <option value="full_service" data-i18n="cat_svc_full">เซอร์วิสทั้งหมด</option>
+                      <option value="other" data-i18n="svc_other">อื่นๆ</option>
                     </select></div>
-                  <div class="form-group"><label>อู่/ศูนย์บริการ</label>
-                    <input type="text" id="ef-svc-workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
-                  <div class="form-group"><label>เซอร์วิสครั้งต่อไปที่ (กม.)</label>
-                    <input type="number" id="ef-svc-next-km" min="0" placeholder="เช่น 55000"></div>
-                  <div class="form-group"><label>วันนัดเซอร์วิสครั้งต่อไป</label>
+                  <div class="form-group"><label data-i18n="cat_svc_workshop">อู่/ศูนย์บริการ</label>
+                    <input type="text" id="ef-svc-workshop" data-i18n-ph="ph_svc_workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
+                  <div class="form-group"><label data-i18n="cat_svc_next_km">เซอร์วิสครั้งต่อไปที่ (กม.)</label>
+                    <input type="number" id="ef-svc-next-km" min="0" data-i18n-ph="ph_svc_next_km" placeholder="เช่น 55000"></div>
+                  <div class="form-group"><label data-i18n="cat_svc_next_date">วันนัดเซอร์วิสครั้งต่อไป</label>
                     <input type="date" id="ef-svc-next-date"></div>
                 </div>
               </div>
 
               <!-- REPAIR -->
               <div id="ef-repair-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">🔨 ข้อมูลการซ่อม</div>
+                <div class="ef-section-label">🔨 <span data-i18n="cat_repair_title">ข้อมูลการซ่อม</span></div>
                 <div class="form-grid">
-                  <div class="form-group full"><label>รายละเอียดงานซ่อม</label>
-                    <textarea id="ef-repair-detail" rows="2" placeholder="อธิบายงานซ่อมที่ทำ..."></textarea></div>
-                  <div class="form-group"><label>อู่ซ่อม</label>
-                    <input type="text" id="ef-repair-workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
-                  <div class="form-group"><label>การรับประกัน</label>
+                  <div class="form-group full"><label data-i18n="cat_repair_detail">รายละเอียดงานซ่อม</label>
+                    <textarea id="ef-repair-detail" rows="2" data-i18n-ph="ph_repair_detail" placeholder="อธิบายงานซ่อมที่ทำ..."></textarea></div>
+                  <div class="form-group"><label data-i18n="cat_repair_workshop">อู่ซ่อม</label>
+                    <input type="text" id="ef-repair-workshop" data-i18n-ph="ph_repair_workshop" placeholder="ชื่ออู่หรือศูนย์บริการ"></div>
+                  <div class="form-group"><label data-i18n="cat_repair_warranty">การรับประกัน</label>
                     <select id="ef-repair-warranty">
-                      <option value="">ไม่มีประกัน</option>
-                      <option value="1m">1 เดือน</option>
-                      <option value="3m">3 เดือน</option>
-                      <option value="6m">6 เดือน</option>
-                      <option value="1y">1 ปี</option>
+                      <option value="" data-i18n="cat_warranty_none">ไม่มีประกัน</option>
+                      <option value="1m" data-i18n="cat_warranty_1m">1 เดือน</option>
+                      <option value="3m" data-i18n="cat_warranty_3m">3 เดือน</option>
+                      <option value="6m" data-i18n="cat_warranty_6m">6 เดือน</option>
+                      <option value="1y" data-i18n="cat_warranty_1y">1 ปี</option>
                     </select></div>
                 </div>
               </div>
 
               <!-- PARKING -->
               <div id="ef-parking-section" style="display:none" class="ef-section cat-extra-section">
-                <div class="ef-section-label">🅿️ ข้อมูลที่จอดรถ</div>
+                <div class="ef-section-label">🅿️ <span data-i18n="cat_parking_title">ข้อมูลที่จอดรถ</span></div>
                 <div class="form-grid">
-                  <div class="form-group full"><label>สถานที่</label>
-                    <input type="text" id="ef-parking-location" placeholder="เช่น ห้างสรรพสินค้า, สนามบิน..."></div>
+                  <div class="form-group full"><label data-i18n="cat_parking_location">สถานที่จอดรถ</label>
+                    <input type="text" id="ef-parking-location" data-i18n-ph="ph_parking_location" placeholder="เช่น ห้างสรรพสินค้า, สนามบิน..."></div>
                 </div>
               </div>
 
