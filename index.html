@@ -56,6 +56,8 @@
 [data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#0F172A;color:#F1F5F9;border-color:#334155}
 [data-theme="dark"] .filter-group select,[data-theme="dark"] .filter-group input{background:#0F172A;color:#F1F5F9;border-color:#334155}
 [data-theme="dark"] .page-tabs,[data-theme="dark"] .tabs{background:rgba(30,41,59,.95)}
+[data-theme="dark"] .toll-ac-list{background:#1E293B;border-color:#334155}
+[data-theme="dark"] .toll-ac-item:hover,[data-theme="dark"] .toll-ac-item.ac-active{background:#263148}
 [data-theme="dark"] .tab-btn{color:#94A3B8}
 [data-theme="dark"] .tab-btn.active{background:var(--primary);color:#fff}
 [data-theme="dark"] .login-card{background:#1E293B}
@@ -189,8 +191,26 @@ tr:hover td{background:#fafafa}
 /* Settings sticky-scroll tables */
 #page-settings .table-wrap{overflow-y:auto;max-height:420px;border-radius:8px}
 #page-settings th{position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8}
+/* Quick Filter Chips */
+.qf-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,.88);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.qf-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.qf-label{font-size:12px;color:var(--text-light);font-weight:600;flex-shrink:0;white-space:nowrap}
+.qf-chip{padding:5px 13px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-light);transition:all .15s;font-family:inherit;white-space:nowrap;line-height:1.4}
+.qf-chip:hover{border-color:var(--primary);color:var(--primary);background:rgba(37,99,235,.05)}
+.qf-chip.active{border-color:var(--primary);background:var(--primary);color:#fff}
+.qf-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 4px}
+[data-theme="dark"] .qf-bar{background:rgba(30,41,59,.95)}
+[data-theme="dark"] .qf-chip{border-color:#334155;color:#94A3B8}
+[data-theme="dark"] .qf-chip:hover{border-color:var(--primary);color:var(--primary)}
+[data-theme="dark"] .qf-chip.active{border-color:var(--primary);background:var(--primary);color:#fff}
 /* Page Tabs (Vehicles) */
-.page-tabs{display:flex;gap:0;margin-bottom:16px;background:rgba(255,255,255,.92);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.page-tabs,.tabs{display:flex;gap:0;margin-bottom:16px;background:rgba(255,255,255,.92);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+/* Toll autocomplete */
+.toll-ac-wrap{position:relative;flex:1}
+.toll-ac-list{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.14);z-index:999;max-height:200px;overflow-y:auto;display:none}
+.toll-ac-item{padding:9px 12px;cursor:pointer;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);transition:background .12s}
+.toll-ac-item:last-child{border-bottom:none}
+.toll-ac-item:hover,.toll-ac-item.ac-active{background:var(--hover);color:var(--primary)}
 .tab-btn{flex:1;padding:9px 16px;border:none;background:transparent;cursor:pointer;border-radius:9px;font-size:13px;font-weight:500;color:var(--text-light);transition:all .2s}
 .tab-btn:hover{background:rgba(37,99,235,.08);color:var(--primary)}
 .tab-btn.active{background:var(--primary);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.35)}
@@ -777,6 +797,21 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
         <!-- ══ EXPENSES LIST ══ -->
         <div class="page" id="page-expenses">
+          <!-- Quick Filter Chips -->
+          <div class="qf-bar" id="exp-quick-filters">
+            <div class="qf-group">
+              <span class="qf-label">📅</span>
+              <button class="qf-chip active" data-group="month" onclick="setMonthChip('this_month',this)">เดือนนี้</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('last_month',this)">เดือนที่แล้ว</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('3months',this)">3 เดือนล่าสุด</button>
+              <button class="qf-chip" data-group="month" onclick="setMonthChip('all',this)">ทั้งหมด</button>
+            </div>
+            <div class="qf-divider"></div>
+            <div class="qf-group">
+              <span class="qf-label">🚗</span>
+              <div id="exp-vehicle-chips" style="display:contents"></div>
+            </div>
+          </div>
           <div class="filter-bar">
             <div class="filter-group"><label data-i18n="from_date">จากวันที่</label><input type="date" id="exp-from"></div>
             <div class="filter-group"><label data-i18n="to_date">ถึงวันที่</label><input type="date" id="exp-to"></div>
@@ -817,7 +852,13 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
           <!-- Tab 1: Vehicle List -->
           <div id="vtab-list">
-            <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="qf-chip active" data-vstat="all" onclick="setVehicleStatusFilter('all',this)">ทั้งหมด</button>
+                <button class="qf-chip" data-vstat="active" onclick="setVehicleStatusFilter('active',this)">✅ ใช้งาน</button>
+                <button class="qf-chip" data-vstat="maintenance" onclick="setVehicleStatusFilter('maintenance',this)">🔧 ซ่อมบำรุง</button>
+                <button class="qf-chip" data-vstat="inactive" onclick="setVehicleStatusFilter('inactive',this)">⏸️ ระงับ</button>
+              </div>
               <button class="btn btn-accent" onclick="openVehicleModal()" id="add-vehicle-btn" style="font-weight:700">
                 + <span data-i18n="add_vehicle">เพิ่มรถ</span>
               </button>
@@ -1287,6 +1328,23 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- DUPLICATE EXPENSE CONFIRM MODAL -->
+<div class="modal-overlay" id="dupConfirmModal" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header" style="background:#FEF9C3;border-bottom-color:#FCD34D">
+      <h3 style="color:#92400E">⚠️ พบรายการที่อาจซ้ำกัน</h3>
+    </div>
+    <div class="modal-body" style="padding:18px">
+      <p id="dup-confirm-msg" style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px"></p>
+      <p style="font-size:12px;color:var(--text-light)">ต้องการบันทึกรายการนี้อีกครั้งหรือไม่?</p>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="resolveDupConfirm(false)">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="resolveDupConfirm(true)">บันทึกอีกครั้ง</button>
+    </div>
+  </div>
+</div>
+
 <!-- PROFILE SETTINGS MODAL -->
 <div class="modal-overlay" id="profileModal" style="display:none">
   <div class="modal" style="max-width:420px">
@@ -1482,6 +1540,45 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
             <option value="lpg"      data-i18n="fuel_lpg">LPG</option>
             <option value="ngv"      data-i18n="fuel_ngv">NGV</option>
           </select>
+        </div>
+      </div>
+      <!-- VEHICLE STATUS -->
+      <div style="margin-top:14px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--text)">🏷️ สถานะรถ</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
+            <input type="radio" name="vm-status" value="active" id="vm-status-active">
+            <span class="badge" style="background:#D1FAE5;color:#065F46">✅ ใช้งาน</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
+            <input type="radio" name="vm-status" value="maintenance" id="vm-status-maintenance">
+            <span class="badge" style="background:#FEF3C7;color:#92400E">🔧 ซ่อมบำรุง</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
+            <input type="radio" name="vm-status" value="inactive" id="vm-status-inactive">
+            <span class="badge" style="background:#F1F5F9;color:#64748B">⏸️ ระงับ</span>
+          </label>
+        </div>
+      </div>
+      <!-- SERVICE REMINDER -->
+      <div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--text)">🔧 Service Reminder</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label style="font-size:12px">ระยะเปลี่ยนถ่าย (กม.)</label>
+            <input type="number" id="vm-svc-interval" min="0" step="500" placeholder="เช่น 5000">
+          </div>
+          <div class="form-group">
+            <label style="font-size:12px">เลขไมล์ตอนเซอร์วิสล่าสุด</label>
+            <input type="number" id="vm-svc-last-km" min="0" placeholder="เช่น 50000">
+          </div>
+          <div class="form-group">
+            <label style="font-size:12px">วันที่เซอร์วิสล่าสุด</label>
+            <input type="date" id="vm-svc-last-date">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end">
+            <small id="vm-svc-next-hint" style="color:var(--text-light);font-size:11px;line-height:1.5"></small>
+          </div>
         </div>
       </div>
     </div>
@@ -1951,7 +2048,7 @@ function showPage(name) {
   document.getElementById('topbarTitle').textContent = t(PAGE_TITLES[name]) || name;
   closeSidebar();
   if (name==='dashboard')    loadDashboard();
-  if (name==='expenses')     loadExpenses();
+  if (name==='expenses')     { initExpensePage(); loadExpenses(); }
   if (name==='vehicles')     { switchVehicleTab('list'); loadVehicles(); }
   if (name==='report')       loadReport();
   if (name==='travel-claim') initTravelClaim();
@@ -2069,7 +2166,8 @@ function populateSelects() {
   const umDept=document.getElementById('um-dept');
   if(umDept) umDept.innerHTML=`<option value="">-</option>`+deptOpts;
   // Build new UX components
-  buildCatButtons();   // A - category icon buttons
+  buildCatButtons();        // A - category icon buttons
+  buildExpVehicleChips();   // Quick filter vehicle chips
 }
 
 async function updatePendingBadge() {
@@ -2121,13 +2219,18 @@ function addTollItem() {
   row.className = 'toll-item';
   row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:center';
   row.innerHTML = `
-    <input type="text" placeholder="${t('ph_toll_name')}" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit">
+    <div class="toll-ac-wrap">
+      <input type="text" placeholder="${t('ph_toll_name')}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit">
+      <div class="toll-ac-list"></div>
+    </div>
     <span style="font-size:13px;color:var(--text-light);white-space:nowrap">RM</span>
     <input type="number" step="0.01" min="0" placeholder="0.00" style="width:100px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px" class="toll-amount" oninput="calcTollTotal()">
     <button type="button" onclick="removeTollItem(this)" style="padding:5px 9px;border:1px solid var(--danger,#dc2626);border-radius:6px;background:transparent;color:var(--danger,#dc2626);cursor:pointer;font-size:13px;line-height:1">✕</button>
   `;
   document.getElementById('ef-toll-rows').appendChild(row);
-  row.querySelector('input[type=text]').focus();
+  const nameInput = row.querySelector('input[type=text]');
+  initTollAutocomplete(nameInput);
+  nameInput.focus();
   calcTollTotal();
 }
 function removeTollItem(btn) {
@@ -2135,6 +2238,51 @@ function removeTollItem(btn) {
   if (rows.children.length <= 1) return;
   btn.closest('.toll-item').remove();
   calcTollTotal();
+}
+
+// ── Toll name autocomplete ──
+let _tollNames = [];
+async function loadTollNames() {
+  if (!navigator.onLine || !allCats.length) return;
+  const tollCatIds = allCats.filter(c =>
+    c.name_en === 'Toll' || (c.name && (c.name.includes('ทางด่วน') || c.name.includes('ด่าน') || c.name.includes('ผ่านทาง')))
+  ).map(c => c.id);
+  if (!tollCatIds.length) return;
+  const { data } = await sbClient.from('expenses')
+    .select('description')
+    .in('category_id', tollCatIds)
+    .eq('is_deleted', false)
+    .not('description', 'is', null);
+  if (data) {
+    const seen = new Set();
+    _tollNames = data
+      .map(r => (r.description||'').trim())
+      .filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase()));
+  }
+}
+function initTollAutocomplete(input) {
+  const wrap = input.parentElement; // .toll-ac-wrap
+  const list = wrap.querySelector('.toll-ac-list');
+  function showAC(q) {
+    const matches = _tollNames
+      .filter(n => n.toLowerCase().includes(q.toLowerCase()))
+      .slice(0, 8);
+    if (!matches.length || !q.trim()) { list.style.display = 'none'; return; }
+    list.innerHTML = matches.map(n =>
+      `<div class="toll-ac-item" onmousedown="event.preventDefault()" onclick="selectTollAC(this,'${n.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">`
+      + `🚧 ${n}</div>`
+    ).join('');
+    list.style.display = 'block';
+  }
+  input.addEventListener('input', () => showAC(input.value));
+  input.addEventListener('focus', () => { if (input.value.trim()) showAC(input.value); });
+  input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 150));
+}
+function selectTollAC(el, name) {
+  const wrap = el.closest('.toll-ac-wrap');
+  wrap.querySelector('input[type=text]').value = name;
+  el.closest('.toll-ac-list').style.display = 'none';
+  wrap.parentElement.querySelector('.toll-amount')?.focus();
 }
 function calcTollTotal() {
   const total = [...document.querySelectorAll('.toll-amount')].reduce((s,el)=>s+(parseFloat(el.value)||0),0);
@@ -2398,6 +2546,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ef-date').value = today();
 });
 
+// ── Duplicate Detection ──
+let _dupResolve = null;
+function resolveDupConfirm(confirmed) {
+  document.getElementById('dupConfirmModal').style.display = 'none';
+  if (_dupResolve) { _dupResolve(confirmed); _dupResolve = null; }
+}
+async function checkAndConfirmDuplicate(vehicleId, catId, date, amount) {
+  if (!navigator.onLine) return true; // skip check offline
+  const { data } = await sbClient.from('expenses')
+    .select('id, amount, expense_date')
+    .eq('vehicle_id', vehicleId)
+    .eq('category_id', catId)
+    .eq('expense_date', date)
+    .eq('amount', amount)
+    .eq('is_deleted', false)
+    .limit(1);
+  if (!data || data.length === 0) return true; // no duplicate
+  const veh  = (allVehicles||[]).find(v=>v.id==vehicleId);
+  const cat  = (allCats||[]).find(c=>c.id==catId);
+  const vName = veh ? (veh.license_plate||veh.name) : vehicleId;
+  const cName = cat ? (cat.name) : catId;
+  document.getElementById('dup-confirm-msg').innerHTML =
+    `พบรายการ <b>${cName}</b> รถ <b>${vName}</b> วันที่ <b>${fmtDate(date)}</b> จำนวน <b>RM ${fmt(amount)}</b> ในระบบแล้ว`;
+  document.getElementById('dupConfirmModal').style.display = 'flex';
+  return new Promise(resolve => { _dupResolve = resolve; });
+}
+
 async function submitExpense(e) {
   e.preventDefault();
   const vehicleId = document.getElementById('ef-vehicle').value;
@@ -2409,6 +2584,14 @@ async function submitExpense(e) {
   const isToll = isTollCategory();
   // Save smart memory (C)
   saveSmartMemory(vehicleId, catId);
+
+  // ── Duplicate detection (skip for toll — checked per item) ──
+  if (!isToll) {
+    const amount = Number(document.getElementById('ef-amount').value);
+    const date   = document.getElementById('ef-date').value;
+    const proceed = await checkAndConfirmDuplicate(vehicleId, catId, date, amount);
+    if (!proceed) return;
+  }
 
   // ── Toll: insert one record per toll row ──
   if (isToll) {
@@ -2555,10 +2738,13 @@ function buildVehiclePicker(searchText='') {
       const deptName = getDeptName(v.department_id);
       const plate    = v.license_plate ? `🔢 ${v.license_plate}` : '(ไม่มีทะเบียน)';
       const isSel    = currentVeh && currentVeh == v.id;
-      return `<div class="veh-item${isSel?' selected-veh':''}" onclick="selectVehicle(${v.id})" tabindex="0">
+      const vs = getVStatus(v.id);
+      const vsLabel = vs === 'maintenance' ? ' 🔧' : vs === 'inactive' ? ' ⏸️' : '';
+      const vsStyle = vs === 'inactive' ? 'opacity:0.55' : '';
+      return `<div class="veh-item${isSel?' selected-veh':''}" onclick="selectVehicle(${v.id})" tabindex="0" style="${vsStyle}">
         <span class="veh-item-icon">🚗</span>
         <div class="veh-item-info">
-          <div class="veh-item-name">${v.name}</div>
+          <div class="veh-item-name">${v.name}${vsLabel}</div>
           <div class="veh-item-sub">${plate}${deptName ? ` · ${deptName}` : ''}</div>
         </div>
         ${isSel ? '<span style="color:var(--success);font-size:16px;flex-shrink:0">✓</span>' : ''}
@@ -2689,6 +2875,8 @@ function initAddExpensePage() {
   if (dateEl && !dateEl.value) dateEl.value = today();
   // Rebuild cat buttons in case data loaded after DOMContentLoaded
   buildCatButtons();
+  // Pre-load toll names for autocomplete
+  loadTollNames();
   // Restore last used vehicle + category
   const mem = loadSmartMemory();
   if (!mem) return;
@@ -2741,6 +2929,70 @@ document.addEventListener('click', function(ev) {
 });
 
 // ─── EXPENSES LIST ────────────────────────────────────────
+let _expVehicleFilter = '';
+function initExpensePage() {
+  // Default to this month if dates are blank
+  if (!document.getElementById('exp-from').value) {
+    const now = new Date();
+    document.getElementById('exp-from').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    document.getElementById('exp-to').value = today();
+  }
+  // Reset vehicle filter
+  _expVehicleFilter = '';
+  // Re-activate "เดือนนี้" chip
+  document.querySelectorAll('[data-group="month"]').forEach((c,i) => c.classList.toggle('active', i===0));
+  document.querySelectorAll('[data-group="vehicle"]').forEach((c,i) => c.classList.toggle('active', i===0));
+}
+
+function buildExpVehicleChips() {
+  const container = document.getElementById('exp-vehicle-chips');
+  if (!container) return;
+  container.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'qf-chip active';
+  allBtn.dataset.group = 'vehicle';
+  allBtn.textContent = 'ทั้งหมด';
+  allBtn.onclick = () => setVehicleChip('', allBtn);
+  container.appendChild(allBtn);
+  (allVehicles||[]).slice(0,8).forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'qf-chip';
+    btn.dataset.group = 'vehicle';
+    btn.textContent = v.license_plate || v.name;
+    btn.title = v.name;
+    btn.onclick = () => setVehicleChip(v.id, btn);
+    container.appendChild(btn);
+  });
+}
+function setMonthChip(period, btn) {
+  document.querySelectorAll('[data-group="month"]').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const now = new Date();
+  let from = '', to = '';
+  if (period === 'this_month') {
+    from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    to   = today();
+  } else if (period === 'last_month') {
+    const f = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const l = new Date(now.getFullYear(), now.getMonth(), 0);
+    from = f.toISOString().slice(0,10);
+    to   = l.toISOString().slice(0,10);
+  } else if (period === '3months') {
+    const f = new Date(now.getFullYear(), now.getMonth()-2, 1);
+    from = f.toISOString().slice(0,10);
+    to   = today();
+  }
+  document.getElementById('exp-from').value = from;
+  document.getElementById('exp-to').value   = to;
+  loadExpenses();
+}
+function setVehicleChip(vehicleId, btn) {
+  document.querySelectorAll('[data-group="vehicle"]').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  _expVehicleFilter = vehicleId;
+  loadExpenses();
+}
+
 async function loadExpenses() {
   // Show skeleton while loading
   const expTbody = document.getElementById('expensesTable');
@@ -2756,9 +3008,10 @@ async function loadExpenses() {
     let q = sbClient.from('expenses')
       .select(`*, vehicles!inner(name,license_plate,department_id,vehicle_type_id), expense_categories(name,icon,color)`)
       .eq('is_deleted',false).order('expense_date',{ascending:false}).limit(1000);
-    if (from)  q = q.gte('expense_date',from);
-    if (to)    q = q.lte('expense_date',to);
-    if (cat)   q = q.eq('category_id',cat);
+    if (from)             q = q.gte('expense_date',from);
+    if (to)               q = q.lte('expense_date',to);
+    if (cat)              q = q.eq('category_id',cat);
+    if (_expVehicleFilter) q = q.eq('vehicle_id', _expVehicleFilter);
     const { data } = await q;
     rows = (data||[]).map(flattenExpense);
     if (dept)  rows = rows.filter(r => r.vehicle_dept_id == dept);
@@ -2857,42 +3110,158 @@ const fuelLabel = code => t(FUEL_KEYS[code] || code) || code;
 const useName = o => o ? (currentLang==='en' ? (o.name_en||o.name) : o.name) : '-';
 const vtypeLabel = vtypeId => useName(allVTypes.find(x => x.id === vtypeId));
 const deptLabel  = deptId  => useName(allDepts.find(x => x.id === deptId));
+
+// ─── VEHICLE STATUS FILTER ────────────────────────────────
+let _vStatusFilter = 'all';
+function setVehicleStatusFilter(status, btn) {
+  _vStatusFilter = status;
+  document.querySelectorAll('[data-vstat]').forEach(b => b.classList.toggle('active', b === btn));
+  loadVehicles();
+}
+
+// ─── VEHICLE STATUS HELPERS ───────────────────────────────
+const V_STATUS = {
+  active:      { label:'✅ ใช้งาน',    bg:'#D1FAE5', color:'#065F46' },
+  maintenance: { label:'🔧 ซ่อมบำรุง', bg:'#FEF3C7', color:'#92400E' },
+  inactive:    { label:'⏸️ ระงับ',    bg:'#F1F5F9', color:'#64748B' },
+};
+function getVStatus(vid) {
+  return localStorage.getItem(`vstatus_${vid}`) || 'active';
+}
+function setVStatus(vid, status) {
+  localStorage.setItem(`vstatus_${vid}`, status);
+}
+function vStatusBadge(vid) {
+  const s = V_STATUS[getVStatus(vid)] || V_STATUS.active;
+  return `<span class="badge" style="background:${s.bg};color:${s.color};margin-left:6px">${s.label}</span>`;
+}
+
+// ─── SERVICE REMINDER HELPERS ─────────────────────────────
+function getSvcSettings(vid) {
+  try { return JSON.parse(localStorage.getItem(`svc_${vid}`)||'null'); } catch(e){ return null; }
+}
+function setSvcSettings(vid, data) {
+  localStorage.setItem(`svc_${vid}`, JSON.stringify(data));
+}
+// Returns {status:'ok'|'soon'|'due', nextKm, remaining} or null
+function checkSvcDue(vid, currentOdo) {
+  const svc = getSvcSettings(vid);
+  if (!svc || !svc.interval_km || !svc.last_km) return null;
+  const nextKm    = Number(svc.last_km) + Number(svc.interval_km);
+  const remaining = nextKm - Number(currentOdo||0);
+  const pct       = remaining / Number(svc.interval_km);
+  const status    = remaining <= 0 ? 'due' : pct <= 0.1 ? 'soon' : 'ok';
+  return { status, nextKm, remaining: Math.round(remaining) };
+}
+
 async function loadVehicles() {
   const { data, error } = await sbClient.from('vehicles')
     .select('*').eq('is_active',true).order('name');
   if (error) { console.error('loadVehicles:', error.message); }
   const rows = data||[];
-  document.getElementById('vehiclesTable').innerHTML = rows.length===0
+
+  // Fetch latest odometer per vehicle (from expenses)
+  const vIds = rows.map(v=>v.id);
+  let odoMap = {};
+  if (vIds.length && navigator.onLine && sbClient) {
+    const { data: odoData } = await sbClient
+      .from('expenses')
+      .select('vehicle_id, odometer')
+      .in('vehicle_id', vIds)
+      .eq('is_deleted', false)
+      .not('odometer', 'is', null)
+      .order('expense_date', {ascending:false});
+    (odoData||[]).forEach(r => {
+      if (!odoMap[r.vehicle_id]) odoMap[r.vehicle_id] = Number(r.odometer||0);
+    });
+  }
+
+  // Apply status filter
+  const filteredRows = _vStatusFilter === 'all'
+    ? rows
+    : rows.filter(v => getVStatus(v.id) === _vStatusFilter);
+
+  document.getElementById('vehiclesTable').innerHTML = filteredRows.length===0
     ? `<tr><td colspan="8">${emptyState('vehicles', t('no_vehicles'))}</td></tr>`
-    : rows.map(v=>`<tr>
-        <td class="fw-bold">${v.license_plate}</td>
-        <td>${v.name}</td>
-        <td>${deptLabel(v.department_id)}</td>
-        <td>${vtypeLabel(v.vehicle_type_id)}</td>
-        <td>${(v.brand||'')+' '+(v.model||'')}</td>
-        <td>${v.year||'-'}</td>
-        <td>${fuelLabel(v.fuel_type)}</td>
-        <td>
-          <button class="btn btn-outline btn-sm btn-icon" onclick='editVehicle(${JSON.stringify(v).replace(/'/g,"&#39;")})'>✏️</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle(${v.id})">🗑️</button>
-        </td>
-      </tr>`).join('');
+    : filteredRows.map(v=>{
+        const svcInfo = checkSvcDue(v.id, odoMap[v.id]||0);
+        const svcBadge = svcInfo
+          ? svcInfo.status === 'due'
+            ? `<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px">🔧 เกินกำหนด</span>`
+            : svcInfo.status === 'soon'
+            ? `<span class="badge" style="background:#FEF3C7;color:#92400E;margin-left:6px">🔧 ใกล้ถึงกำหนด</span>`
+            : ''
+          : '';
+        return `<tr>
+          <td class="fw-bold">${v.license_plate||'-'}</td>
+          <td>${v.name}${vStatusBadge(v.id)}${svcBadge}</td>
+          <td>${deptLabel(v.department_id)}</td>
+          <td>${vtypeLabel(v.vehicle_type_id)}</td>
+          <td>${(v.brand||'')+' '+(v.model||'')}</td>
+          <td>${v.year||'-'}</td>
+          <td>${fuelLabel(v.fuel_type)}</td>
+          <td>
+            <button class="btn btn-outline btn-sm btn-icon" onclick='editVehicle(${JSON.stringify(v).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle(${v.id})">🗑️</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  // Update notification badge with service alerts
+  refreshServiceNotifs(rows, odoMap);
 }
 
 function openVehicleModal(v=null) {
   document.getElementById('vehicleModalTitle').textContent = v ? t('btn_edit') : t('add_vehicle');
   ['vm-id','vm-plate','vm-name','vm-brand','vm-model','vm-year'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('vm-dept').value=''; document.getElementById('vm-vtype').value=''; document.getElementById('vm-fuel').value='gasoline';
+  // Clear service fields & status
+  ['vm-svc-interval','vm-svc-last-km','vm-svc-last-date'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('vm-svc-next-hint').textContent='';
+  document.getElementById('vm-status-active').checked = true; // default
   if (v) {
-    document.getElementById('vm-id').value=v.id; document.getElementById('vm-plate').value=v.license_plate;
+    // Load status
+    document.querySelector(`input[name="vm-status"][value="${getVStatus(v.id)}"]`).checked = true;
+    document.getElementById('vm-id').value=v.id; document.getElementById('vm-plate').value=v.license_plate||'';
     document.getElementById('vm-name').value=v.name; document.getElementById('vm-dept').value=v.department_id;
     document.getElementById('vm-vtype').value=v.vehicle_type_id; document.getElementById('vm-brand').value=v.brand||'';
     document.getElementById('vm-model').value=v.model||''; document.getElementById('vm-year').value=v.year||'';
     document.getElementById('vm-fuel').value=v.fuel_type||'gasoline';
+    // Load service settings from localStorage
+    const svc = getSvcSettings(v.id);
+    if (svc) {
+      document.getElementById('vm-svc-interval').value = svc.interval_km||'';
+      document.getElementById('vm-svc-last-km').value  = svc.last_km||'';
+      document.getElementById('vm-svc-last-date').value= svc.last_date||'';
+      if (svc.interval_km && svc.last_km) {
+        const next = Number(svc.last_km) + Number(svc.interval_km);
+        document.getElementById('vm-svc-next-hint').textContent = `➡️ เซอร์วิสครั้งต่อไป: ${next.toLocaleString()} กม.`;
+      }
+    }
   }
   openModal('vehicleModal');
 }
 function editVehicle(v) { openVehicleModal(v); }
+
+// Build in-memory list of service alerts (injected into notification panel)
+let _svcAlerts = [];
+function refreshServiceNotifs(vehicles, odoMap) {
+  _svcAlerts = [];
+  (vehicles||[]).forEach(v => {
+    const info = checkSvcDue(v.id, odoMap?.[v.id]||0);
+    if (!info || info.status === 'ok') return;
+    const label = `${v.license_plate||''} ${v.name}`;
+    if (info.status === 'due') {
+      _svcAlerts.push({ vid: v.id, label, msg: `เกินกำหนดเซอร์วิส ${Math.abs(info.remaining).toLocaleString()} กม. (ควรทำที่ ${info.nextKm.toLocaleString()} กม.)`, color: '#B91C1C' });
+    } else {
+      _svcAlerts.push({ vid: v.id, label, msg: `ใกล้ถึงกำหนดเซอร์วิส — อีก ${info.remaining.toLocaleString()} กม. (ที่ ${info.nextKm.toLocaleString()} กม.)`, color: '#92400E' });
+    }
+  });
+  // Bump badge count
+  refreshNotifBadge();
+  // If panel open, refresh
+  if (document.getElementById('notif-panel')?.classList.contains('open')) loadNotifications();
+}
 
 async function saveVehicle() {
   const id = document.getElementById('vm-id').value;
@@ -2904,8 +3273,25 @@ async function saveVehicle() {
   };
   if (!body.name||!body.department_id||!body.vehicle_type_id) return toast(t('save_error'),'error');
   if (!body.license_plate) body.license_plate = null; // ทะเบียนไม่บังคับ (รถฟาร์มไม่มีทะเบียน)
-  if (id) await sbClient.from('vehicles').update(body).eq('id',id);
-  else { const { error } = await sbClient.from('vehicles').insert(body); if (error) return toast(error.message,'error'); }
+  let savedId = id;
+  if (id) {
+    await sbClient.from('vehicles').update(body).eq('id',id);
+  } else {
+    const { data: ins, error } = await sbClient.from('vehicles').insert(body).select('id').single();
+    if (error) return toast(error.message,'error');
+    savedId = ins?.id;
+  }
+  // Save status + service settings to localStorage
+  if (savedId) {
+    const status = document.querySelector('input[name="vm-status"]:checked')?.value || 'active';
+    setVStatus(savedId, status);
+    const interval = Number(document.getElementById('vm-svc-interval').value)||0;
+    const lastKm   = Number(document.getElementById('vm-svc-last-km').value)||0;
+    const lastDate = document.getElementById('vm-svc-last-date').value||'';
+    if (interval || lastKm) {
+      setSvcSettings(savedId, { interval_km: interval, last_km: lastKm, last_date: lastDate });
+    }
+  }
   closeModal('vehicleModal'); toast(t('save_success'),'success');
   await loadMasterData(); loadVehicles();
 }
@@ -3099,27 +3485,42 @@ async function loadNotifications() {
   if (!list) return;
   list.innerHTML = `<div class="notif-empty">⏳</div>`;
 
+  // ── Service alerts (local) ───────────────────────────────
+  const svcHtml = _svcAlerts.map(a => `
+    <div class="notif-item unread" onclick="showPage('vehicles')" style="cursor:pointer">
+      <div class="notif-icon">🔧</div>
+      <div class="notif-body">
+        <div class="notif-ttl" style="color:${a.color}">${a.label}</div>
+        <div class="notif-msg">${a.msg}</div>
+        <div class="notif-time">Service Reminder</div>
+      </div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#e53e3e;flex-shrink:0;margin-top:6px"></div>
+    </div>`).join('');
+
   const { data, error } = await sbClient.from('notifications')
     .select('*')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: false })
     .limit(30);
 
-  if (error || !data?.length) {
+  const dbHtml = (!error && data?.length)
+    ? data.map(n => `
+        <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="clickNotif(${n.id},'${n.link_page||''}','${n.link_tab||''}')">
+          <div class="notif-icon">${NOTIF_ICONS[n.type] || NOTIF_ICONS.default}</div>
+          <div class="notif-body">
+            <div class="notif-ttl">${n.title}</div>
+            ${n.message ? `<div class="notif-msg">${n.message}</div>` : ''}
+            <div class="notif-time">${timeAgo(n.created_at)}</div>
+          </div>
+          ${!n.is_read ? `<div style="width:8px;height:8px;border-radius:50%;background:#3182ce;flex-shrink:0;margin-top:6px"></div>` : ''}
+        </div>`).join('')
+    : '';
+
+  if (!svcHtml && !dbHtml) {
     list.innerHTML = `<div class="notif-empty">🔕 ${t('notif_empty')}</div>`;
     return;
   }
-
-  list.innerHTML = data.map(n => `
-    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="clickNotif(${n.id},'${n.link_page||''}','${n.link_tab||''}')">
-      <div class="notif-icon">${NOTIF_ICONS[n.type] || NOTIF_ICONS.default}</div>
-      <div class="notif-body">
-        <div class="notif-ttl">${n.title}</div>
-        ${n.message ? `<div class="notif-msg">${n.message}</div>` : ''}
-        <div class="notif-time">${timeAgo(n.created_at)}</div>
-      </div>
-      ${!n.is_read ? `<div style="width:8px;height:8px;border-radius:50%;background:#3182ce;flex-shrink:0;margin-top:6px"></div>` : ''}
-    </div>`).join('');
+  list.innerHTML = svcHtml + dbHtml;
 }
 
 async function clickNotif(id, page, tab) {
@@ -3150,8 +3551,9 @@ async function refreshNotifBadge() {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', currentUser.id)
     .eq('is_read', false);
-  if (count > 0) {
-    badge.textContent = count > 99 ? '99+' : count;
+  const total = (count||0) + (_svcAlerts?.length||0);
+  if (total > 0) {
+    badge.textContent = total > 99 ? '99+' : total;
     badge.style.display = 'flex';
   } else {
     badge.style.display = 'none';
@@ -3693,10 +4095,12 @@ async function loadReport() {
   });
   const grandTotal = rows.reduce((s,r)=>s+Number(r.amount||0),0);
   const sortedKeys = Object.keys(grouped).sort((a,b)=>grouped[b].total-grouped[a].total);
+  _rpRows = rows; // cache for monthly PDF
   document.getElementById('reportContent').innerHTML=`
     <div class="card">
       <div class="card-header">
         <span class="card-title">📊 ${t('report_title')} ${from||''} - ${to||''}</span>
+        <button class="btn btn-outline btn-sm" onclick="exportMonthlyVehiclePDF('${from}','${to}')">📋 Monthly by Vehicle</button>
         <button class="btn btn-outline btn-sm" onclick="exportReportPDF()">📄 PDF</button>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ ${t('btn_print')}</button>
       </div>
@@ -3725,7 +4129,115 @@ async function loadReport() {
         </tr></tfoot>
       </table></div>
     </div>`;
+  // ── Fuel Efficiency chart (per vehicle) ──────────────────
+  renderFuelEfficiencyChart(rows);
+
   logAction('view_report', { from, to, group });
+}
+
+let _rpRows = []; // cache rows for Monthly PDF export
+
+// ─── FUEL EFFICIENCY CHART ────────────────────────────────
+let _fuelEffChart = null;
+function renderFuelEfficiencyChart(rows) {
+  // Identify fuel categories
+  const fuelCatIds = new Set(
+    allCats
+      .filter(c => {
+        const n = (c.name_en||'').toLowerCase();
+        const nt = (c.name||'').toLowerCase();
+        return n.includes('fuel') || n.includes('petrol') || n.includes('gas') ||
+               nt.includes('น้ำมัน') || nt.includes('เชื้อเพลิง');
+      })
+      .map(c => c.id)
+  );
+
+  // Per-vehicle aggregation: only rows with both fuel_liters > 0 AND distance_km > 0
+  const vData = {};
+  rows.forEach(r => {
+    if (!fuelCatIds.has(r.category_id)) return;
+    const liters = Number(r.fuel_liters || 0);
+    const km     = Number(r.distance_km || 0);
+    if (liters <= 0 || km <= 0) return;
+    const key = (r.license_plate || '') + (r.vehicle_name ? ' — '+r.vehicle_name : '');
+    if (!vData[key]) vData[key] = { liters:0, km:0 };
+    vData[key].liters += liters;
+    vData[key].km     += km;
+  });
+
+  const labels = Object.keys(vData).sort();
+  if (labels.length === 0) {
+    // No fuel efficiency data — remove any leftover card
+    const old = document.getElementById('fuel-eff-card');
+    if (old) old.remove();
+    return;
+  }
+
+  const values = labels.map(k => +((vData[k].liters / vData[k].km * 100).toFixed(2)));
+  const best   = Math.min(...values);
+
+  // Build or update card
+  let card = document.getElementById('fuel-eff-card');
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'fuel-eff-card';
+    card.className = 'card';
+    card.style.marginTop = '16px';
+    document.getElementById('reportContent').appendChild(card);
+  }
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">⛽ Fuel Efficiency by Vehicle (L/100 km)</span>
+    </div>
+    <div style="padding:16px 0 4px">
+      <canvas id="fuelEffCanvas" height="120"></canvas>
+    </div>
+    <div style="padding:4px 12px 12px;font-size:12px;color:var(--text-light)">
+      ⭐ Best: <strong>${labels[values.indexOf(best)]}</strong> — ${best} L/100 km &nbsp;|&nbsp;
+      Only fuel expenses with both <em>liters</em> and <em>km</em> filled are counted.
+    </div>`;
+
+  if (_fuelEffChart) { try { _fuelEffChart.destroy(); } catch(e){} _fuelEffChart = null; }
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+  const barColors = values.map(v =>
+    v === best ? 'rgba(16,185,129,.85)' : 'rgba(37,99,235,.70)'
+  );
+
+  _fuelEffChart = new Chart(document.getElementById('fuelEffCanvas'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'L/100 km',
+        data: values,
+        backgroundColor: barColors,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} L/100 km  (${vData[labels[ctx.dataIndex]].liters.toFixed(1)} L / ${vData[labels[ctx.dataIndex]].km.toFixed(0)} km)`
+          }
+        },
+        datalabels: undefined,
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: isDark ? '#94a3b8':'#64748b', font:{size:12} } },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: isDark ? '#94a3b8':'#64748b' },
+          title: { display: true, text: 'L/100 km', color: isDark ? '#94a3b8':'#64748b' }
+        }
+      }
+    }
+  });
 }
 
 // ─── TRAVELLING CLAIMS FORM ───────────────────────────────
@@ -5021,6 +5533,148 @@ async function exportReportPDF() {
   } catch(e) {
     console.error('exportReportPDF:', e);
     toast('Export PDF ล้มเหลว: ' + e.message, 'error');
+  }
+}
+
+// ─── MONTHLY BY VEHICLE PDF ───────────────────────────────
+function exportMonthlyVehiclePDF(from, to) {
+  if (!_rpRows || _rpRows.length === 0) { toast(t('no_data'), 'error'); return; }
+  toast('กำลังสร้าง Monthly PDF...', 'info');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW  = doc.internal.pageSize.getWidth();
+    const pageH  = doc.internal.pageSize.getHeight();
+    const L      = 12, R = pageW - 12, TW = pageW - 24;
+    const PRI    = [37, 99, 235];
+    const GRAY   = [100, 116, 139];
+    const LGRAY  = [241, 245, 249];
+
+    // Helper: draw header band on each page
+    function drawHeader(pageNum, totalPages) {
+      doc.setFillColor(...PRI);
+      doc.rect(0, 0, pageW, 14, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(11); doc.setFont(undefined,'bold');
+      doc.text('VehicleTrack — Monthly Expense Report by Vehicle', L, 9.5);
+      doc.setFontSize(8); doc.setFont(undefined,'normal');
+      doc.text(`${from} to ${to}`, R, 9.5, {align:'right'});
+      doc.setTextColor(150);
+      doc.setFontSize(7.5);
+      doc.text(`Page ${pageNum} / ${totalPages}`, pageW/2, pageH-4, {align:'center'});
+    }
+
+    // Group rows by vehicle, then by month
+    const vehicles = {};
+    _rpRows.forEach(r => {
+      const vKey  = r.license_plate || r.vehicle_name || String(r.vehicle_id);
+      const month = String(r.expense_date).slice(0,7);
+      if (!vehicles[vKey]) vehicles[vKey] = { name: r.vehicle_name, plate: r.license_plate, dept: r.department_name, months: {} };
+      if (!vehicles[vKey].months[month]) vehicles[vKey].months[month] = { total:0, count:0, rows:[] };
+      vehicles[vKey].months[month].total  += Number(r.amount||0);
+      vehicles[vKey].months[month].count  += 1;
+      vehicles[vKey].months[month].rows.push(r);
+    });
+
+    // --- Page 1: Summary table ---
+    let y = 22;
+    doc.setTextColor(0);
+    doc.setFontSize(14); doc.setFont(undefined,'bold');
+    doc.text('Summary by Vehicle', L, y); y += 8;
+
+    // Summary header row
+    doc.setFillColor(...LGRAY); doc.rect(L, y, TW, 7, 'F');
+    doc.setFontSize(9); doc.setFont(undefined,'bold'); doc.setTextColor(...GRAY);
+    doc.text('Vehicle',       L+2,  y+5);
+    doc.text('Department',    L+60, y+5);
+    doc.text('Records',       L+108, y+5, {align:'right'});
+    doc.text('Total (RM)',    R,     y+5, {align:'right'});
+    y += 8;
+
+    const grandTotal = _rpRows.reduce((s,r)=>s+Number(r.amount||0),0);
+    let altRow = false;
+    Object.entries(vehicles).forEach(([vKey, vData]) => {
+      const vTotal = Object.values(vData.months).reduce((s,m)=>s+m.total,0);
+      const vCount = Object.values(vData.months).reduce((s,m)=>s+m.count,0);
+      if (altRow) { doc.setFillColor(248,250,252); doc.rect(L, y, TW, 7, 'F'); }
+      altRow = !altRow;
+      doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.setTextColor(30,41,59);
+      doc.text(`${vData.plate||''} ${vData.name||''}`, L+2, y+5);
+      doc.text(vData.dept||'-',               L+60, y+5);
+      doc.text(String(vCount),                L+108, y+5, {align:'right'});
+      doc.setFont(undefined,'bold');
+      doc.text(`RM ${fmt(vTotal)}`,           R,     y+5, {align:'right'});
+      y += 7;
+      if (y > pageH-20) { doc.addPage(); y = 22; }
+    });
+    // Grand total row
+    doc.setFillColor(...PRI);
+    doc.rect(L, y, TW, 8, 'F');
+    doc.setFont(undefined,'bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+    doc.text('TOTAL', L+2, y+5.5);
+    doc.text(`RM ${fmt(grandTotal)}`, R, y+5.5, {align:'right'});
+    y += 12;
+
+    // --- Per-vehicle detail pages ---
+    Object.entries(vehicles).forEach(([vKey, vData]) => {
+      doc.addPage(); y = 22;
+      // Vehicle title
+      doc.setTextColor(...PRI);
+      doc.setFontSize(13); doc.setFont(undefined,'bold');
+      doc.text(`${vData.plate||''} — ${vData.name||''}`, L, y); y += 6;
+      doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.setTextColor(...GRAY);
+      doc.text(`Department: ${vData.dept||'-'}`, L, y); y += 8;
+
+      const vTotal = Object.values(vData.months).reduce((s,m)=>s+m.total,0);
+      const months = Object.keys(vData.months).sort();
+
+      months.forEach(month => {
+        const mData = vData.months[month];
+        if (y > pageH - 40) { doc.addPage(); y = 22; }
+        // Month header
+        doc.setFillColor(...PRI);
+        doc.rect(L, y, TW, 7, 'F');
+        doc.setFontSize(9.5); doc.setFont(undefined,'bold'); doc.setTextColor(255,255,255);
+        doc.text(month, L+2, y+5);
+        doc.text(`${mData.count} records   RM ${fmt(mData.total)}`, R, y+5, {align:'right'});
+        y += 8;
+
+        // Expense rows
+        mData.rows.forEach(r => {
+          if (y > pageH - 15) { doc.addPage(); y = 22; }
+          const catName = r.category_name || '-';
+          const desc    = r.description ? ` — ${r.description.slice(0,35)}` : '';
+          doc.setFont(undefined,'normal'); doc.setFontSize(8.5); doc.setTextColor(30,41,59);
+          doc.text(fmtDate(r.expense_date), L+2,  y+4);
+          doc.text(`${catName}${desc}`,     L+26, y+4);
+          doc.setFont(undefined,'bold');
+          doc.text(`RM ${fmt(r.amount)}`,   R,    y+4, {align:'right'});
+          y += 6;
+        });
+        y += 3;
+      });
+
+      // Vehicle subtotal
+      if (y > pageH - 14) { doc.addPage(); y = 22; }
+      doc.setFillColor(241,245,249);
+      doc.rect(L, y, TW, 8, 'F');
+      doc.setFont(undefined,'bold'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+      doc.text('Vehicle Total', L+2, y+5.5);
+      doc.setTextColor(...PRI);
+      doc.text(`RM ${fmt(vTotal)}`, R, y+5.5, {align:'right'});
+      y += 12;
+    });
+
+    // Stamp all pages with headers
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) { doc.setPage(i); drawHeader(i, totalPages); }
+
+    const filename = `monthly-by-vehicle_${from}_${to}.pdf`;
+    doc.save(filename);
+    toast('Export Monthly PDF สำเร็จ ✅', 'success');
+  } catch(e) {
+    console.error('exportMonthlyVehiclePDF:', e);
+    toast('PDF ล้มเหลว: ' + e.message, 'error');
   }
 }
 
