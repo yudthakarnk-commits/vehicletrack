@@ -218,7 +218,7 @@ tr:hover td{background:#fafafa}
 .toll-ac-item{padding:9px 12px;cursor:pointer;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);transition:background .12s}
 .toll-ac-item:last-child{border-bottom:none}
 .toll-ac-item:hover,.toll-ac-item.ac-active{background:var(--hover);color:var(--primary)}
-.tab-btn{flex:1;padding:9px 16px;border:none;background:transparent;cursor:pointer;border-radius:9px;font-size:13px;font-weight:500;color:var(--text-light);transition:all .2s}
+.tab-btn{flex:1;padding:9px 16px;border:none;background:transparent;cursor:pointer;border-radius:9px;font-size:13px;font-weight:600;color:var(--text);transition:all .2s}
 .tab-btn:hover{background:rgba(37,99,235,.08);color:var(--primary)}
 .tab-btn.active{background:var(--primary);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.35)}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
@@ -1189,6 +1189,13 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
               <span class="card-title">📋 <span data-i18n="tc_section_a">Section A : Requester Details</span></span>
             </div>
             <div style="padding:10px 16px">
+              <!-- User selector (admin/manager only) -->
+              <div id="tc-user-row" style="display:none;margin-bottom:10px">
+                <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_select_user">Select User</label>
+                <select id="tc-user" onchange="tcUserChanged()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                  <option value="" data-i18n="select_user">-- Select User --</option>
+                </select>
+              </div>
               <!-- Row 1: Company + EmpID | Name + Position | Dept + Branch | JG + PCA -->
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                 <div class="form-group" style="margin:0">
@@ -4845,30 +4852,96 @@ function initTravelClaim() {
   if (mSel) mSel.value = now.getMonth() + 1;
   if (yearSel) yearSel.value = now.getFullYear();
 
-  // Populate vehicle dropdown
-  tcPopulateVehicles();
-
-  // ── Auto-fill from user profile (always override with fresh profile data) ──
-  if (currentProfile) {
-    setVal('tc-name',       currentProfile.full_name || '');
-    setVal('tc-department', currentProfile.departments?.name || '');
-  }
-
   // ── Fill extra fields from localStorage (user fills once, remembered forever) ──
   const saved = tcLoadSavedProfile();
-  if (saved.company)  setVal('tc-company',  saved.company);
-  if (saved.empId)    setVal('tc-empid',    saved.empId);
-  if (saved.position) setVal('tc-position', saved.position);
-  if (saved.branch)   setVal('tc-branch',   saved.branch);
-  if (saved.jg)       setVal('tc-jg',       saved.jg);
-  if (saved.pca)      setVal('tc-pca',      saved.pca);
-  if (saved.carType)  document.getElementById('tc-car-type').value = saved.carType;
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  if (saved.company)   setVal('tc-company',    saved.company);
+  if (saved.empId)     setVal('tc-empid',      saved.empId);
+  if (saved.position)  setVal('tc-position',   saved.position);
+  if (saved.branch)    setVal('tc-branch',     saved.branch);
+  if (saved.jg)        setVal('tc-jg',         saved.jg);
+  if (saved.pca)       setVal('tc-pca',        saved.pca);
+  if (saved.carType)   document.getElementById('tc-car-type').value = saved.carType;
   if (saved.claimRate) setVal('tc-claim-rate', saved.claimRate);
 
-  function setVal(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
+  // ── User selector (admin/manager) or self (regular user) ──
+  const role = currentProfile?.role;
+  const userRow = document.getElementById('tc-user-row');
+  if (role === 'admin' || role === 'manager') {
+    if (userRow) userRow.style.display = '';
+    tcPopulateUserSelector();          // async: loads users → pre-selects self → calls tcUserChanged
+  } else {
+    if (userRow) userRow.style.display = 'none';
+    // Auto-fill own profile then filter vehicles to own assigned ones
+    setVal('tc-name',       currentProfile?.full_name || '');
+    setVal('tc-department', currentProfile?.departments?.name || '');
+    tcPopulateVehiclesForUser(currentUser?.id);
   }
+}
+
+// ── Populate user selector dropdown (admin/manager only) ───────────────────
+async function tcPopulateUserSelector() {
+  const sel = document.getElementById('tc-user');
+  if (!sel) return;
+  try {
+    const { data } = await sbClient.from('user_profiles')
+      .select('id, full_name, departments(name)')
+      .order('full_name');
+    sel.innerHTML = `<option value="">${t('select_user')}</option>`;
+    (data || []).forEach(u => {
+      const label = u.full_name + (u.departments?.name ? ` — ${u.departments.name}` : '');
+      sel.add(new Option(label, u.id));
+    });
+    // Pre-select logged-in user
+    if (currentUser) sel.value = currentUser.id;
+    tcUserChanged();
+  } catch(e) {
+    // offline fallback: fill from currentProfile only
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setVal('tc-name',       currentProfile?.full_name || '');
+    setVal('tc-department', currentProfile?.departments?.name || '');
+    tcPopulateVehicles();
+  }
+}
+
+// ── When admin changes the user selector ──────────────────────────────────
+async function tcUserChanged() {
+  const sel = document.getElementById('tc-user');
+  const userId = sel?.value || currentUser?.id;
+  if (!userId) return;
+  try {
+    const { data: profile } = await sbClient.from('user_profiles')
+      .select('full_name, departments(name)')
+      .eq('id', userId).single();
+    if (profile) {
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+      setVal('tc-name',       profile.full_name || '');
+      setVal('tc-department', profile.departments?.name || '');
+    }
+  } catch(e) { /* ignore, keep existing text */ }
+  await tcPopulateVehiclesForUser(userId);
+}
+
+// ── Populate vehicle dropdown filtered by user assignment ──────────────────
+async function tcPopulateVehiclesForUser(userId) {
+  const sel = document.getElementById('tc-vehicle');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">${t('select_vehicle')}</option>`;
+  let vehicles = allVehicles || [];
+  if (userId) {
+    try {
+      const { data } = await sbClient.from('user_vehicles')
+        .select('vehicle_id').eq('user_id', userId);
+      const ids = (data || []).map(x => Number(x.vehicle_id));
+      if (ids.length > 0) vehicles = vehicles.filter(v => ids.includes(v.id));
+      // If no assignments recorded, fall back to all vehicles
+    } catch(e) { /* offline — show all */ }
+  }
+  vehicles.forEach(v => {
+    sel.add(new Option(`${v.license_plate} – ${v.name}`, v.id));
+  });
+  if (prev && [...sel.options].some(o => o.value == prev)) sel.value = prev;
 }
 
 function tcLoadSavedProfile() {

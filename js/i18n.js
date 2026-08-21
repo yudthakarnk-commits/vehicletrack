@@ -283,6 +283,8 @@ const TRANSLATIONS = {
     toll_empty_error: 'กรุณาใส่ยอดเงินอย่างน้อย 1 รายการ',
 
     // Travelling Claims Form
+    tc_select_user:     'เลือกพนักงาน',
+    select_user:        '-- เลือกพนักงาน --',
     tc_title:           'ใบเบิกค่าเดินทาง',
     tc_section_a:       'ส่วนที่ A : ข้อมูลผู้เบิก',
     tc_section_b:       'ส่วนที่ B : รายละเอียดการเดินทาง',
@@ -766,6 +768,8 @@ const TRANSLATIONS = {
     toll_empty_error: 'Please enter at least one toll amount',
 
     // Travelling Claims Form
+    tc_select_user:     'Select User',
+    select_user:        '-- Select User --',
     tc_title:           'Travelling Claim Form',
     tc_section_a:       'Section A : Requester Details',
     tc_section_b:       'Section B : Mileage Claim Details',
