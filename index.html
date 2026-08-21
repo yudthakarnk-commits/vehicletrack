@@ -202,14 +202,24 @@ tr:hover td{background:#fafafa}
 .qf-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,.88);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .qf-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .qf-label{font-size:12px;color:var(--text-light);font-weight:600;flex-shrink:0;white-space:nowrap}
-.qf-chip{padding:5px 13px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-light);transition:all .15s;font-family:inherit;white-space:nowrap;line-height:1.4}
+.qf-chip{padding:5px 13px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:600;cursor:pointer;color:var(--text);transition:all .15s;font-family:inherit;white-space:nowrap;line-height:1.4}
 .qf-chip:hover{border-color:var(--primary);color:var(--primary);background:rgba(37,99,235,.05)}
 .qf-chip.active{border-color:var(--primary);background:var(--primary);color:#fff}
+/* Status chips — colour-coded when inactive */
+.qf-chip[data-vstat="active"]:not(.active){border-color:#22C55E;color:#15803D;background:rgba(34,197,94,.07)}
+.qf-chip[data-vstat="maintenance"]:not(.active){border-color:#F59E0B;color:#92400E;background:rgba(245,158,11,.07)}
+.qf-chip[data-vstat="inactive"]:not(.active){border-color:#94A3B8;color:#475569;background:rgba(148,163,184,.07)}
 .qf-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 4px}
 [data-theme="dark"] .qf-bar{background:rgba(30,41,59,.95)}
 [data-theme="dark"] .qf-chip{border-color:#334155;color:#94A3B8}
 [data-theme="dark"] .qf-chip:hover{border-color:var(--primary);color:var(--primary)}
 [data-theme="dark"] .qf-chip.active{border-color:var(--primary);background:var(--primary);color:#fff}
+/* Sortable table headers */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{background:rgba(37,99,235,.06);color:var(--primary)}
+th.sortable .sort-icon{display:inline-block;margin-left:4px;opacity:.35;font-size:10px}
+th.sortable.sort-asc .sort-icon{opacity:1;color:var(--primary)}
+th.sortable.sort-desc .sort-icon{opacity:1;color:var(--primary)}
 /* Page Tabs (Vehicles) */
 .page-tabs,.tabs{display:flex;gap:0;margin-bottom:16px;background:rgba(255,255,255,.92);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
 /* Toll autocomplete */
@@ -990,11 +1000,15 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
             </div>
             <div class="card">
               <div class="card-header"><span class="card-title" data-i18n="vehicle_list">รายการรถ</span></div>
-              <div class="table-wrap"><table><thead><tr>
-                <th data-i18n="col_plate">ทะเบียน</th><th data-i18n="col_name">ชื่อรถ</th>
-                <th data-i18n="department">หน่วยงาน</th><th data-i18n="vehicle_type">ชนิดรถ</th>
-                <th data-i18n="col_brand">ยี่ห้อ/รุ่น</th><th data-i18n="col_year">ปี</th>
-                <th data-i18n="col_fuel">เชื้อเพลิง</th><th></th>
+              <div class="table-wrap"><table><thead><tr id="vTableHead">
+                <th class="sortable" id="vth-plate" ondblclick="vTableSort('plate')" data-i18n="col_plate">ทะเบียน<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-name"  ondblclick="vTableSort('name')"  data-i18n="col_name">ชื่อรถ<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-dept"  ondblclick="vTableSort('dept')"  data-i18n="department">หน่วยงาน<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-vtype" ondblclick="vTableSort('vtype')" data-i18n="vehicle_type">ชนิดรถ<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-brand" ondblclick="vTableSort('brand')" data-i18n="col_brand">ยี่ห้อ/รุ่น<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-year"  ondblclick="vTableSort('year')"  data-i18n="col_year">ปี<span class="sort-icon">⇅</span></th>
+                <th class="sortable" id="vth-fuel"  ondblclick="vTableSort('fuel')"  data-i18n="col_fuel">เชื้อเพลิง<span class="sort-icon">⇅</span></th>
+                <th></th>
               </tr></thead><tbody id="vehiclesTable"></tbody></table></div>
             </div>
           </div>
@@ -3371,6 +3385,29 @@ function setVehicleStatusFilter(status, btn) {
   loadVehicles();
 }
 
+// ─── VEHICLE TABLE SORT ───────────────────────────────────
+let _vSortCol = '';
+let _vSortDir = 'asc';
+function vTableSort(col) {
+  if (_vSortCol === col) {
+    _vSortDir = _vSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _vSortCol = col;
+    _vSortDir = 'asc';
+  }
+  // Update header indicators
+  document.querySelectorAll('#vTableHead th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    th.querySelector('.sort-icon').textContent = '⇅';
+  });
+  const active = document.getElementById('vth-' + col);
+  if (active) {
+    active.classList.add(_vSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    active.querySelector('.sort-icon').textContent = _vSortDir === 'asc' ? '▲' : '▼';
+  }
+  loadVehicles();
+}
+
 // ─── VEHICLE STATUS HELPERS ───────────────────────────────
 function V_STATUS() {
   return {
@@ -3431,9 +3468,25 @@ async function loadVehicles() {
   }
 
   // Apply status filter
-  const filteredRows = _vStatusFilter === 'all'
+  let filteredRows = _vStatusFilter === 'all'
     ? rows
     : rows.filter(v => getVStatus(v.id) === _vStatusFilter);
+
+  // Apply column sort
+  if (_vSortCol) {
+    const dir = _vSortDir === 'asc' ? 1 : -1;
+    const key = v => {
+      if (_vSortCol === 'plate') return (v.license_plate||'').toLowerCase();
+      if (_vSortCol === 'name')  return (v.name||'').toLowerCase();
+      if (_vSortCol === 'dept')  return deptLabel(v.department_id).toLowerCase();
+      if (_vSortCol === 'vtype') return vtypeLabel(v.vehicle_type_id).toLowerCase();
+      if (_vSortCol === 'brand') return ((v.brand||'')+' '+(v.model||'')).toLowerCase();
+      if (_vSortCol === 'year')  return Number(v.year||0);
+      if (_vSortCol === 'fuel')  return fuelLabel(v.fuel_type).toLowerCase();
+      return '';
+    };
+    filteredRows = [...filteredRows].sort((a,b) => key(a) > key(b) ? dir : key(a) < key(b) ? -dir : 0);
+  }
 
   document.getElementById('vehiclesTable').innerHTML = filteredRows.length===0
     ? `<tr><td colspan="8">${emptyState('vehicles', t('no_vehicles'))}</td></tr>`
