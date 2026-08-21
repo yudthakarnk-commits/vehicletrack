@@ -222,6 +222,7 @@ th.sortable.sort-asc .sort-icon{opacity:1;color:var(--primary)}
 th.sortable.sort-desc .sort-icon{opacity:1;color:var(--primary)}
 /* Page Tabs (Vehicles) */
 .page-tabs,.tabs{display:flex;gap:0;margin-bottom:16px;background:rgba(255,255,255,.92);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.page-tabs{position:sticky;top:0;z-index:12;backdrop-filter:blur(8px)}
 /* Toll autocomplete */
 .toll-ac-wrap{position:relative;flex:1}
 .toll-ac-list{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.14);z-index:999;max-height:200px;overflow-y:auto;display:none}
@@ -987,7 +988,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
           <!-- Tab 1: Vehicle List -->
           <div id="vtab-list">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;background:rgba(255,255,255,.92);border-radius:12px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;background:rgba(255,255,255,.95);border-radius:12px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:52px;z-index:11;backdrop-filter:blur(8px)">
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="qf-chip active" data-vstat="all" onclick="setVehicleStatusFilter('all',this)" data-i18n="vstatus_all">ทั้งหมด</button>
                 <button class="qf-chip" data-vstat="active" onclick="setVehicleStatusFilter('active',this)" data-i18n="vstatus_active">✅ ใช้งาน</button>
