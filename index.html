@@ -191,6 +191,8 @@ tr:hover td{background:#fafafa}
 /* Settings sticky-scroll tables */
 #page-settings .table-wrap{overflow-y:auto;max-height:420px;border-radius:8px}
 #page-settings th{position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #c8d5e8}
+/* Vehicle list — sticky table header (below tab bar + filter bar) */
+#vtab-list th{position:sticky;top:112px;z-index:10;box-shadow:0 1px 0 #c8d5e8}
 /* Category-specific extra sections */
 .cat-extra-section{margin-top:2px;padding:12px 14px;background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:10px}
 [data-theme="dark"] .cat-extra-section{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.25)}
@@ -1211,77 +1213,116 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
                   <option value="" data-i18n="select_user">-- Select User --</option>
                 </select>
               </div>
-              <!-- Row 1: Company + EmpID | Name + Position | Dept + Branch | JG + PCA -->
+              <!-- Section A Grid -->
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <!-- Company -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_company">Company</label>
-                  <input type="text" id="tc-company" value="PK Agro-Industrial Products (M) Sdn Bhd" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                  <select id="tc-company" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="Avian Farm (Malaysia) Sdn Bhd">Avian Farm (Malaysia) Sdn Bhd</option>
+                    <option value="Charoen Pokphand Jaya Farm (M) Sdn Bhd">Charoen Pokphand Jaya Farm (M) Sdn Bhd</option>
+                    <option value="Pertanian Pertiwi Sdn Bhd">Pertanian Pertiwi Sdn Bhd</option>
+                    <option value="PK Agro-Industrial Products (M) Sdn Bhd" selected>PK Agro-Industrial Products (M) Sdn Bhd</option>
+                    <option value="Teck Huat Farming Sdn Bhd">Teck Huat Farming Sdn Bhd</option>
+                    <option value="Chau Yang Farming Sdn Bhd">Chau Yang Farming Sdn Bhd</option>
+                    <option value="Tip Top Meat Sdn Bhd">Tip Top Meat Sdn Bhd</option>
+                  </select>
                 </div>
+                <!-- Employee ID -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_emp_id">Employee ID</label>
                   <input type="text" id="tc-empid" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
+                <!-- Name -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_name">Name</label>
                   <input type="text" id="tc-name" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <div class="form-group" style="margin:0">
-                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_position">Position</label>
-                  <input type="text" id="tc-position" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_department">Department</label>
-                  <input type="text" id="tc-department" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_branch">Branch</label>
-                  <input type="text" id="tc-branch" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_jg">JG</label>
-                  <input type="text" id="tc-jg" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                </div>
+                <!-- PCA -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_pca">PCA</label>
                   <input type="text" id="tc-pca" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
-                <!-- Row 2: Vehicle | CarType | ClaimRate | Month+Year -->
+                <!-- Position -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_position">Position</label>
+                  <input type="text" id="tc-position" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- JG -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_jg">JG</label>
+                  <select id="tc-jg" onchange="tcAutoClaimRate()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="">-- JG --</option>
+                    <option value="JG1">JG1</option><option value="JG2">JG2</option><option value="JG3">JG3</option>
+                    <option value="JG4">JG4</option><option value="JG5">JG5</option><option value="JG6">JG6</option>
+                    <option value="JG7">JG7</option><option value="JG8">JG8</option><option value="JG9">JG9</option>
+                    <option value="JG10">JG10</option><option value="JG11">JG11</option><option value="JG12">JG12</option>
+                    <option value="JG13">JG13</option><option value="JG14">JG14</option><option value="JG15">JG15</option>
+                    <option value="JG16">JG16</option><option value="JG17">JG17</option><option value="JG18">JG18</option>
+                    <option value="JG19">JG19</option><option value="JG20">JG20</option>
+                  </select>
+                </div>
+                <!-- CCA -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_cca">CCA</label>
+                  <input type="text" id="tc-cca" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- Department -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_department">Department</label>
+                  <input type="text" id="tc-department" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- Branch -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_branch">Branch</label>
+                  <input type="text" id="tc-branch" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- Reference Number -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_ref_no">Reference Number</label>
+                  <input type="text" id="tc-refno" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px" placeholder="e.g. HR-2026-001">
+                </div>
+                <!-- Travelling Period From -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_period_from">Travelling Period (From)</label>
+                  <input type="date" id="tc-period-from" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- Travelling Period To -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_period_to">Travelling Period (To)</label>
+                  <input type="date" id="tc-period-to" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                </div>
+                <!-- Vehicle -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_vehicle_no">Vehicle No.</label>
                   <select id="tc-vehicle" onchange="tcVehicleChanged()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                     <option value="" data-i18n="select_vehicle">-- Select Vehicle --</option>
                   </select>
                 </div>
+                <!-- Car Type -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_car_type">Car Type</label>
-                  <select id="tc-car-type" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                    <option value="COMPANY CAR" data-i18n="tc_car_company">Company Car</option>
-                    <option value="PRIVATE CAR (PETROL)" data-i18n="tc_car_private_p">Private Car (Petrol)</option>
-                    <option value="PRIVATE CAR (DIESEL)" data-i18n="tc_car_private_d">Private Car (Diesel)</option>
-                    <option value="PRIVATE CAR (ELECTRIC)" data-i18n="tc_car_private_e">Private Car (Electric)</option>
-                    <option value="MOTORCYCLE" data-i18n="tc_car_motorcycle">Motorcycle</option>
+                  <select id="tc-car-type" onchange="tcAutoClaimRate()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                    <option value="MOTORCYCLE">MOTORCYCLE</option>
+                    <option value="COMPANY CAR-PETROL">COMPANY CAR - PETROL</option>
+                    <option value="COMPANY CAR-DIESEL">COMPANY CAR - DIESEL</option>
+                    <option value="PRIVATE CAR (WITH ALLOWANCE-PETROL)" selected>PRIVATE CAR (WITH ALLOWANCE - PETROL)</option>
+                    <option value="PRIVATE CAR (WITH ALLOWANCE-DIESEL)">PRIVATE CAR (WITH ALLOWANCE - DIESEL)</option>
+                    <option value="PRIVATE CAR (NO ALLOWANCE)">PRIVATE CAR (NO ALLOWANCE)</option>
+                    <option value="ELECTRIC VEHICLE (NO ALLOWANCE)">ELECTRIC VEHICLE (NO ALLOWANCE)</option>
+                    <option value="ELECTRIC VEHICLE (WITH ALLOWANCE)-STATION CHARGE">ELECTRIC VEHICLE (WITH ALLOWANCE) - STATION CHARGE</option>
+                    <option value="ELECTRIC VEHICLE (WITH ALLOWANCE)-HOME CHARGE">ELECTRIC VEHICLE (WITH ALLOWANCE) - HOME CHARGE</option>
                   </select>
                 </div>
+                <!-- Claim Rate (auto-calculated) -->
                 <div class="form-group" style="margin:0">
                   <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_claim_rate">Claim Rate (RM/km)</label>
-                  <input type="number" id="tc-claim-rate" value="0.20" step="0.01" min="0" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+                  <input type="number" id="tc-claim-rate" value="0.20" step="0.01" min="0" readonly style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);cursor:default">
                 </div>
-                <div class="form-group" style="margin:0;display:flex;gap:8px">
-                  <div style="flex:1">
-                    <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_month">Month</label>
-                    <select id="tc-month" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-                      <option value="1">January</option><option value="2">February</option>
-                      <option value="3">March</option><option value="4">April</option>
-                      <option value="5">May</option><option value="6">June</option>
-                      <option value="7">July</option><option value="8">August</option>
-                      <option value="9">September</option><option value="10">October</option>
-                      <option value="11">November</option><option value="12">December</option>
-                    </select>
-                  </div>
-                  <div style="flex:1">
-                    <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_year">Year</label>
-                    <select id="tc-year" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px"></select>
-                  </div>
+                <!-- Personal Usage (total km for personal use this period) -->
+                <div class="form-group" style="margin:0">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-light)" data-i18n="tc_personal_usage">Personal Usage (km)</label>
+                  <input type="number" id="tc-personal-usage" value="0" min="0" step="0.1" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
                 </div>
               </div>
               <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
@@ -4635,25 +4676,29 @@ async function submitTravelClaim() {
   btn.textContent = t('tc_submitting');
 
   const payload = {
-    user_id:      currentUser.id,
-    vehicle_id:   d.veh?.id || null,
-    month:        d.month,
-    year:         d.year,
-    name:         d.name,
-    emp_id:       d.empId,
-    position:     d.position,
-    department:   d.department,
-    company:      d.company,
-    branch:       d.branch,
-    jg:           d.jg,
-    pca:          d.pca,
-    car_type:     d.carType,
-    claim_rate:   d.claimRate,
-    total_km:     d.totKm,
-    total_amount: d.grandTotal,
-    claim_rows:   d.rows,
-    status:       'submitted',
-    submitted_at: new Date().toISOString(),
+    user_id:        currentUser.id,
+    vehicle_id:     d.veh?.id || null,
+    period_from:    d.fromDate,
+    period_to:      d.toDate,
+    name:           d.name,
+    emp_id:         d.empId,
+    position:       d.position,
+    department:     d.department,
+    company:        d.company,
+    branch:         d.branch,
+    jg:             d.jg,
+    pca:            d.pca,
+    cca:            d.cca,
+    ref_no:         d.refNo,
+    car_type:       d.carType,
+    claim_rate:     d.claimRate,
+    total_km:       d.totKm,
+    personal_km:    d.personalKm,
+    total_amount:   d.actualClaimed,
+    grand_total:    d.grandTotal,
+    claim_rows:     d.rows,
+    status:         'submitted',
+    submitted_at:   new Date().toISOString(),
   };
 
   const { error } = await sbClient.from('travel_claims').insert(payload);
@@ -4673,11 +4718,11 @@ async function submitTravelClaim() {
 
   // Notify managers/admins
   const submitterName = currentProfile?.full_name || currentUser.email;
-  const mth = MONTH_NAMES_EN[payload.month];
+  const periodStr = `${payload.period_from||''} – ${payload.period_to||''}`;
   notifyManagers(
     'claim_submitted',
     `📤 ${t('notif_new_claim')}`,
-    `${submitterName} — ${mth} ${payload.year} (RM ${fmt(payload.total_amount)})`,
+    `${submitterName} — ${periodStr} (RM ${fmt(payload.total_amount)})`,
     'travel-claim', 'approve'
   );
 
@@ -4894,31 +4939,34 @@ async function previewClaim(id, canAction) {
 
 // ─── TRAVELLING CLAIMS FORM ────────────────────────────────
 function initTravelClaim() {
-  // Populate year dropdown
-  const yearSel = document.getElementById('tc-year');
-  if (yearSel && yearSel.options.length === 0) {
-    const thisYear = new Date().getFullYear();
-    for (let y = thisYear; y >= thisYear - 5; y--) {
-      yearSel.add(new Option(y, y));
-    }
-  }
-  // Set default month/year to current
+  // Set default Travelling Period = first day to today of current month
   const now = new Date();
-  const mSel = document.getElementById('tc-month');
-  if (mSel) mSel.value = now.getMonth() + 1;
-  if (yearSel) yearSel.value = now.getFullYear();
+  const yy  = now.getFullYear();
+  const mm  = String(now.getMonth()+1).padStart(2,'0');
+  const dd  = String(now.getDate()).padStart(2,'0');
+  const fromEl = document.getElementById('tc-period-from');
+  const toEl   = document.getElementById('tc-period-to');
+  if (fromEl && !fromEl.value) fromEl.value = `${yy}-${mm}-01`;
+  if (toEl   && !toEl.value)   toEl.value   = `${yy}-${mm}-${dd}`;
 
-  // ── Fill extra fields from localStorage (user fills once, remembered forever) ──
+  // ── Fill extra fields from localStorage ──
   const saved = tcLoadSavedProfile();
   const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
   if (saved.company)   setVal('tc-company',    saved.company);
   if (saved.empId)     setVal('tc-empid',      saved.empId);
-  if (saved.position)  setVal('tc-position',   saved.position);
-  if (saved.branch)    setVal('tc-branch',     saved.branch);
-  if (saved.jg)        setVal('tc-jg',         saved.jg);
   if (saved.pca)       setVal('tc-pca',        saved.pca);
-  if (saved.carType)   document.getElementById('tc-car-type').value = saved.carType;
-  if (saved.claimRate) setVal('tc-claim-rate', saved.claimRate);
+  if (saved.position)  setVal('tc-position',   saved.position);
+  if (saved.jg) {
+    setVal('tc-jg', saved.jg);
+  }
+  if (saved.cca)       setVal('tc-cca',        saved.cca);
+  if (saved.branch)    setVal('tc-branch',     saved.branch);
+  if (saved.refNo)     setVal('tc-refno',      saved.refNo);
+  if (saved.carType) {
+    const ctEl = document.getElementById('tc-car-type');
+    if (ctEl) ctEl.value = saved.carType;
+  }
+  tcAutoClaimRate(); // auto-set claim rate based on restored JG + car type
 
   // ── User selector (admin/manager) or self (regular user) ──
   const role = currentProfile?.role;
@@ -5006,15 +5054,17 @@ function tcLoadSavedProfile() {
 }
 
 function tcSaveProfile() {
+  const g = id => document.getElementById(id)?.value || '';
   const data = {
-    company:   document.getElementById('tc-company').value,
-    empId:     document.getElementById('tc-empid').value,
-    position:  document.getElementById('tc-position').value,
-    branch:    document.getElementById('tc-branch').value,
-    jg:        document.getElementById('tc-jg').value,
-    pca:       document.getElementById('tc-pca').value,
-    carType:   document.getElementById('tc-car-type').value,
-    claimRate: document.getElementById('tc-claim-rate').value,
+    company:  g('tc-company'),
+    empId:    g('tc-empid'),
+    pca:      g('tc-pca'),
+    position: g('tc-position'),
+    jg:       g('tc-jg'),
+    cca:      g('tc-cca'),
+    branch:   g('tc-branch'),
+    refNo:    g('tc-refno'),
+    carType:  g('tc-car-type'),
   };
   localStorage.setItem('tc_profile', JSON.stringify(data));
 }
@@ -5040,17 +5090,39 @@ function tcVehicleChanged() {
   }
 }
 
+// JG → claim rate lookup (JG1=0.20, JG2=0.21, ... JG20=0.39)
+const TC_JG_RATES = {};
+for (let i = 1; i <= 20; i++) TC_JG_RATES['JG'+i] = +(0.19 + i * 0.01).toFixed(2);
+
+function tcAutoClaimRate() {
+  const carType  = document.getElementById('tc-car-type')?.value || '';
+  const jg       = document.getElementById('tc-jg')?.value || '';
+  const rateEl   = document.getElementById('tc-claim-rate');
+  if (!rateEl) return;
+  let rate = 0.20;
+  if (carType === 'MOTORCYCLE') {
+    rate = 0.28;
+  } else if (carType === 'PRIVATE CAR (NO ALLOWANCE)') {
+    rate = 0.22;
+  } else if (carType === 'ELECTRIC VEHICLE (WITH ALLOWANCE)-HOME CHARGE') {
+    rate = 0.20;
+  } else if (carType === 'ELECTRIC VEHICLE (NO ALLOWANCE)' || carType === 'ELECTRIC VEHICLE (WITH ALLOWANCE)-STATION CHARGE') {
+    rate = 0; // actual cost — user fills manually
+  } else if (jg && TC_JG_RATES[jg]) {
+    rate = TC_JG_RATES[jg];
+  }
+  rateEl.value = rate;
+}
+
 async function loadTravelClaim() {
   const vehicleId = document.getElementById('tc-vehicle').value;
   if (!vehicleId) { toast('กรุณาเลือกรถ', 'error'); return; }
-  tcSaveProfile(); // remember user's extra fields for next time
+  tcSaveProfile();
 
-  const month = parseInt(document.getElementById('tc-month').value);
-  const year  = parseInt(document.getElementById('tc-year').value);
-
-  const fromDate = `${year}-${String(month).padStart(2,'0')}-01`;
-  const lastDay  = new Date(year, month, 0).getDate();
-  const toDate   = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  const fromDate = document.getElementById('tc-period-from')?.value;
+  const toDate   = document.getElementById('tc-period-to')?.value;
+  if (!fromDate || !toDate) { toast('กรุณาเลือก Travelling Period', 'error'); return; }
+  if (fromDate > toDate) { toast('วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด', 'error'); return; }
 
   document.getElementById('tc-report-content').innerHTML =
     `<div class="card"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div></div>`;
@@ -5072,24 +5144,32 @@ async function loadTravelClaim() {
 
   // Categorise expenses by date
   const fuelByDate = {}, tollByDate = {}, parkByDate = {};
+  const airByDate = {}, accomByDate = {}, outstByDate = {}, transByDate = {};
   (expRows || []).forEach(e => {
     const catEn = (e.expense_categories?.name_en || '').toLowerCase();
-    const catTh = (e.expense_categories?.name || '');
+    const catTh = (e.expense_categories?.name || '').toLowerCase();
     const d = e.expense_date;
-    const isFuel = catEn.includes('fuel') || catTh.includes('น้ำมัน');
-    const isToll = catEn.includes('toll') || catTh.includes('ด่าน') || catTh.includes('ทางด่วน');
-    const isPark = catEn.includes('park') || catTh.includes('จอดรถ');
-    if (isFuel) fuelByDate[d] = (fuelByDate[d]||0) + Number(e.amount||0);
-    if (isToll) tollByDate[d] = (tollByDate[d]||0) + Number(e.amount||0);
-    if (isPark) parkByDate[d] = (parkByDate[d]||0) + Number(e.amount||0);
+    const amt = Number(e.amount || 0);
+    if (catEn.includes('fuel') || catTh.includes('น้ำมัน'))
+      fuelByDate[d] = (fuelByDate[d]||0) + amt;
+    else if (catEn.includes('toll') || catTh.includes('ด่าน') || catTh.includes('ทางด่วน'))
+      tollByDate[d] = (tollByDate[d]||0) + amt;
+    else if (catEn.includes('park') || catTh.includes('จอด'))
+      parkByDate[d] = (parkByDate[d]||0) + amt;
+    else if (catEn.includes('air') || catEn.includes('flight') || catTh.includes('ตั๋ว'))
+      airByDate[d] = (airByDate[d]||0) + amt;
+    else if (catEn.includes('hotel') || catEn.includes('accommodation') || catEn.includes('lodg') || catTh.includes('โรงแรม'))
+      accomByDate[d] = (accomByDate[d]||0) + amt;
+    else if (catEn.includes('outstation') || catEn.includes('allowance') || catTh.includes('เบี้ย'))
+      outstByDate[d] = (outstByDate[d]||0) + amt;
+    else if (catEn.includes('transport') || catTh.includes('ค่าเดินทาง'))
+      transByDate[d] = (transByDate[d]||0) + amt;
   });
 
   // ── Aggregate by day ──
   const dayMap = {};
   (ulRows || []).forEach(r => {
-    if (!dayMap[r.date]) {
-      dayMap[r.date] = { date: r.date, odoFrom: null, odoTo: null, km: 0, purposes: [] };
-    }
+    if (!dayMap[r.date]) dayMap[r.date] = { date: r.date, odoFrom: null, odoTo: null, km: 0, purposes: [] };
     const d = dayMap[r.date];
     const km = (Number(r.odometer_end||0) - Number(r.odometer_start||0));
     if (r.odometer_start != null && (d.odoFrom === null || Number(r.odometer_start) < d.odoFrom))
@@ -5101,16 +5181,19 @@ async function loadTravelClaim() {
     if (dest && !d.purposes.includes(dest)) d.purposes.push(dest);
   });
 
-  // Build rows for all days with data
   const rows = Object.values(dayMap).sort((a,b) => a.date.localeCompare(b.date)).map(d => ({
-    date:    d.date,
-    odoFrom: d.odoFrom,
-    odoTo:   d.odoTo,
-    km:      d.km,
-    fuel:    fuelByDate[d.date] || 0,
-    toll:    tollByDate[d.date] || 0,
-    parking: parkByDate[d.date] || 0,
-    purpose: d.purposes.join(' / '),
+    date:        d.date,
+    odoFrom:     d.odoFrom,
+    odoTo:       d.odoTo,
+    km:          d.km,
+    fuel:        fuelByDate[d.date] || 0,
+    toll:        tollByDate[d.date] || 0,
+    parking:     parkByDate[d.date] || 0,
+    airFare:     airByDate[d.date] || 0,
+    accommodation: accomByDate[d.date] || 0,
+    outstation:  outstByDate[d.date] || 0,
+    transport:   transByDate[d.date] || 0,
+    purpose:     d.purposes.join(' / '),
   }));
 
   if (rows.length === 0) {
@@ -5123,42 +5206,48 @@ async function loadTravelClaim() {
   }
 
   // Compute totals
-  const totKm    = rows.reduce((s,r) => s + r.km, 0);
-  const totFuel  = rows.reduce((s,r) => s + r.fuel, 0);
-  const totToll  = rows.reduce((s,r) => s + r.toll, 0);
-  const totPark  = rows.reduce((s,r) => s + r.parking, 0);
+  const totKm     = rows.reduce((s,r) => s + r.km, 0);
+  const totFuel   = rows.reduce((s,r) => s + r.fuel, 0);
+  const totToll   = rows.reduce((s,r) => s + r.toll, 0);
+  const totPark   = rows.reduce((s,r) => s + r.parking, 0);
+  const totAir    = rows.reduce((s,r) => s + r.airFare, 0);
+  const totAccom  = rows.reduce((s,r) => s + r.accommodation, 0);
+  const totOutst  = rows.reduce((s,r) => s + r.outstation, 0);
+  const totTrans  = rows.reduce((s,r) => s + r.transport, 0);
+  const personalKm = parseFloat(document.getElementById('tc-personal-usage')?.value) || 0;
 
-  // ── Claimable fuel = same cap logic as HR form Excel formula ──
-  // D53 = MIN(F51/D51, claimRate)  →  fuelPerKmActual vs claimRate
-  // D56 = D51 × D53  →  km × effectiveRate
   const claimRateVal = parseFloat(document.getElementById('tc-claim-rate')?.value) || 0.20;
-  const carTypeVal   = document.getElementById('tc-car-type')?.value || 'COMPANY CAR';
+  const carTypeVal   = document.getElementById('tc-car-type')?.value || '';
   const actualPerKm  = totKm > 0 ? totFuel / totKm : 0;
-  // MOTORCYCLE uses fixed rate; all others cap at claimRate
-  const effectiveRate = carTypeVal === 'MOTORCYCLE'
+  const effectiveRate = (carTypeVal === 'MOTORCYCLE' || carTypeVal.includes('NO ALLOWANCE') || carTypeVal.includes('HOME CHARGE'))
     ? claimRateVal
     : Math.min(actualPerKm, claimRateVal);
-  const fuelClaim  = totKm * effectiveRate;         // claimable petrol (capped)
-  const grandTotal = fuelClaim + totToll + totPark; // matches Excel D63
-  const costPerKm  = totKm > 0 ? totFuel / totKm : 0; // actual cost/km = fuel ÷ km
+  const fuelClaim     = totKm * effectiveRate;
+  const personalDeduct = personalKm * claimRateVal;
+  const grandTotal    = fuelClaim + totToll + totPark + totAir + totAccom + totOutst + totTrans;
+  const actualClaimed = grandTotal - personalDeduct;
+  const costPerKm     = totKm > 0 ? totFuel / totKm : 0;
 
-  // Get vehicle info
   const veh = (allVehicles || []).find(v => v.id == vehicleId);
-  const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
 
   // Cache for export
   const g = id => document.getElementById(id)?.value || '';
-  tcReportData = { rows, totKm, totFuel, fuelClaim, totToll, totPark, grandTotal, costPerKm, month, year, veh,
-    company:    g('tc-company'),
-    empId:      g('tc-empid'),
-    name:       g('tc-name'),
-    position:   g('tc-position'),
-    department: g('tc-department'),
-    branch:     g('tc-branch'),
-    jg:         g('tc-jg'),
-    pca:        g('tc-pca'),
-    carType:    g('tc-car-type'),
-    claimRate:  parseFloat(g('tc-claim-rate')) || 0.20,
+  tcReportData = {
+    rows, totKm, totFuel, fuelClaim, totToll, totPark, totAir, totAccom, totOutst, totTrans,
+    grandTotal, actualClaimed, personalKm, personalDeduct, costPerKm,
+    fromDate, toDate, veh,
+    company:      g('tc-company'),
+    empId:        g('tc-empid'),
+    name:         g('tc-name'),
+    pca:          g('tc-pca'),
+    position:     g('tc-position'),
+    jg:           g('tc-jg'),
+    cca:          g('tc-cca'),
+    department:   g('tc-department'),
+    branch:       g('tc-branch'),
+    refNo:        g('tc-refno'),
+    carType:      g('tc-car-type'),
+    claimRate:    parseFloat(g('tc-claim-rate')) || 0.20,
   };
 
   // ── Render preview table ──
@@ -5171,44 +5260,54 @@ async function loadTravelClaim() {
     <td class="text-right">${r.fuel ? fmt(r.fuel) : '-'}</td>
     <td class="text-right">${r.toll ? fmt(r.toll) : '-'}</td>
     <td class="text-right">${r.parking ? fmt(r.parking) : '-'}</td>
+    <td class="text-right">${r.airFare ? fmt(r.airFare) : '-'}</td>
+    <td class="text-right">${r.accommodation ? fmt(r.accommodation) : '-'}</td>
+    <td class="text-right">${r.outstation ? fmt(r.outstation) : '-'}</td>
+    <td class="text-right">${r.transport ? fmt(r.transport) : '-'}</td>
     <td style="font-size:12px;color:var(--text-light)">${r.purpose || '-'}</td>
   </tr>`).join('');
 
-  // ── Claim Summary (shown right below form) ──
+  // ── DETAILS OF CLAIM summary ──
+  const periodLabel = `${fromDate} – ${toDate}`;
   const summaryEl = document.getElementById('tc-claim-summary');
   summaryEl.style.display = '';
   summaryEl.innerHTML = `
     <div class="card">
       <div class="card-header" style="padding:8px 16px">
-        <span class="card-title">💰 ${t('tc_section_c')}</span>
-        <span style="font-size:11px;color:var(--text-light)">${monthNames[month]} ${year} · ${veh?.license_plate || ''}</span>
+        <span class="card-title">💰 DETAILS OF CLAIM</span>
+        <span style="font-size:11px;color:var(--text-light)">${periodLabel} · ${veh?.license_plate || ''}</span>
       </div>
-      <div style="padding:10px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
-        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_total_km')}</div>
-          <div style="font-size:20px;font-weight:700;color:var(--primary)">${fmtKm(totKm)} km</div>
+      <div style="padding:10px 16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:12px">
+          <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+            <div style="font-size:11px;color:var(--text-light)">Total KM</div>
+            <div style="font-size:18px;font-weight:700;color:var(--primary)">${fmtKm(totKm)} km</div>
+          </div>
+          <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+            <div style="font-size:11px;color:var(--text-light)">Personal Use</div>
+            <div style="font-size:18px;font-weight:700">${fmtKm(personalKm)} km</div>
+          </div>
+          <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+            <div style="font-size:11px;color:var(--text-light)">Claim Rate</div>
+            <div style="font-size:18px;font-weight:700">RM ${claimRateVal.toFixed(2)}/km</div>
+          </div>
+          <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
+            <div style="font-size:11px;color:var(--text-light)">Cost/km (actual)</div>
+            <div style="font-size:18px;font-weight:700;color:var(--accent)">RM ${costPerKm.toFixed(4)}</div>
+          </div>
         </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_fuel')} (RM)</div>
-          <div style="font-size:20px;font-weight:700">RM ${fmt(fuelClaim)}</div>
-          ${totFuel > fuelClaim ? `<div style="font-size:10px;color:var(--text-light)">Actual: RM ${fmt(totFuel)}</div>` : ''}
-        </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_toll')} (RM)</div>
-          <div style="font-size:20px;font-weight:700">RM ${fmt(totToll)}</div>
-        </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:11px;color:var(--text-light)">${t('tc_col_parking')} (RM)</div>
-          <div style="font-size:20px;font-weight:700">RM ${fmt(totPark)}</div>
-        </div>
-        <div style="padding:10px 12px;background:var(--primary);border-radius:8px;color:#fff">
-          <div style="font-size:11px;opacity:.8">${t('tc_grand_total')}</div>
-          <div style="font-size:20px;font-weight:700">RM ${fmt(grandTotal)}</div>
-        </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:8px">
-          <div style="font-size:11px;color:var(--text-light)">${t('tc_cost_per_km')}</div>
-          <div style="font-size:20px;font-weight:700;color:var(--accent)">RM ${costPerKm.toFixed(4)}/km</div>
-        </div>
+        <table style="width:100%;font-size:13px;border-collapse:collapse">
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Petrol/Diesel</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(fuelClaim)}${totFuel>fuelClaim?` <span style="font-size:10px;color:var(--text-light)">(actual RM ${fmt(totFuel)})</span>`:''}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Toll</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totToll)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Parking</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totPark)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Air Fare</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totAir)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Accommodation</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totAccom)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Outstation Allow.</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totOutst)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Transportation</td><td style="text-align:right;padding:4px 8px;font-weight:600">RM ${fmt(totTrans)}</td></tr>
+          <tr style="border-top:2px solid var(--border)"><td style="padding:6px 8px;font-weight:700">Grand Total</td><td style="text-align:right;padding:6px 8px;font-weight:700;font-size:15px;color:var(--primary)">RM ${fmt(grandTotal)}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--text-light)">Less: Personal Use</td><td style="text-align:right;padding:4px 8px;color:#e53e3e">- RM ${fmt(personalDeduct)}</td></tr>
+          <tr style="border-top:2px solid var(--primary);background:var(--primary);color:#fff;border-radius:6px"><td style="padding:8px;font-weight:700;border-radius:6px 0 0 6px">Actual Claimed</td><td style="text-align:right;padding:8px;font-weight:700;font-size:16px;border-radius:0 6px 6px 0">RM ${fmt(actualClaimed)}</td></tr>
+        </table>
       </div>
     </div>`;
 
@@ -5216,32 +5315,40 @@ async function loadTravelClaim() {
   document.getElementById('tc-report-content').innerHTML = `
     <div class="card">
       <div class="card-header">
-        <span class="card-title">📋 ${t('tc_section_b')} — ${monthNames[month]} ${year}</span>
+        <span class="card-title">📋 SECTION B — ${periodLabel}</span>
         <span style="font-size:12px;color:var(--text-light)">${veh?.license_plate || ''}</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr style="background:var(--primary);color:#fff">
-              <th class="text-center" style="width:40px">${t('tc_col_no')}</th>
-              <th class="text-center" style="width:50px">${t('tc_col_date')}</th>
-              <th class="text-right">${t('tc_col_odo_from')}</th>
-              <th class="text-right">${t('tc_col_odo_to')}</th>
-              <th class="text-right">${t('tc_col_total_km')}</th>
-              <th class="text-right">${t('tc_col_fuel')}</th>
-              <th class="text-right">${t('tc_col_toll')}</th>
-              <th class="text-right">${t('tc_col_parking')}</th>
-              <th>${t('tc_col_purpose')}</th>
+            <tr style="background:var(--primary);color:#fff;font-size:11px">
+              <th class="text-center" style="width:32px">No.</th>
+              <th class="text-center" style="width:40px">Date</th>
+              <th class="text-right">Meter From</th>
+              <th class="text-right">Meter To</th>
+              <th class="text-right">Total KM</th>
+              <th class="text-right">Petrol/Diesel</th>
+              <th class="text-right">Toll</th>
+              <th class="text-right">Parking</th>
+              <th class="text-right">Air Fare</th>
+              <th class="text-right">Accom.</th>
+              <th class="text-right">Outstation</th>
+              <th class="text-right">Transport</th>
+              <th>Purpose / Destination</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
           <tfoot>
-            <tr style="background:var(--bg);font-weight:700;font-size:13px">
-              <td colspan="4" class="text-right" style="padding-right:12px">${t('tc_total')}</td>
+            <tr style="background:var(--bg);font-weight:700;font-size:12px">
+              <td colspan="4" class="text-right" style="padding-right:8px">TOTAL</td>
               <td class="text-right" style="color:var(--primary)">${fmtKm(totKm)}</td>
               <td class="text-right">${totFuel ? fmt(totFuel) : '-'}</td>
               <td class="text-right">${totToll ? fmt(totToll) : '-'}</td>
               <td class="text-right">${totPark ? fmt(totPark) : '-'}</td>
+              <td class="text-right">${totAir ? fmt(totAir) : '-'}</td>
+              <td class="text-right">${totAccom ? fmt(totAccom) : '-'}</td>
+              <td class="text-right">${totOutst ? fmt(totOutst) : '-'}</td>
+              <td class="text-right">${totTrans ? fmt(totTrans) : '-'}</td>
               <td></td>
             </tr>
           </tfoot>
@@ -5252,7 +5359,6 @@ async function loadTravelClaim() {
   document.getElementById('tc-export-btn').style.display = '';
   document.getElementById('tc-pdf-btn').style.display = '';
 
-  // Show submit bar (reset state)
   const submitBar = document.getElementById('tc-submit-bar');
   const submitBtn = document.getElementById('tc-submit-btn');
   const submitSt  = document.getElementById('tc-submit-status');
@@ -5264,11 +5370,12 @@ async function loadTravelClaim() {
 async function exportTravelClaimExcel() {
   if (!tcReportData) return;
   const d = tcReportData;
-  const mm      = String(d.month).padStart(2,'0');
-  const yy      = String(d.year).slice(-2);
-  const lastDay = new Date(d.year, d.month, 0).getDate();
-  const endDd   = String(lastDay).padStart(2,'0');
+  // Derive sheet name from fromDate: e.g. "2026-09-01" → "SEP 26"
   const MONTH_SHORT = ['','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const fromParts = (d.fromDate || '').split('-');
+  const sheetMon  = parseInt(fromParts[1]||'1');
+  const sheetYY   = (fromParts[0]||'2026').slice(-2);
+  const newSheetName = `${MONTH_SHORT[sheetMon]||'CLM'} ${sheetYY}`;
 
   // ── 1. Load template ──
   let wb;
@@ -5284,7 +5391,7 @@ async function exportTravelClaimExcel() {
 
   // ── 2. Use first sheet, rename it ──
   const origName   = wb.SheetNames[0];
-  const newName    = `${MONTH_SHORT[d.month]} ${yy}`;
+  const newName    = newSheetName;
   wb.SheetNames[0] = newName;
   wb.Sheets[newName] = wb.Sheets[origName];
   delete wb.Sheets[origName];
@@ -5304,22 +5411,37 @@ async function exportTravelClaimExcel() {
     if (ws[addr]) { ws[addr].v = null; ws[addr].t = 'z'; delete ws[addr].f; delete ws[addr].w; }
   };
 
-  // ── 4. Section A — Requester details ──
+  // ── 4. Section A — derive period parts from fromDate / toDate ──
+  const fromD  = d.fromDate || '';   // e.g. "2026-09-01"
+  const toD    = d.toDate   || '';   // e.g. "2026-09-30"
+  const fParts = fromD.split('-');   // [yyyy, mm, dd]
+  const tParts = toD.split('-');
+  const fYY = (fParts[0]||'').slice(-2), fMM = fParts[1]||'00', fDD = fParts[2]||'00';
+  const tYY = (tParts[0]||'').slice(-2), tMM = tParts[1]||'00', tDD = tParts[2]||'00';
+
+  // Company → C7
   sc('C7',  d.company    || '');
+  // Name → C8
   sc('C8',  d.name       || '');
+  // Position → C9, JG → G9
   sc('C9',  d.position   || '');
+  sc('G9',  d.jg         || '');
+  // Department → C10
   sc('C10', d.department || '');
+  // Branch → C11
   sc('C11', d.branch     || '');
+  // Vehicle No → C12
   sc('C12', d.veh?.license_plate || '');
-  sc('J13', d.carType    || 'COMPANY CAR');
-  sc('X13', Number(d.claimRate) || 0.20, 'n');
+  // Car Type → J13, Claim Rate → X13
+  sc('J13', d.carType    || '');
+  sc('X13', Number(d.claimRate) || 0, 'n');
 
   // Employee ID → one digit per cell L7–U7 (10 cells)
   const EMP_COLS = ['L','M','N','O','P','Q','R','S','T','U'];
   const empStr = String(d.empId || '');
   EMP_COLS.forEach((col, i) => {
     const ch = empStr[i];
-    if (ch !== undefined) sc(`${col}7`, Number(ch), 'n');
+    if (ch !== undefined) { const n=Number(ch); sc(`${col}7`, isNaN(n)?ch:n, isNaN(n)?'s':'n'); }
     else clr(`${col}7`);
   });
 
@@ -5328,29 +5450,38 @@ async function exportTravelClaimExcel() {
   const pcaStr = String(d.pca || '');
   PCA_COLS.forEach((col, i) => {
     const ch = pcaStr[i];
-    if (ch !== undefined) sc(`${col}8`, Number(ch), 'n');
+    if (ch !== undefined) { const n=Number(ch); sc(`${col}8`, isNaN(n)?ch:n, isNaN(n)?'s':'n'); }
     else clr(`${col}8`);
   });
 
-  // JG → C9 area — also fill AA11 (reference number count = 1)
-  // (JG shown in G9 in original)
-  sc('G9', d.jg || '');
+  // CCA → one digit per cell L9–U9 (10 cells)
+  const CCA_COLS = ['L','M','N','O','P','Q','R','S','T','U'];
+  const ccaStr = String(d.cca || '');
+  CCA_COLS.forEach((col, i) => {
+    const ch = ccaStr[i];
+    if (ch !== undefined) { const n=Number(ch); sc(`${col}9`, isNaN(n)?ch:n, isNaN(n)?'s':'n'); }
+    else clr(`${col}9`);
+  });
 
-  // Travelling Period → L10–X10 (chars: d1,d2,m1,m2,y1,y2, '-', d1,d2,m1,m2,y1,y2)
-  const periodVals = [
-    ['L10','0'], ['M10','1'],           // start day = 01
-    ['N10', mm[0]], ['O10', mm[1]],    // start month
-    ['P10', yy[0]], ['Q10', yy[1]],    // start year
+  // Travelling Period: L10-X10 (from) and S10-X10 already covers to
+  // Format: dd mm yy - dd mm yy split per cell
+  const periodCells = [
+    ['L10', fDD[0]], ['M10', fDD[1]],
+    ['N10', fMM[0]], ['O10', fMM[1]],
+    ['P10', fYY[0]], ['Q10', fYY[1]],
     ['R10', '-'],
-    ['S10', endDd[0]], ['T10', endDd[1]],  // end day
-    ['U10', mm[0]], ['V10', mm[1]],        // end month
-    ['W10', yy[0]], ['X10', yy[1]],        // end year
+    ['S10', tDD[0]], ['T10', tDD[1]],
+    ['U10', tMM[0]], ['V10', tMM[1]],
+    ['W10', tYY[0]], ['X10', tYY[1]],
   ];
-  periodVals.forEach(([addr, val]) => {
+  periodCells.forEach(([addr, val]) => {
     const n = Number(val);
     if (!isNaN(n) && val !== '-') sc(addr, n, 'n');
-    else sc(addr, val, 's');
+    else sc(addr, val || '', 's');
   });
+
+  // Reference Number → L11 (as text)
+  sc('L11', d.refNo || '', 's');
 
   // ── 5. Section B — Clear all data rows first (B20:Q50), then write ──
   const DATA_COLS = ['B','C','E','F','G','H','I','J','K','L','Q'];
@@ -5358,40 +5489,60 @@ async function exportTravelClaimExcel() {
     DATA_COLS.forEach(col => clr(`${col}${row}`));
   }
 
-  // Build date → row lookup
+  // Build date → row lookup (iterate all days in the period range)
   const rowByDate = {};
   d.rows.forEach(r => { rowByDate[r.date] = r; });
 
-  for (let day = 1; day <= lastDay; day++) {
-    const dateStr = `${d.year}-${mm}-${String(day).padStart(2,'0')}`;
+  // Iterate day-by-day from fromDate to toDate
+  const startMs  = new Date(fromD).getTime();
+  const endMs    = new Date(toD).getTime();
+  let   xlRow    = 20;
+  for (let ms = startMs; ms <= endMs && xlRow <= 50; ms += 86400000, xlRow++) {
+    const dateStr = new Date(ms).toISOString().slice(0,10);
     const r = rowByDate[dateStr];
-    const xlRow = 19 + day; // day 1 → row 20
-
     if (r) {
       if (r.odoFrom != null) sc(`B${xlRow}`, r.odoFrom, 'n');
       if (r.odoTo   != null) sc(`C${xlRow}`, r.odoTo,   'n');
-      // D column has formula =C-B → leave it (auto-calculates in Excel)
-      if (r.fuel    > 0)     sc(`F${xlRow}`, r.fuel,    'n');
-      if (r.toll    > 0)     sc(`G${xlRow}`, r.toll,    'n');
-      if (r.parking > 0)     sc(`H${xlRow}`, r.parking, 'n');
-      if (r.purpose)         sc(`Q${xlRow}`, r.purpose, 's');
+      // D = TOTAL KM (formula =C-B in template; overwrite with value)
+      if (r.km      > 0)     sc(`D${xlRow}`, r.km,      'n');
+      // E = Personal Usage (0 per row; total deducted globally)
+      sc(`E${xlRow}`, 0, 'n');
+      if (r.fuel        > 0) sc(`F${xlRow}`, r.fuel,         'n');
+      if (r.toll        > 0) sc(`G${xlRow}`, r.toll,         'n');
+      if (r.parking     > 0) sc(`H${xlRow}`, r.parking,      'n');
+      if (r.airFare     > 0) sc(`I${xlRow}`, r.airFare,      'n');
+      if (r.accommodation>0) sc(`J${xlRow}`, r.accommodation,'n');
+      if (r.outstation  > 0) sc(`K${xlRow}`, r.outstation,   'n');
+      if (r.transport   > 0) sc(`L${xlRow}`, r.transport,    'n');
+      if (r.purpose)         sc(`Q${xlRow}`, r.purpose,      's');
     }
-    // Days with no data: B/C empty → D formula =C-B will show 0 (normal for original form)
   }
 
-  // ── 6. Remove notes/comments from worksheet ──
+  // ── 6. Details of Claim (rows 56-65) ──
+  sc('D56', d.fuelClaim     || 0, 'n');   // PETROL/DIESEL
+  sc('D57', d.totToll       || 0, 'n');   // TOLL
+  sc('D58', d.totPark       || 0, 'n');   // PARKING
+  sc('D59', d.totAir        || 0, 'n');   // AIR FARE
+  sc('D60', d.totAccom      || 0, 'n');   // ACCOMMODATION
+  sc('D61', d.totOutst      || 0, 'n');   // OUTSTATION ALLOW.
+  sc('D62', d.totTrans      || 0, 'n');   // TRANSPORTATION
+  sc('D63', d.grandTotal    || 0, 'n');   // GRAND TOTAL
+  sc('D64', d.personalDeduct|| 0, 'n');   // Less: Personal Use
+  sc('D65', d.actualClaimed || 0, 'n');   // ACTUAL CLAIMED
+  // Cost Per KM
+  sc('D53', d.costPerKm     || 0, 'n');
+
+  // ── 7. Remove notes/comments from worksheet ──
   delete ws['!comments'];
 
-  // ── 7. Keep only current month's sheet (remove MARCH 26, APRIL 26, etc.) ──
+  // ── 8. Keep only the first sheet ──
   wb.SheetNames.slice().forEach(name => {
-    if (name !== newName) {
-      delete wb.Sheets[name];
-    }
+    if (name !== newName) { delete wb.Sheets[name]; }
   });
   wb.SheetNames = [newName];
 
-  // ── 8. Download ──
-  const filename = `Travelling_Claim_${(d.veh?.license_plate||'vehicle').replace(/\s/g,'')}_${d.year}${mm}.xlsx`;
+  // ── 9. Download ──
+  const filename = `Travelling_Claim_${(d.veh?.license_plate||'vehicle').replace(/\s/g,'')}_${(d.fromDate||'').replace(/-/g,'')}_${(d.toDate||'').replace(/-/g,'')}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast('ดาวน์โหลดไฟล์ Excel สำเร็จ', 'success');
 }
@@ -6120,13 +6271,14 @@ async function exportTravelClaimPDF() {
                       'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
     // Header
+    const periodLabel = `${d.fromDate || ''} – ${d.toDate || ''}`;
     doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, pageW, 18, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.text('Travelling Claim Report', margin, 8);
     doc.setFontSize(9);
-    doc.text(`${MONTH_TH[d.month] || d.month} ${d.year}  |  ${d.veh?.license_plate || ''}`, margin, 14);
+    doc.text(`${periodLabel}  |  ${d.veh?.license_plate || ''}`, margin, 14);
     doc.text(`${d.name}  |  ${d.department}  |  ${d.position}`, pageW - margin, 14, { align: 'right' });
     doc.setTextColor(0, 0, 0);
 
@@ -6161,7 +6313,7 @@ async function exportTravelClaimPDF() {
       doc.setFontSize(8); doc.setTextColor(150);
       doc.text(`Page ${i} / ${pages}  |  Total: RM ${fmt(d.grandTotal)}  |  KM: ${fmtKm(d.totKm)}`, pageW / 2, pageH - 4, { align: 'center' });
     }
-    doc.save(`travel-claim_${d.year}-${String(d.month).padStart(2,'0')}_${d.name}.pdf`);
+    doc.save(`travel-claim_${(d.fromDate||'').replace(/-/g,'')}_${(d.toDate||'').replace(/-/g,'')}_${d.name}.pdf`);
     toast('Export PDF สำเร็จ ✅', 'success');
   } catch(e) {
     console.error('exportTravelClaimPDF:', e);
