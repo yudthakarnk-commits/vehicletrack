@@ -375,6 +375,42 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;transition:border-color .15s;box-sizing:border-box}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary-light)}
 .form-group textarea{resize:vertical;min-height:70px}
+/* ── FAB + Quick Entry ── */
+.fab-wrap{position:fixed;bottom:76px;right:16px;z-index:500;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.fab{width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;font-size:26px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.45);transition:transform .18s,box-shadow .18s;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab:active{transform:scale(.92);box-shadow:0 2px 10px rgba(37,99,235,.35)}
+.fab-dial{display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.fab-item{display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transform:translateY(6px);transition:all .18s}
+.fab-item.fab-visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+.fab-item-label{padding:7px 13px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap;cursor:pointer;color:var(--text);transition:background .14s}
+.fab-item-label:active{background:var(--hover)}
+.fab-item-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+/* Quick-entry bottom sheet */
+.qe-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:flex-end}
+.qe-overlay.qe-open{display:flex}
+.qe-sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:94vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1)}
+.qe-overlay.qe-open .qe-sheet{transform:translateY(0)}
+.qe-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.qe-title{font-size:17px;font-weight:700;text-align:center;margin-bottom:16px}
+.qe-label{font-size:12px;font-weight:600;color:var(--text-light);margin-bottom:4px;display:block}
+.qe-field{width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;background:var(--card);color:var(--text);box-sizing:border-box;transition:border-color .14s}
+.qe-field:focus{outline:none;border-color:var(--primary)}
+.qe-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qe-group{margin-bottom:12px}
+.qe-amt{width:100%;padding:18px 14px;font-size:28px;font-weight:700;border:2px solid var(--primary);border-radius:12px;font-family:inherit;background:var(--card);color:var(--primary);text-align:center;box-sizing:border-box}
+.qe-amt:focus{outline:none;border-color:var(--primary-light)}
+.qe-preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.qe-preset{padding:8px 14px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:13px;font-weight:700;cursor:pointer;color:var(--text-light);font-family:inherit;transition:all .13s}
+.qe-preset:active{border-color:var(--primary);color:var(--primary);background:rgba(37,99,235,.08)}
+.qe-cat-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.qe-cat-btn{padding:9px 14px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:13px;cursor:pointer;color:var(--text);font-family:inherit;transition:all .13s}
+.qe-cat-btn.qe-cat-active{border-color:var(--primary);background:rgba(37,99,235,.1);color:var(--primary);font-weight:700}
+.qe-purpose-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.qe-purpose-chip{padding:7px 12px;border:1.5px solid var(--border);border-radius:18px;background:transparent;font-size:12px;cursor:pointer;color:var(--text-light);font-family:inherit;transition:all .13s}
+.qe-purpose-chip.qe-pur-active{border-color:var(--accent);background:rgba(245,158,11,.1);color:var(--accent);font-weight:600}
+.qe-save{width:100%;padding:15px;font-size:16px;font-weight:700;background:var(--primary);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit;margin-top:14px;transition:background .14s}
+.qe-save:active{background:var(--primary-light)}
+.qe-date-hint{font-size:12px;color:var(--text-light);text-align:center;margin-top:-6px;margin-bottom:10px;cursor:pointer;text-decoration:underline dotted}
 /* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.open{display:flex}
@@ -6619,8 +6655,331 @@ function applyScannedAmount(v) {
   document.getElementById('scan-status').textContent = `✅ RM ${fmt(v)}`;
 }
 
+// ─── QUICK ENTRY (FAB) ────────────────────────────────────
+let _fabOpen = false;
+
+function toggleFAB() {
+  _fabOpen = !_fabOpen;
+  const items = document.querySelectorAll('.fab-item');
+  items.forEach(el => el.classList.toggle('fab-visible', _fabOpen));
+  document.getElementById('fabBtn').textContent = _fabOpen ? '✕' : '＋';
+}
+
+function openQE(type) {
+  // close dial
+  _fabOpen = false;
+  document.querySelectorAll('.fab-item').forEach(el => el.classList.remove('fab-visible'));
+  document.getElementById('fabBtn').textContent = '＋';
+
+  // populate vehicle selects with last-used pre-selected
+  const lastVeh = localStorage.getItem('qe_last_vehicle') || '';
+  const vehOpts = (allVehicles || [])
+    .map(v => `<option value="${v.id}" ${v.id == lastVeh ? 'selected' : ''}>${v.name}${v.license_plate ? ' · ' + v.license_plate : ''}</option>`)
+    .join('');
+
+  if (type === 'log') {
+    document.getElementById('ql-vehicle').innerHTML = vehOpts;
+    document.getElementById('ql-date').value         = today();
+    document.getElementById('ql-from').value         = '';
+    document.getElementById('ql-to').value           = '';
+    document.getElementById('ql-odo-start').value    = '';
+    document.getElementById('ql-odo-end').value      = '';
+    document.querySelectorAll('#ql-purposes .qe-purpose-chip')
+      .forEach((c, i) => c.classList.toggle('qe-pur-active', i === 0));
+    document.getElementById('qeLogOverlay').classList.add('qe-open');
+
+  } else if (type === 'exp') {
+    document.getElementById('qe-vehicle').innerHTML  = vehOpts;
+    document.getElementById('qe-date').value         = today();
+    document.getElementById('qe-amount').value       = '';
+    document.getElementById('qe-desc').value         = '';
+    _buildQECats();
+    document.getElementById('qeExpOverlay').classList.add('qe-open');
+    setTimeout(() => document.getElementById('qe-amount')?.focus(), 320);
+
+  } else {
+    document.getElementById('qs-vehicle').innerHTML  = vehOpts;
+    document.getElementById('qs-last-date').value    = today();
+    document.getElementById('qs-next-date').value    = '';
+    document.getElementById('qs-notes').value        = '';
+    document.querySelectorAll('#qs-types .qe-cat-btn')
+      .forEach((c, i) => c.classList.toggle('qe-cat-active', i === 0));
+    document.getElementById('qeSvcOverlay').classList.add('qe-open');
+  }
+}
+
+function closeQE(id) {
+  document.getElementById(id)?.classList.remove('qe-open');
+}
+
+function qeSaveVehicle(val) {
+  if (val) localStorage.setItem('qe_last_vehicle', val);
+}
+
+function qeSetAmt(val) {
+  const el = document.getElementById('qe-amount');
+  el.value = val;
+  el.focus();
+}
+
+function qePurposeChip(btn) {
+  document.querySelectorAll('#ql-purposes .qe-purpose-chip').forEach(c => c.classList.remove('qe-pur-active'));
+  btn.classList.add('qe-pur-active');
+}
+
+function qeCatBtn(btn, groupId) {
+  document.querySelectorAll('#' + groupId + ' .qe-cat-btn').forEach(c => c.classList.remove('qe-cat-active'));
+  btn.classList.add('qe-cat-active');
+}
+
+function _buildQECats() {
+  const cats = (allCats || []).filter(c => !c.is_deleted).slice(0, 9);
+  document.getElementById('qe-cats').innerHTML = cats.map((c, i) =>
+    `<button type="button" class="qe-cat-btn${i===0?' qe-cat-active':''}" onclick="qeCatBtn(this,'qe-cats')" data-val="${c.id}">${c.icon || ''} ${c.name}</button>`
+  ).join('');
+}
+
+async function saveQuickLog() {
+  const vehicleId = document.getElementById('ql-vehicle').value;
+  const date      = document.getElementById('ql-date').value;
+  if (!vehicleId || !date) return toast('กรุณาระบุรถและวันที่', 'error');
+
+  const activeChip = document.querySelector('#ql-purposes .qe-purpose-chip.qe-pur-active');
+  const purpose    = activeChip?.textContent?.trim() || null;
+  const driver     = currentProfile?.full_name || currentUser?.email?.split('@')[0] || '';
+
+  const body = {
+    date,
+    vehicle_id:     Number(vehicleId),
+    user_id:        currentUser.id,
+    driver_name:    driver,
+    origin:         document.getElementById('ql-from').value       || null,
+    destination:    document.getElementById('ql-to').value         || null,
+    purpose,
+    odometer_start: document.getElementById('ql-odo-start').value  || null,
+    odometer_end:   document.getElementById('ql-odo-end').value    || null,
+  };
+
+  qeSaveVehicle(vehicleId);
+  const { error } = await sbClient.from('vehicle_usage_logs').insert(body);
+  if (error) return toast(t('save_error') + ': ' + error.message, 'error');
+  closeQE('qeLogOverlay');
+  toast(t('save_success'), 'success');
+  if (document.getElementById('page-logs')?.classList.contains('active')) loadUsageLogs();
+}
+
+async function saveQuickExpense() {
+  const vehicleId = document.getElementById('qe-vehicle').value;
+  const amount    = parseFloat(document.getElementById('qe-amount').value);
+  const date      = document.getElementById('qe-date').value;
+  const activeBtn = document.querySelector('#qe-cats .qe-cat-btn.qe-cat-active');
+  const catId     = activeBtn?.dataset?.val;
+
+  if (!vehicleId)            return toast('กรุณาเลือกรถ', 'error');
+  if (!amount || amount <= 0) return toast('กรุณาระบุจำนวนเงิน', 'error');
+  if (!catId)                return toast('กรุณาเลือกหมวดหมู่', 'error');
+
+  const clientId = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString());
+  const payload = {
+    client_id:    clientId,
+    vehicle_id:   Number(vehicleId),
+    category_id:  Number(catId),
+    expense_date: date,
+    amount,
+    description:  document.getElementById('qe-desc').value || null,
+    created_by:   currentUser?.id,
+    is_deleted:   false,
+  };
+
+  qeSaveVehicle(vehicleId);
+  if (navigator.onLine) {
+    const { error } = await sbClient.from('expenses').insert(payload);
+    if (error) return toast(t('save_error') + ': ' + error.message, 'error');
+  } else {
+    await idbPut('expenses', { ...payload, id: clientId, created_at: new Date().toISOString() });
+    await queueSync('INSERT', 'expenses', payload);
+    toast(t('save_offline'), 'info');
+  }
+  closeQE('qeExpOverlay');
+  toast(t('save_success'), 'success');
+  if (document.getElementById('page-expenses')?.classList.contains('active')) loadExpenses();
+}
+
+async function saveQuickService() {
+  const vehicleId = document.getElementById('qs-vehicle').value;
+  const nextDate  = document.getElementById('qs-next-date').value;
+  const lastDate  = document.getElementById('qs-last-date').value;
+  const activeBtn = document.querySelector('#qs-types .qe-cat-btn.qe-cat-active');
+  const svcType   = activeBtn?.dataset?.val || 'general';
+
+  if (!vehicleId) return toast('กรุณาเลือกรถ', 'error');
+  if (!nextDate)  return toast('กรุณาระบุวันนัดถัดไป', 'error');
+
+  const payload = {
+    vehicle_id:    Number(vehicleId),
+    service_type:  svcType,
+    last_date:     lastDate || null,
+    next_date:     nextDate,
+    reminder_days: 30,
+    notes:         document.getElementById('qs-notes').value || null,
+    created_by:    currentUser?.id,
+  };
+
+  qeSaveVehicle(vehicleId);
+  const { error } = await sbClient.from('vehicle_services').insert(payload);
+  if (error) return toast(t('save_error') + ': ' + error.message, 'error');
+  closeQE('qeSvcOverlay');
+  toast(t('save_success'), 'success');
+  if (document.getElementById('page-vehicles')?.classList.contains('active')) loadServiceSchedule();
+}
 
 </script>
+
+<!-- ═══ FAB ═══════════════════════════════════════════════ -->
+<div class="fab-wrap" id="fabWrap">
+  <div class="fab-dial" id="fabDial">
+    <button class="fab-item" onclick="openQE('svc')">
+      <span class="fab-item-label">🔧 ค่าซ่อม/บำรุง</span>
+      <span class="fab-item-icon" style="background:#fff3e0">🔧</span>
+    </button>
+    <button class="fab-item" onclick="openQE('exp')">
+      <span class="fab-item-label">💰 บันทึกค่าใช้จ่าย</span>
+      <span class="fab-item-icon" style="background:#e8f5e9">💰</span>
+    </button>
+    <button class="fab-item" onclick="openQE('log')">
+      <span class="fab-item-label">🚗 บันทึกการเดินทาง</span>
+      <span class="fab-item-icon" style="background:#e3f2fd">🚗</span>
+    </button>
+  </div>
+  <button class="fab" id="fabBtn" onclick="toggleFAB()" title="Quick Entry">＋</button>
+</div>
+
+<!-- ═══ QUICK LOG ════════════════════════════════════════ -->
+<div class="qe-overlay" id="qeLogOverlay" onclick="closeQE('qeLogOverlay')">
+  <div class="qe-sheet" onclick="event.stopPropagation()">
+    <div class="qe-handle"></div>
+    <div class="qe-title">🚗 บันทึกการเดินทาง</div>
+
+    <div class="qe-row">
+      <div class="qe-group">
+        <label class="qe-label">วันที่</label>
+        <input type="date" id="ql-date" class="qe-field">
+      </div>
+      <div class="qe-group">
+        <label class="qe-label">รถ</label>
+        <select id="ql-vehicle" class="qe-field" onchange="qeSaveVehicle(this.value)"></select>
+      </div>
+    </div>
+
+    <div class="qe-row">
+      <div class="qe-group">
+        <label class="qe-label">ต้นทาง</label>
+        <input type="text" id="ql-from" class="qe-field" placeholder="จากที่ไหน...">
+      </div>
+      <div class="qe-group">
+        <label class="qe-label">ปลายทาง</label>
+        <input type="text" id="ql-to" class="qe-field" placeholder="ไปที่ไหน...">
+      </div>
+    </div>
+
+    <div class="qe-row">
+      <div class="qe-group">
+        <label class="qe-label">Odometer เริ่ม (กม.)</label>
+        <input type="number" id="ql-odo-start" class="qe-field" placeholder="0">
+      </div>
+      <div class="qe-group">
+        <label class="qe-label">Odometer จบ (กม.)</label>
+        <input type="number" id="ql-odo-end" class="qe-field" placeholder="0">
+      </div>
+    </div>
+
+    <label class="qe-label">วัตถุประสงค์</label>
+    <div class="qe-purpose-row" id="ql-purposes">
+      <button type="button" class="qe-purpose-chip qe-pur-active" onclick="qePurposeChip(this)">ปฏิบัติงาน</button>
+      <button type="button" class="qe-purpose-chip" onclick="qePurposeChip(this)">ส่งสินค้า</button>
+      <button type="button" class="qe-purpose-chip" onclick="qePurposeChip(this)">ประชุม</button>
+      <button type="button" class="qe-purpose-chip" onclick="qePurposeChip(this)">รับของ</button>
+      <button type="button" class="qe-purpose-chip" onclick="qePurposeChip(this)">ตรวจพื้นที่</button>
+    </div>
+
+    <button class="qe-save" onclick="saveQuickLog()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ═══ QUICK EXPENSE ═══════════════════════════════════ -->
+<div class="qe-overlay" id="qeExpOverlay" onclick="closeQE('qeExpOverlay')">
+  <div class="qe-sheet" onclick="event.stopPropagation()">
+    <div class="qe-handle"></div>
+    <div class="qe-title">💰 บันทึกค่าใช้จ่าย</div>
+
+    <label class="qe-label">รถ</label>
+    <select id="qe-vehicle" class="qe-field" style="margin-bottom:12px" onchange="qeSaveVehicle(this.value)"></select>
+
+    <label class="qe-label">หมวดหมู่</label>
+    <div class="qe-cat-grid" id="qe-cats" style="margin-bottom:14px"></div>
+
+    <label class="qe-label">จำนวนเงิน (RM)</label>
+    <input type="number" id="qe-amount" class="qe-field qe-amt" placeholder="0.00" step="0.01" inputmode="decimal">
+    <div class="qe-preset-row">
+      <button type="button" class="qe-preset" onclick="qeSetAmt(50)">50</button>
+      <button type="button" class="qe-preset" onclick="qeSetAmt(100)">100</button>
+      <button type="button" class="qe-preset" onclick="qeSetAmt(200)">200</button>
+      <button type="button" class="qe-preset" onclick="qeSetAmt(500)">500</button>
+    </div>
+
+    <div class="qe-row" style="margin-top:12px">
+      <div class="qe-group">
+        <label class="qe-label">วันที่</label>
+        <input type="date" id="qe-date" class="qe-field">
+      </div>
+      <div class="qe-group">
+        <label class="qe-label">หมายเหตุ</label>
+        <input type="text" id="qe-desc" class="qe-field" placeholder="(ไม่บังคับ)">
+      </div>
+    </div>
+
+    <button class="qe-save" onclick="saveQuickExpense()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ═══ QUICK SERVICE ════════════════════════════════════ -->
+<div class="qe-overlay" id="qeSvcOverlay" onclick="closeQE('qeSvcOverlay')">
+  <div class="qe-sheet" onclick="event.stopPropagation()">
+    <div class="qe-handle"></div>
+    <div class="qe-title">🔧 ค่าซ่อม / บำรุงรักษา</div>
+
+    <label class="qe-label">รถ</label>
+    <select id="qs-vehicle" class="qe-field" style="margin-bottom:12px" onchange="qeSaveVehicle(this.value)"></select>
+
+    <label class="qe-label">ประเภทงาน</label>
+    <div class="qe-cat-grid" id="qs-types" style="margin-bottom:14px">
+      <button type="button" class="qe-cat-btn qe-cat-active" onclick="qeCatBtn(this,'qs-types')" data-val="oil_change">🛢️ เปลี่ยนน้ำมัน</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="tire">🔵 ยาง</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="battery">🔋 แบตเตอรี่</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="brake">🛑 เบรก</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="filter">🌀 กรอง</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="ac">❄️ แอร์</button>
+      <button type="button" class="qe-cat-btn" onclick="qeCatBtn(this,'qs-types')" data-val="general">🔩 ทั่วไป</button>
+    </div>
+
+    <div class="qe-row">
+      <div class="qe-group">
+        <label class="qe-label">วันที่ซ่อม</label>
+        <input type="date" id="qs-last-date" class="qe-field">
+      </div>
+      <div class="qe-group">
+        <label class="qe-label">นัดถัดไป</label>
+        <input type="date" id="qs-next-date" class="qe-field">
+      </div>
+    </div>
+
+    <label class="qe-label" style="margin-top:4px">หมายเหตุ</label>
+    <input type="text" id="qs-notes" class="qe-field" placeholder="(ไม่บังคับ)">
+
+    <button class="qe-save" onclick="saveQuickService()">💾 บันทึก</button>
+  </div>
+</div>
+
 </body>
 </html>
                                
